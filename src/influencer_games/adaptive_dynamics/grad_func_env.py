@@ -368,7 +368,6 @@ class AdapativeEnv:
                     abs_diffrence=torch.linalg.norm(pos_vec_row-pos_vec[-2],axis=1)
                 abs_diffrence_value=torch.sum(abs_diffrence<=self.tolarance).item()
                 if abs_diffrence_value>=self.tolarated_agents:
-                    print("broke")
                     break
         self.grad_matrix=grad_vec.clone()
         self.pos_matrix=pos_vec.clone()
@@ -418,7 +417,6 @@ class AdapativeEnv:
                 abs_diffrence=torch.abs(pos_vec_row-pos_vec[-2])
                 abs_diffrence_value=torch.sum(abs_diffrence<=self.tolarance).item()
                 if abs_diffrence_value>=self.tolarated_agents:
-                    print("broke")
                     break
         self.grad_matrix=grad_vec
         self.pos_matrix=pos_vec
