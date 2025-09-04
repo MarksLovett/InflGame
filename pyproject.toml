@@ -1,7 +1,6 @@
 [build-system]
-
-requires = ["hatchling"]
-build-backend = "hatchling.backend"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
 
 
