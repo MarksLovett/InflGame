@@ -11,8 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - name: Install Sphinx and documentation dependencies
+      - name: Install InflGame and documentation dependencies
         run: |
+          pip install -e .            # <-- This installs InflGame locally (editable mode)
           pip install sphinx myst-nb matplotlib scipy numpydoc sphinx-copybutton sphinx-design pydata-sphinx-theme intersphinx_registry
       - name: Sphinx build
         run: |
