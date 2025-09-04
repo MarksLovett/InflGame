@@ -15,6 +15,7 @@ jobs:
         run: |
           pip install -e .
           pip install sphinx myst-nb matplotlib scipy numpydoc sphinx-copybutton sphinx-design pydata-sphinx-theme intersphinx_registry
+          pip install tree
       - name: Sphinx build (with autosummary)
         run: |
           sphinx-build -E -a docs _build
