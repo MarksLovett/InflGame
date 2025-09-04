@@ -1,0 +1,1927 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc} % Load inputenc first
+\usepackage[english]{babel} % Load babel early
+\usepackage[T1]{fontenc}    % Load fontenc early
+
+\usepackage[backend=biber,style=nature]{biblatex}
+\addbibresource{refs.bib}
+%% Mathematics
+\usepackage{amsthm}
+\usepackage{thmtools}  % Theorem-like environments
+\usepackage{mathtools} % Fonts and environments for mathematical formuale
+\usepackage{amsfonts}  % For \mathbb command
+\usepackage{amssymb}   % Additional math symbols
+%\usepackage{madthrsfs}  % Script font with \mathscr{}
+\usepackage{physics}   % For partial derivatives 
+
+%% Miscellaneous
+\usepackage{graphicx}  % Tool for images
+\graphicspath{{figures/}}   % Automatic translations
+\usepackage{csquotes}  % Quotes
+\usepackage{textcomp}  % Extra symbols
+\usepackage{listings}  % Typesetting code
+\lstset{basicstyle = \ttfamily, frame = tb}
+\usepackage{graphicx,subcaption,float,caption}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{epstopdf}
+\usepackage[table]{xcolor}
+\usepackage{comment}
+\usepackage{setspace}
+
+\usepackage{array}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ }
+\usepackage{hyperref}
+\usepackage{braket} % needed for \Set
+\usepackage{caption}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{svg}
+\usepackage{bbm}
+
+\svgsetup{inkscapepath=svgsubdir}
+
+
+\usepackage[english]{babel}
+\usepackage{forest}
+\forestset{
+  L1/.style={draw=black,},
+  L2/.style={,edge={,line width=0.8pt}},
+}
+
+
+\lstset{
+  mathescape
+}
+
+
+\renewcommand\qedsymbol{$\blacksquare$}
+
+
+\makeatletter
+\newcommand*\bigcdot{\mathpalette\bigcdot@{.5}}
+\newcommand*\bigcdot@[2]{\mathbin{\vcenter{\hbox{\scalebox{#2}{$\m@th#1\bullet$}}}}}
+\makeatother
+
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}{Remark}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\newcommand {\R}{\mathbb{R}}
+\newcommand {\N}{\mathbb{N}}
+\newcommand {\D}{\mathbb{D}}
+\newcommand {\B}{\mathbb{B}}
+
+\definecolor{alexgreen}{rgb}{0, 0.6, 0}
+\newcommand{\am}[1]{\textcolor{alexgreen}{\textbf{#1}}}
+
+\newenvironment{enumalph}
+{\begin{enumerate}\renewcommand{\labelenumi}{\textnormal{(\alph{enumi})}}}
+{\end{enumerate}}
+
+\newenvironment{enumroman}
+{\begin{enumerate}\renewcommand{\labelenumi}{\textnormal{(\roman{enumi})}}}
+{\end{enumerate}}
+\usepackage{cleveref}
+
+\title{Learning Dynamics Sentiment Landscape: The Influencer Dilemma (Supplementary Information) }
+\author{Author Name} % Add author to fix the warning
+
+
+\begin{document}
+\maketitle
+ 
+\tableofcontents
+    \section{Introduction to the Model}
+        The purpose of this section is to introduce the necessary background to understand the intricacies of the model which we discuss in later sections. This section will then introduce influencer games rigorously with definition of spatial resource games (SRGs) and expected spatial resource games (ESRGs). 
+       
+        \subsection{Introduction to Spatial Resource Games and Expected Spatial Resource Games}
+            We now introduce the concept of spatial resource games (SRGs). A SRG is a normal form game, with some additional caveats; SRGs as their name implies add a spatial component to the traditional normal form game. Players compete in a space or game board $\mathbb{D}$, this is where players are contained. The players' payoff or utility is tied directly to their position in and the positions of their competition $\mathbf{x}\in\mathbb{D}$; therefore, position will be explicitly accounted for in a player's utility. The second component to a spatial resource allocation game is the game board's environment $\mathbb{B}$, which describes how resources are distributed. Resources are distributed across a space $\mathbb{B}$, according to a distribution kernel $B:\mathbb{B}\to \R$, such that $B(b)\in \R$ for all $b\in \mathbb{B}$. Formally the definition of a SRG is 
+            \begin{definition}[Spatial resource game]
+                A game is said to be a spatial resource game, if it is a normal form game $T(I,\mathbb{D},\mathbf{\mu})$ with an accompanying game board $\mathbb{D}$, resource space $\mathbb{B}$, resource distribution $B(b)\in \R$ for $b\in \mathbb{B}$, such that a players payoff is 
+                \begin{equation}
+                    u_i(x,\mathbf{x},b,B)\to \mathbb{R}
+                \end{equation}
+                where $\mathbf{x}=(x_1,x_2,\dots,x_N), x_i\in\mathbb{D}$ the strategic position of the $i$th player $i\in I$ and $b\in\mathbb{B}$. 
+            \end{definition}
+            There are many spatial resource games in the game theory literature, some examples that are explicitly spatial are the cake cutting games and Pac-Man. 
+
+            An extension of a spatial resource game is the expected spatial resource game or ESRG. These games take into account that players can't know the exact return of the reward that they have but rather receive a utility or reward that is based on expected returns from each resource position in $\mathbb{B}$.            \begin{definition}[Expected Spatial Resource Game (ESRG)]
+                An expected spatial resource game is a type of spatial resource game with the following utility function for the $i$'th player
+                \begin{align}
+                    u_{i}(\mathbf{x})&=\sum_{b\in\B} B(b)G_i(\mathbf{x},b) \label{eq:SI_disc_ESRG}\\
+                    u_{i}(\mathbf{x})&=\int_{\B} B(b)G_i(\mathbf{x},b)db \label{eq:SI_cont_ESRG}
+                \end{align}
+                Where \cref{eq:SI_disc_ESRG} is for a discrete ESRG and \cref{eq:SI_cont_ESRG} is for a continuous ESRG. Here $\mathbf{x}=(x_1,x_2,\dots,x_n)$ are the player strategies in $\D$ and $G_i(\mathbf{x},b)$ is the probability of the $i$th player receiving the resource $B(b)$. 
+            \end{definition}
+            Many SRGs are ESRGs, some examples of ESRGS are political games where politicians compete for voters (resources) in ideological space ($\D$). An example of ESRG in physical space is the competition for resources such as mates and food for species via their home range or migration strategies. 
+
+            Another type of ESRG is a Blotto game also known as a Colonel Blotto game. A Blotto game is a game where players are given a finite pool of resources and several "battlefields" which they can dedicate these resources to fight for. Each battlefield is won or lost based on which player has dedicated more resources to a battlefield. Players' utility or payoff is determined by the number of battle fields won. Blotto games have had several applications in political games, network defense, and hiring decisions \cite{}. 
+
+             Blotto games are a limited ESRG, because they only consider 2 player games, have discrete allocation schemes, and an all-or-nothing reward allocation. This leaves a gap in the field to study games where players might be able to allocate a resources in a continuous manner or where there might be multiple players competing for the same resources. 
+
+            \subsubsection{Influencer Games (Our Model)}
+                We seek to introduce a new form of game denoted an \textbf{Influencer Game}. Influencer games are a type of expected spatial resource game, where players' expected utilities are based on their relative influence over a resource, measured by an influence kernel $f_i(x_i,b)$. 
+                \begin{definition}[Influence Kernel]
+                    A player $i\in I$'s influence over a resource at $b\in B$ is measured by the influence kernel 
+                    \begin{equation}\label{eq:SI_influence_kernel_def}
+                        f_{i}(x_i,b):X_i\times \mathbb{B}\to\mathbb{R}
+                    \end{equation}
+                \end{definition}
+                In this way an influence kernel is a measure of distance from a players' position $x_i$ in $\mathbb{D}$ and a resource at $b$ in $\mathbb{B}$.  
+                
+                We model a player's expected return of a resource as proportional to the player's influence over the resource at point $b$ relative to the total influence being exerted on that resource point. 
+                \begin{definition}[relative influence, influence probability]
+                    Formally we denoted the relative influence as 
+                    \begin{equation}\label{eq:SI_relative_influence}
+                        G_i(\mathbf{x},b)=\frac{f_i(x_i,b)}{\sum_{j=1}^{N}f_j(x_j,b)}
+                    \end{equation}
+                    One can also think of this as the probability that a player $i$ influences a point $b\in \B$. If we let $\beta$ be a random variable such that $\beta=i$ represents the event player $i$ influence $b$.                    \begin{equation}\label{eq:SI_relative_influence_prob}
+                        G_i(\mathbf{x},b)=\mathbb{P}(\beta=i|b), \text{ s.t. } \sum_i\mathbb{P}(\beta=i|b)=1.
+                    \end{equation}
+                \end{definition}
+                Then an influencer game is a type of ESRG with players' utility function is the sum of expected resources that player will receive from all $b\in \mathbb{B}$. 
+                \begin{definition}[Utility function]
+                    The utility function for a player $i\in I$ is 
+                    \begin{equation}
+                        u_{i}(\mathbf{x})=\sum_{b} B(b)\cdot  G_i(\mathbf{x},b)
+                    \end{equation}
+                    for discrete influencer games or 
+                    \begin{equation}
+                         u_{i}(\mathbf{x})=\int_{\mathbb{B}} B(b)\cdot G_i(\mathbf{x},b)db
+                    \end{equation}
+                    for continuous influencer games where $\mathbb{B}$ is a closed subset of $\mathbb{R}^L$ for $L\in \mathbb{N}$.
+                \end{definition}
+
+        Influencer games can be thought of as a continuous expansion of Blotto games, where $f_i(x_i,b)$ represents a players committed resources to a battlefield at point $b$. Unlike a blotto game though $B(b)$ is not limited to a 1-1 value, meaning that battlefields are allowed to have different values. Additionally, influencer games can easily be extended to multi dimensional strategy spaces, resource spaces, and multiple players. The introduction of influencer games opens a multitude of avenues of games to study as well as provides a elegant results for symmetric influencer games as we demonstrate in the next section. 
+        
+    \section{General Results on Nash Analysis}
+         Without loss of generality we assume for the rest of the work that the resources at a point will be nonnegative such that $B(b)\in \R^+_0$. This assumption will make the analysis of equilibria behavior more straight forward. A negative resource value would imply that a player will loose reward by getting closer to a resource. To ensure positive resource values; a constant shift would apply the same result since the relative resource values will be maintained. Additionally, we assume that the influence kernels $f_i(x_i,b)\in C^2(\D,\B)$ are all differentiable functions in $x_i\in \D$ and $b\in \B$ and $f_i(x_i,b)>0$. 
+    
+        This section's main focus is studying the Nash equilibrium behavior; understanding the Nash behavior is an excellent way to provide insight into the long-term behavior of our game. Given that our expected return spatial resource games are normal form games, we can utilize many results regarding to the Nash within the game. First of which is the existence of a Nash in the system.
+        
+        \subsection{Existence of Nash Equilibria}
+            Given our influencer game $T(I,\mathbf{X},\mathbf{u})$ we may utilize \cref{thm:SI_Reny} from  \cite{reny2020nash,reny2016nash}. 
+            \begin{theorem}[Reny Pure Strategy Nash Equilibrium]\label{thm:SI_Reny}
+                Suppose that $T$ is a compact, convex, bounded, and quasi-concave normal-form game and that the sum of the players’ payoff functions $\sum_{i\in I} u_i(\mathbf{x})$ is upper semi continuous in $\mathbf{x}\in X_1\times X_2\times \dots \times X_N$. If for each player $i$ and for any $x \in X$ we obtain that $u_i (x_i,x_{-i})$ is lower semi continuous in $x_{-i} \in X_{-i}$, then $T$ has a pure strategy Nash equilibrium.
+            \end{theorem}
+            If we have $X_i=\mathbb{D}\subset \R^L$ be a closed and bounded space then our influencer game $T$ must be a compact, convex, and bounded game. Since $f_i(x_i,b)>0$ and $f_i(x_i,b)\in C^{2}$, then $u_i(\mathbf{x},b)$ is continuous and therefore satisfies the requirements for continuity in \cref{thm:SI_Reny}. The final requirement is that $f_i(x_i,b)$ is quasi-concave, this is a fair assumption given that much of the literature with influencer games have influence kernels that are at least quasi-concave. Reny also has conditions on mixed Nash equilibria but for now we restrict our analysis to the pure symmetric strategy Nash \cite{reny2020nash,reny2016nash}. If we assume that $\mathbf{x}^*$ is a symmetric Nash equilibrium then it follows that there are certain dynamical constraints that it must satisfy in an influencer game.  
+            \begin{lemma}[First Order Symmetric Nash Requirements]\label{lem:SI_requirements}
+                    For a symmetric influencer game, in dimension $L\in \N$, with $N$ players $i\in I$, $I=\set{1,2,\dots,N}$ utilizing strategies $x_i\in \set{x_1,x_2,\dots,x_N}$, $x_i=(x_{(i,1)},x_{(i,2)},\dots,x_{(i,L)})$, $x_i\in\D$ $\forall i\in I$, $\D\subset \R^L$, influence kernels $f_i(x_i,b)$, and resource distribution $B:\B\to \R, \; B(b)\in \R$ $\B\subset \R^L$. 
+                    
+                    A symmetric Nash $\mathbf{x^*}\in X_1\times X_2\times \dots\times X_N$, $\mathbf{x}^*=(x_1^*,x_2^*,\dots, x_N^*)$ where $x^*_i=(x_{(i,1)}^*,x_{(i,2)}^*,\dots, x_{(i,L)}^*)$, $x_l\in\D^l,\; \D=\D^1\times \D^2\times \dots \times \D^L$, $\forall l=1,2,\dots,L$ and $\forall i\in I$ must satisfy the following system of equations
+                    \begin{equation}
+                         \pdv{u_i(\mathbf{x})}{x_{(i,l)}}|_{x_{i,l}=x_{(i,l)}^*}=0 \; \forall i\in I \text{ and } l=1,2,\dots,L
+                    \end{equation}
+                    Where
+                    \begin{equation}
+                       \pdv{u_i(\mathbf{x})}{x_{(i,l)}}= \sum_{b\in \B} B(b)d_{(i,l)}(x_{i},b)G_i(\mathbf{x},b)G_i^c(\mathbf{x},b)
+                    \end{equation}
+                    and 
+                    \begin{equation}
+                        d_{(i,l)}(x_{i},b)=\pdv{}{x_{(i,l)}}\ln(f_i(x_{i},d))
+                    \end{equation}
+                    
+            \end{lemma}
+            \begin{proof}
+                This follows from definition of a Nash equilibrium, the definition of $u_i(\mathbf{x})$. In order for a strategy profile to be a Nash it must satisfy,
+                \begin{equation}
+                    \nabla_{\mathbf{x}}\mathbf{u}=\left\langle \pdv{}{x_1}u_1(\mathbf{x}),\pdv{}{x_2}u_2(\mathbf{x}),\dots, \pdv{}{x_N}u_N(\mathbf{x})\right\rangle =\Vec{0}
+                \end{equation}
+                For  multi dimensional $L\in \N$ strategy i.e. $x_i=(x_{(i,1)},x_{(i,2)},\dots,x_{(i,L)})$ this is expanded to be 
+                \begin{equation}
+                    \nabla_{\mathbf{x}}\mathbf{u}=\langle \nabla_{x_1}u_1(\mathbf{x}),\nabla_{x_2}u_2(\mathbf{x}),\dots,\nabla_{x_L}u_L(\mathbf{x}) \rangle =\Vec{0} \label{eq:SI_first_order_cond}
+                \end{equation}
+                Where 
+                \begin{equation}
+                   \nabla_{x_i}u_i(\mathbf{x})=\left\langle \pdv{}{x_{(i,1)}}u_i(\mathbf{x}),\pdv{}{x_{(i,2)}}u_i(\mathbf{x}),\dots, \pdv{}{x_{(i,L)}}u_i(\mathbf{x})\right\rangle
+                \end{equation}
+                Thus, \cref{eq:SI_first_order_cond} is equivalently,
+                \begin{equation}
+                    \pdv{}{x_{(i,l)}}u_i(\mathbf{x})|_{\mathbf{x}=\mathbf{x^*}}=0\; \forall i\in I \text{  and } l\in 1,2,\dots,L. 
+                \end{equation}
+                This is often called first order Nash conditions. Thus we calculate the the partial derivative for each agent $i$ and dimension of their strategy $l$.
+                \begin{align}
+                    \pdv{}{x_{(i,l)}}u_i(\mathbf{x})&=\sum_{b\in \B} B(b)\pdv{}{x_{(i,l)}}G_i(\mathbf{x},b) \\ %
+                    &=\sum_{b\in \B} B(b)\pdv{}{x_{(i,l)}}\frac{f_{i}(x_i,b)}{\sum_{j\in I}f_{j}(x_j,b)} \\ %
+                    &=\sum_{b\in \B} B(b)\frac{\pdv{}{x_{(i,l)}}f_{i}(x_i,b)\cdot \sum_{j\in I} f_{j}(x_j,b)-\pdv{}{x_{(i,l)}}f_{i}(x_i,b)\cdot f_{i}(x_i,b)}{[\sum_{j\in I} f_{j}(x_j,b)]^2} \\ %
+                    &=\sum_{b\in \B} B(b) \pdv{}{x_{(i,l)}}f_{i}(x_i,b) \cdot \left[\frac{1}{\sum_{j\in I} f_{j}(x_j,b)}- \frac{f_{i}(x_i,b)}{[\sum_{j\in I} f_{j}(x_j,b)]^2}\right] \\ %
+                    &=\sum_{b\in \B} B(b) \frac{\pdv{}{x_{(i,l)}}f_{i}(x_i,b)}{f_{i}(x_i,b)} \cdot \left[\frac{f_{i}(x_i,b)}{\sum_{j\in I} f_{j}(x_j,b)}- \frac{f_{i}^2(x_i,b)}{[\sum_{j\in I} f_{j}(x_j,b)]^2}\right] \\ %
+                    &=\sum_{b\in \B} B(b) d_{(i,l)}(x_i,b) [G_i(\mathbf{x},b)- G_i^2(\mathbf{x},b)] \\ %
+                    &=\sum_{b\in \B} B(b) d_{(i,l)}(x_i,b) G_i(\mathbf{x},b)G_i^c(\mathbf{x},b) \\ %
+                \end{align}
+            \end{proof}
+            
+        \subsection{Uniqueness of the Symmetric Nash Equilibrium in Symmetric Log-Concave Influencer Games}
+            Here we go a step further by introducing a theorem, regarding the uniqueness of a symmetric Nash equilibrium for symmetric log-concave influencer games. 
+            \begin{definition}[Symmetric Influencer game]\label{def:SI_symmetric_influencers}
+                A influencer game is said to be symmetric if 
+                \begin{equation}
+                    x_i=x_j \implies f_i(x_i,b)=f_j(x_j,b) \quad\forall i,j\in I.
+                \end{equation}
+                A consequence of a symmetric influencer game is that 
+                \begin{equation}\label{eq:SI_symmetric_payoff}
+                    x_i=x_j \implies u_i(x_i,x_{-i})=u_{j}(x_j,x_{-j}).
+                \end{equation}
+            \end{definition}
+            \begin{definition}[Log-concave Influencer game]\label{def:SI_log-concave_influencers}
+                A influencer game is log-concave if 
+                \begin{equation}
+                    \log(f_i(x_i,b)): \text{concave in $x_i$ }\forall i\in I.
+                \end{equation}
+            \end{definition}
+            
+            \begin{theorem}[Uniqueness of the internal Symmetric Nash for symmetric log-concave influencer games]\label{thm:SI_uniqueness}
+             Suppose there is an symmetric influencer game $T(I,\mathbf{X},\mathbf{u})$ with player set $I=\set{1,2,\dots, N}$, strategy space $\mathbf{X}=\set{X_1,X_2,\dots, X_N}$, and payoff function set $\mathbf{u}=\set{u_1,u_2,\dots, u_N}$. If  $X_i=\mathbb{D}\subset \R ^L$ $\forall i\in I$, $\mathbb{B}\subset \R^L$  $L\in \N$, and $T$ has log-concave influence kernels $f_i(x_i,b)\in C^2(\D,\B)$. Then $T$ has a unique Symmetric Nash equilibrium. 
+             \end{theorem}
+             \begin{proof}
+                Without loss of generality we let $u_i(x)=\sum_{b\in\mathbb{B}} B(b)G_i(\mathbf{x},b)$. Then the change in the payoff with respect a players strategy is
+                \begin{align}
+                    u_i(\mathbf{x})&=\sum_{b\in\mathbb{B}} B(b)G_i(\mathbf{x}^*,b) \\ %
+                    \implies \pdv{u_i}{x_i}&=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}G_i(\mathbf{x},b) \\ %
+                    &=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}\frac{f_i(x_i,b)}{\sum_{j\in I}f_j(x_j,b)} \\ %
+                    &=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}[f_i(x_i,b)]\cdot \frac{\sum_{j\in I}f_j(x_j,b)-f_i(x_i,b)}{[\sum_{j\in I}f_j(x_j,b)]^2} \\ %
+                    &=\sum_{b\in\mathbb{B}} B(b)\frac{\pdv{}{x_i}[f_i(x_i,b)]}{f_i(x_i,b)}\cdot\left(\frac{f_i(x_i,b)\cdot \sum_{j\in I}f_j(x_j,b)}{[\sum_{j\in I}f_j(x_j,b)]^2}- \frac{f_i(x_i,b)^2}{[\sum_{j\in I}f_j(x_j,b)]^2}\right) \\ %
+                    &=\sum_{b\in\mathbb{B}} B(b)\frac{\pdv{}{x_i}[f_i(x_i,b)]}{f_i(x_i,b)}\cdot G_i(\mathbf{x},b)\left(1- G_i(\mathbf{x},b)\right) \\ %
+                    &=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}\ln(f_i(x_i,b)) \cdot G_i(\mathbf{x},b) G_i^c(\mathbf{x},b)\label{eq:SI_derivative_payoff}
+                \end{align}
+                 From \cref{thm:SI_Reny} we know that there exists a symmetric Nash equilibrium. We let $\mathbf{}{x}^*$ be a strategy profile Nash equilibrium and we examine, 
+                 \begin{align}
+                     \pdv{u_i(\mathbf{x})}{x_i}|_{\mathbf{x}=\mathbf{x^*}}&=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}\ln(f_i(x_i,b)) \cdot\frac{N-1}{N^2} \\ %
+                     &=\frac{N-1}{N^2}\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_i}\ln(f_i(x_i^*,b)) \\ %
+                     &=\frac{N-1}{N^2}\ln\left(\prod_{b\in \B}f_i(x_i^*,b)^{B(b)}\right) \\ %
+                     &=0 \text{ from \cref{thm:SI_Reny}}
+                 \end{align}
+                 $\prod_{b\in \B}f_i(x_i,b)^{B(b)}$ is a log-concave function since $B(b)\geq0$, $f_i(x_i,b)$ is log-concave in $x_i$, and the product of log-concave functions is a log-concave function. This implies that $\pdv{u_i(\mathbf{x})}{x_i}|_{\mathbf{x}=\mathbf{x^*}}=0$ uniquely for $x^*$. Given \cref{def:SI_symmetric_influencers} this further implies $\pdv{u_i(\mathbf{x})}{x_i}|_{\mathbf{x}=\mathbf{x^*}}=0 $ uniquely for the same $x^*_i$ for all players $i\in I$. Thus there can be no other symmetric Nash equilibrium.  
+             \end{proof}
+             This result is essential for our analysis later, where we show that the symmetric Nash equilibrium stability conditions can help determine whether a system will converge to mixed Nash equilibria. 
+             
+        \subsection{Stability of Symmetric Nash Equilibria in Symmetric Influencer Games}
+            Now we know that for symmetric log-concave influencer games there exists a unique symmetric Nash equilibrium. We can now further explore the stability of this symmetric Nash equilibrium via its Jacobian. 
+            \begin{theorem}[Jacobian for symmetric Nash equilibrium in influencer games]\label{thm:SI_Jacobian}
+                For a general symmetric influencer game with a board that has $L$ dimensions i.e. $\D\subset \mathbb{R}^{L}$ $L\in \N$ and influence kernels $f_i(x_i,b)$ then the Jacobian has the form
+                \begin{equation}\label{eq:paper_jacobian_general}
+                    \mathbf{J}_{\mathbf{u}}=\begin{pmatrix}
+                        A & B& \cdots & B \\ %
+                        B & A & \cdots & B \\ %
+                        \vdots &  & \ddots &\vdots  \\ %
+                        B& B & \cdots & A \\ %
+                        \end{pmatrix}
+                \end{equation}
+            where $A=\beta_{i,i}$ and $B=\beta_{i,j}$ $i\neq j$ are $L\times L$ blocks with 
+            \begin{align}
+                \beta_{(i,j)}=\begin{pmatrix}
+                    \pdv[2]{u_i(\mathbf{x})}{x_{(j,1)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*} & \pdv[2]{u_i(\mathbf{x})}{x_{(j,2)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*}& \cdots &\pdv[2]{u_i(\mathbf{x})}{x_{(j,L)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*} \\ %
+                    \pdv[2]{u_i(\mathbf{x})}{x_{(j,1)}}{x_{(i,2)}}|_{\mathbf{x}=\mathbf{x}^*} & \pdv[2]{u_i(\mathbf{x})}{x_{(j,2)}}{x_{(i,2)}}|_{\mathbf{x}=\mathbf{x}^*}& \cdots &\pdv[2]{u_i(\mathbf{x})}{x_{(j,L)}}{x_{(i,2)}}|_{\mathbf{x}=\mathbf{x}^*} \\ %
+                    \vdots & \quad & \ddots  & \vdots \\ %
+                    \pdv[2]{u_i(\mathbf{x})}{x_{(j,1)}}{x_{(i,L)}}|_{\mathbf{x}=\mathbf{x}^*} & \pdv[2]{u_i(\mathbf{x})}{x_{(j,2)}}{x_{(i,L)}}|_{\mathbf{x}=\mathbf{x}^*}& \cdots &\pdv[2]{u_i(\mathbf{x})}{x_{(j,L)}}{x_{(i,L)}}|_{\mathbf{x}=\mathbf{x}^*}
+                \end{pmatrix}
+            \end{align}
+            With $A=\beta_{i,i}= \beta_{j,j}$ for all $i,j\in I$ and $B=\beta_{i,j}= \beta_{s,t}$ $\forall i,j,s,t\in I$ such that $i\neq j$ and $s\neq t$. Hence $J_\mathbf{u}$ is a symmetric matrix of symmetric blocks.  
+            \end{theorem}
+            \begin{proof}
+                The crux of this proof is showing two things 
+                \begin{align}
+                    A&=\beta_{i,i}=\beta_{j,j} \; \forall i,j\in I \label{eq:SI_Jacobian_diag_sym} \\ %
+                    B&= \beta_{i,j}=\beta_{s,t} \; \forall \set{(i,j,s,t)\in I|i\neq j, s\neq t} \label{eq:SI_Jacobian_off_sym} 
+                \end{align}
+                where $\cref{eq:SI_Jacobian_diag_sym}$ shows that the diagonal is symmetric and \cref{eq:SI_Jacobian_off_sym} shows the off diagonal is symmetric. The next two steps show these symmetries. 
+                \begin{enumerate}
+                    \item[] \textbf{Part 1:} Our goal is to show the following
+                    \begin{align}
+                        \pdv[2]{u_i(\mathbf{x})}{x_{(i,L)}}{x_{(i,l)}}&=\pdv[2]{u_i(\mathbf{x})}{x_{(i,l)}}{x_{(i,L)}} \label{eq:SI_Jacobian_intra_dim_sym}\\ %
+                        \pdv[2]{u_i(\mathbf{x})}{x_{(i,l)}}{x_{(i,L)}}|_{\mathbf{x}=\mathbf{x}^*}&=\pdv[2]{u_i(\mathbf{x})}{x_{(j,L)}}{x_{(j,l)}}|_{\mathbf{x}=\mathbf{x}^*} \label{eq:SI_Jacobian_inter_player_diag_sym}
+                    \end{align}
+                     \Cref{eq:SI_Jacobian_intra_dim_sym} is intra-player: dimensional order symmetry, i.e. that the order in which we differentiate along the dimensions of player $i$'s strategy are arbitrary for symmetric influencer games. \Cref{eq:SI_Jacobian_inter_player_diag_sym} is inter-player diagonal (block) symmetry
+                     
+                    
+                    We begin by recalling the following definition, 
+                    \begin{align}
+                        \pdv{u_i}{x_{(i,l)}}&=\sum_{b\in\mathbb{B}} B(b)\pdv{}{x_{(i,l)}}\ln(f_i(x_i,b)) \cdot G_i(\mathbf{x},b) G_i^c(\mathbf{x},b),
+                    \end{align}
+                    for ease of notation we let
+                    \begin{equation}
+                        d_{(i,l)}(b)=\pdv{}{x_{(i,l)}}\ln(f_i(x_i,b))
+                    \end{equation}
+                    Then we can rewrite the partial derivative as, 
+                    \begin{align}
+                        \pdv{u_i}{x_{(i,l)}}&=\sum_{b\in\mathbb{B}} B(b) d_{(i,l)}(b)\cdot G_i(\mathbf{x},b) G_i^c(\mathbf{x},b) \\ %
+                        \implies \pdv[2]{u_i}{x_{(i,L)}}{x_{(i,l)}}&=\sum_{b\in\mathbb{B}} B(b)\cdot G_i(\mathbf{x},b) G_i^c(\mathbf{x},b)\left[\pdv{}{x_{(i,L)}} d_{(i,l)}(b)+ d_{(i,l)}(b) d_{(i,L)}(b)(G^C(\mathbf{x},b) -G(\mathbf{x},b) )\right] \label{eq:SI_jacobians_A}.
+                    \end{align}
+                    Due to symmetry and $f_{i}(x_i,b)\in C^2(\D,\B)$ 
+                    \begin{align}
+                        \pdv{}{x_{(i,L)}} d_{(i,l)}(b) = \pdv{}{x_{(i,l)}} d_{(i,L)}(b),
+                    \end{align}
+                    the orders of the derivatives don't conflict. This implies that 
+                    \begin{equation}
+                        \pdv[2]{u_i}{x_{(i,L)}}{x_{(i,l)}}=\pdv[2]{u_i}{x_{(i,l)}}{x_{(i,L)}}.
+                    \end{equation}
+
+                    
+                    Furthermore,
+                    \begin{align}
+                        G_{i}(\mathbf{x},b)|_{\mathbf{x}=\mathbf{x}^*}&=G_{j}(\mathbf{x},b)|_{\mathbf{x}=\mathbf{x}^*}\ \\ % %
+                        d_{i,l}(b)|_{\mathbf{x}=\mathbf{x}^*}&= d_{j,l}(b)|_{\mathbf{x}=\mathbf{x}^*}\; \forall i,j\in I \\ %
+                        \implies \pdv[2]{u_j}{x_{(j,L)}}{x_{(j,l)}}|_{\mathbf{x}=\mathbf{x}^*}&=\pdv[2]{u_i}{x_{(i,L)}}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}
+                    \end{align}
+                    this shows that $A=\beta_{i,i}=\beta_{j,j}\;  \forall i,j\in I$. 
+                \item[] \textbf{Part 2:} now we must show that
+                    \begin{align}
+                        \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}&=\pdv[2]{u_i}{x_{(j,l)}}{x_{(i,L)}}\label{eq:Jacobian_inter_player_sym} \\ %
+                        \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}&=\pdv[2]{u_j}{x_{(j,L)}}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}
+                        \label{eq_Jacobian_inter_off_sym}
+                    \end{align}
+                    \Cref{eq:Jacobian_inter_player_sym} is the intra-player: player order symmetry, i.e. showing that order of differentiation with respect to player is arbitrary for symmetric influencer games. \Cref{eq_Jacobian_inter_off_sym} is the inter-player off diagonal (block) symmetry. 
+
+                    
+                    Again, we look back to the definition of 
+                    \begin{align}
+                        \pdv{u_i}{x_{(i,l)}}&=\sum_{b\in\mathbb{B}} B(b) d_{(i,l)}(b)\cdot G_i(\mathbf{x},b) G_i^c(\mathbf{x},b), \\ %
+                        \implies \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}&=-\sum_{b\in\mathbb{B}} B(b)\cdot G_i(\mathbf{x},b) G_j(\mathbf{x},b)\left[ d_{(i,l)}(b) d_{(j,L)}(b)(G_i^c(\mathbf{x},b) -G_i(\mathbf{x},b) )\right]. \label{eq:SI_jacobians_B}
+                    \end{align}
+                    Now the following relationship becomes apparent,
+                    \begin{equation}
+                         \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}=\pdv[2]{u_i}{x_{(j,l)}}{x_{(i,L)}}.
+                    \end{equation}
+                    Due to the properties of symmetry 
+                    \begin{align}
+                         G_{i}(\mathbf{x},b)|_{\mathbf{x}=\mathbf{x}^*}&=G_{j}(\mathbf{x},b)|_{\mathbf{x}=\mathbf{x}^*}\ \\ %
+                        d_{i,l}(b)|_{\mathbf{x}=\mathbf{x}^*}&= d_{j,l}(b)|_{\mathbf{x}=\mathbf{x}^*}\; \forall i,j\in I \\ %
+                        \implies \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}&=\pdv[2]{u_j}{x_{(i,L)}}{x_{(j,l)}}|_{\mathbf{x}=\mathbf{x}^*}
+                    \end{align}
+                    Thus, $B=\beta_{i,j}=\beta_{j,i} \; \forall i,j\in I$.  
+                \end{enumerate}
+                 
+            \end{proof}
+            Given the form of $\mathbf{J}_{\mathbf{u}}$ we can use a useful theorem from Sothanaphan regarding block matrices \cite{sothanaphan2017determinants}.
+            \begin{theorem}[Sothanaphan determinant of symmetric block matrices]\label{thm:SI_Soth}
+                A matrix with the form $\mathbf{J}_{\mathbf{u}}$ has the determinant
+                \begin{equation}
+                    Det(\mathbf{J}_{\mathbf{u}})=Det(A-B)\cdot Det(A+B)=Det(A^+)\cdot Det(A^-) 
+                \end{equation}
+            \end{theorem}
+            Thus the problem of solving for the stability of a symmetric Nash equilibrium is simplified to finding when the maximum eigenvalues of the $L \times L$ matrices $A^+$ and $A^-$ are greater than zero. Note this does not tell us the multiplicity of the eigenvalues created by the increase in the number of players, but increasing the number of players doesn't make the calculation more computationally difficult. This result is applicable across game board and resource distribution dimensions. 
+            \subsubsection{One Dimensional Influencer Games}
+                
+                 For 1-D  symmetric influencer games if players are in the same position then \cref{thm:SI_Jacobian} implies the Jacobian of the system is given by 
+                \begin{equation}
+                    \mathbf{J}_{\mathbf{u}}^*=\begin{pmatrix}
+                    a & b& \cdots & b\ \\ %
+                    b & a & \cdots & b\ \\ %
+                    \vdots &  & \ddots &\vdots \\ %
+                    b & b & \cdots & a\ \\ %
+                    \end{pmatrix}.
+                \end{equation}
+                where $a,b$ are one-by-one blocks. In order for a point $\mathbf{x}^*$ to be stable by \cref{thm:SI_Soth} we must find the maximum of the two eigenvalues $\lambda_1=a-b$ and $\lambda_2=a+2b$ of $\mathbf{J}_{\mathbf{u}}$. 
+                \begin{theorem}\label{thm:SI_one-dimensional-stability}
+                    For a symmetric n-player influencer game with influence kernels $f_i(x_i,b)$ we find the stability of a symmetric Nash equilibrium $\mathbf{x}^{*}=(x^*,x^*,\dots,x^*)$ is determined by 
+                    \begin{equation}\label{eq:SS_threshold_1d_general}
+                        \sum_{b\in\B}B(b)((n-1)d'(b)+(n-2)d^2(b)) <0
+                    \end{equation}
+                    or in another form 
+                    \begin{equation}
+                         -\sum_{b\in \B} B(b)d'(b)>\frac{n-2}{n-1}\sum_{b\in \B} B(b)d^2(b)
+                    \end{equation}
+                    where $d(b)=d_i(x_i,b)|_{x_i=x^*}=d_j(x_j,b)|_{x_j=x^*}$ and $d'(b)=\pdv{}{x_i}d_i(x_i,b)|_{x_i=x^*}=\pdv{}{x_j}d_j(x_j,b)|_{x_j=x^*}$ for all players $i,j\in I$.   
+                \end{theorem}
+                \begin{proof}
+                    Let $\mathbf{J}_\mathbf{u}^*$ be the Jacobian at the symmetric Nash equilibrium from \cref{thm:SI_Jacobian}, such that 
+                    \begin{align}
+                    \mathbf{J}_{\mathbf{u}}^*&=
+                        \begin{pmatrix}
+                            a & b& \cdots & b \\ %
+                            b & a & \cdots & b \\ %
+                            \vdots &  & \ddots &\vdots  \\ %
+                            b & b & \cdots & a \\ %
+                        \end{pmatrix}
+                    \end{align}
+                    We have the following partial derivatives for a 1-d system with 
+                    \begin{align}
+                        \pdv[2]{u_{i}}{x_{i}}&=\sum_{b\in \B} B(b)G_{i}(\mathbf{x},b)G_{i}(\mathbf{x},b)^c(\pdv{}{x_i}d_i(x_i,b)+d_i(x_i,b)^2[G_{i}(\mathbf{x},b)^c-G_{i}(\mathbf{x},b)]) \\ %
+                        \pdv[]{u_{j}}{x_{i}}{x_{j}}=\pdv[]{u_{i}}{x_{j}}{x_{i}}&=-\sum_{b\in \B} B(b)G_{i}(\mathbf{x},b)G_{j}(\mathbf{x},b)(d_i(x_i,b)d_{j}(x_j,b)[G_{i}(\mathbf{x},b)^c-G_{i}(\mathbf{x},b)])
+                    \end{align}
+                    Now at equilibrium ($\mathbf{x}^*$) we have
+                    \begin{align}
+                        a&=\pdv[2]{u_{i}}{x_{i}}|_{\mathbf{x}=\mathbf{x}^*}=\sum_{b\in \B} B(b)\frac{n-1}{n^2}\left(d'(b)+d^2(b)\frac{n-2}{n}\right) \\ %
+                        b&=\pdv[]{u_{i}}{x_{i}}{x_{j}}|_{\mathbf{x}=\mathbf{x}^*}=-\sum_{b\in \B} B(b)\frac{n-2}{n^2}d^2(b)
+                    \end{align}
+                    where $d(x^*,b)=d_i(x_i^*,b)=d_j(x_j^*,b)$ and $d'(x^*,b)=\pdv{}{x_i}d_i(x_i,b)|_{x_i=x_i^*}=\pdv{}{x_j}d_j(x_j,b)|_{x_j=x_j^*}$ for all $i,j\in I$. Now we have $E_{\lambda}(\mathbf{J}_{u}^*)=\set{(a-b),(a+2b)}$, but clearly $b<0$ which implies that $\max(E_{\lambda}(\mathbf{J}_{u}^{*}))=a-b$. From the above equations for $a,b$ we have 
+                    \begin{align}
+                        a-b&=\sum_{b\in \B}\frac{1}{n^2}B(b)((n-1)d'(b)+(n-2)d^2)
+                    \end{align}
+                    In order for the symmetric Nash equilibrium to be stable we must have $a-b<0$. 
+                \end{proof}
+                
+                \begin{corollary}
+                    A direct result from \cref{thm:SI_one-dimensional-stability} is that any symmetric 1-D strictly log-concave two player influence game will have a unique stable symmetric Nash equilibrium. 
+                \end{corollary}
+                \begin{proof}
+                    \cref{thm:SI_one-dimensional-stability} and $N=2$ implies stability since
+                    \begin{equation}
+                          -\sum_{b\in \B} B(b)d'(b)>\frac{n-2}{n-1}\sum_{b\in \B} B(b)d^2(b)=0
+                    \end{equation}
+                    is always true given $d'(b)\leq 0$ because $\ln(f_i(x_i,b))$ is strictly concave. 
+                \end{proof}
+            \subsubsection{Multi-dimensional Spatial Influencer Games}
+                Because there are many eigenvalues of $A^+$ and $A^-$ for games in more than one dimension it is not possible to generalize the condition for stability of a symmetric Nash in any dimension, but we may examine each dimensional case by case. However, if we limit ourselves to two players it is possible to generally analyze when a symmetric two-player Nash equilibrium is stable across dimensions.
+                
+                \begin{lemma}[Multi-Dimensional 2 player influencer game symmetric Nash stability ] \label{lem:SI_two_player_stability_multi_dim}
+                    A 2-player symmetric strictly log-concave influencer game with $\D\subset \R^L$ and $\B\subset \R^L$ $L\in \N$ dimensions has an always stable unique symmetric Nash equilibrium if the influence functions are log-linear with respect to their dimensions. I.e. 
+                    \begin{equation}
+                        \pdv{}{x_{(i,s)}}{x_{(i,l)}}\ln(f_{i}(x_i,b))=0 \;\forall s,l=1,2,\dots,L
+                    \end{equation}
+                \end{lemma}
+                \begin{proof}
+                    Recall that the for higher dimensional games with $L>1$ dimensions, the Jacobian is of the form
+                    \begin{equation}
+                        \mathbf{J}_{\mathbf{u}}=\begin{pmatrix}
+                            A & B& \cdots & B \\ %
+                            B & A & \cdots & B \\ %
+                            \vdots &  & \ddots &\vdots  \\ %
+                            B& B & \cdots & A \\ %
+                            \end{pmatrix}
+                    \end{equation}
+                    where $A$ and $B$ are $L\times L$ blocks. Thus $Det(\mathbf{J}_{\mathbf{u}})=Det(A-B)\cdot Det(A+B)=Det(A^+)\cdot Det(A^-)$. The problem of solving for the stability of the system is simplified to finding when the maximum eigenvalues of the $L \times L$ matrices $A^+$ and $A^-$ is negative. However, in the 2-player case the off-diagonal block matrices $B$ are the zero matrix since
+                    \begin{align}
+                        G_i(\mathbf{x}^*,b)&=G^c_i(\mathbf{x}^*,b)\\
+                        \implies \pdv[2]{u_i}{x_{(j,L)}}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}&=-\sum_{b\in\mathbb{B}} B(b)\cdot G_i(\mathbf{x}^*,b) G_j(\mathbf{x}^*,b)\left[ d_{(i,l)}(b) d_{(j,L)}(b)(G_i^c(\mathbf{x}^*,b) -G_i(\mathbf{x}^*,b) )\right]=0
+                    \end{align}
+                    Therefore $A$ is reduced to the form 
+                    \begin{equation}
+                        A=\begin{pmatrix}
+                        a_{1} & c_{1,2}& \cdots &c_{1,L} \\ %
+                        c_{2,1} & a_{2} & \cdots & c_{2,L} \\ %
+                        \vdots &  & \ddots &\vdots  \\ %
+                        c_{L,1} & c_{L,2} & \cdots & a_{L} \\ %
+                        \end{pmatrix}
+                    \end{equation}
+                    where 
+                    \begin{align}
+                        a_{l}&= \pdv[2]{u_{i}}{x_{(i,l)}}=\sum_{b\in \B}B(b)\pdv[2]{}{x_{(i,l)}}ln(f_{i}(x_i,b)) \\ %
+                        c_{s,l}&=\pdv{u_i}{x_{(i,s)}}{x_{(i,l)}}=\sum_{b\in \B} B(b)\pdv{}{x_{(i,s)}}{x_{(i,l)}}\ln(f_{i}(x_i,b)).
+                    \end{align} 
+                    if $f_{i}(x_i,b)$ is log-concave with respect to $x_{(i,l)}$ this implies $a_l<0$, but $c_{(s,l)}$ could have any sign. However, if $f_{i}(x_i,b)$ is log-linear with respect to $x_{(i,1)},x_{(i,2)},\dots, x_{(i,L)}$ then $c_{(s,l)}=0$ for all $s,l= 1,\dots,L$ and $s\neq l$, implying the symmetric Nash equilibrium is always stable.
+                \end{proof}
+            Naturally, \cref{lem:SI_two_player_stability_multi_dim} isn't a catch-all result, since there are conditions where $f_i(x_i,b)$ is not log-linear but log-concave and still the game has a stable unique symmetric Nash equilibrium. Such cases include when $c_{s,l}$ is negative for all $s,l$ or more complex conditions.
+
+
+            Next we also look at the 2-dimensional stability conditions, which are more complex than 1-dimensional space. The 2-dimensional case, while still more complex than the 1-dimensional case, is relatively simple to examine and we can find a maximum eigenvalue for the Jacobian in general. However, extending the results to 3 dimensions, while possible, becomes a tedious calculation.
+            \begin{theorem}[2-Dim stability] \label{thm:SI_two_dimensional_stability}
+                If $T(I,\mathbf{X},\mathbf{u})$ is a symmetric influencer game with $\D,\B\subset \R^2$, influence kernels $f_i(x_i,b)\in C^2$, and symmetric Nash $\mathbf{x}^*=(x_1^*,x_2^*,\dots,x_N^*)$ ($x_i^*=(x_{(i,1)}^*,x_{(i,2)}^*)$). Then, $\mathbf{x}^*$ is stable if 
+                \begin{equation}
+                   (a_{11}-b_{11})+(a_{22}-b_{22})+ \sqrt{(a_{11}-a_{22}-b_{11}+b_{22})^2+4(a_{12}-b_{12})^2}<0
+                \end{equation} 
+                with each $a_{ij},b_{ij}$ defined as in \cref{eq:SI_jacobians_A} and \cref{eq:SI_jacobians_B}
+            \end{theorem}
+            \begin{proof}
+                Recall the Jacobian of a general symmetric influencer game is given by,  
+                \begin{equation}
+                    \mathbf{J}_u^*=\begin{pmatrix}
+                        A & B& \cdots & B \\ %
+                        B & A & \cdots & B \\ %
+                        \vdots &  & \ddots &\vdots  \\ %
+                        B& B & \cdots & A \\ %
+                        \end{pmatrix}.
+                \end{equation}
+                In the 2-dimensional case 
+                \begin{equation}
+                    A=\begin{pmatrix}
+                        a_{11} & a_{12} \\ %
+                        a_{21} & a_{22} \\ %
+                        \end{pmatrix}, \;
+                    B=\begin{pmatrix}
+                        b_{11} & b_{12} \\ %
+                        b_{21} & b_{22} \\ %
+                        \end{pmatrix},   
+                \end{equation}
+                with each $a_{ij},b_{ij}$ defined as in \cref{eq:SI_jacobians_A} and \cref{eq:SI_jacobians_B}. By \cref{thm:SI_Soth} we know that the eigenvalues of $\mathbf{J}_u^*$ are the same as the union of the eigenvalues of $A^+=A+B$ and $A^-=A-B$. Or
+                \begin{equation}
+                    E_\lambda(\mathbf{J}_u)=\set{\Lambda_-,\Lambda_+,\lambda_-,\lambda_+}
+                \end{equation}
+                where $E_\lambda(A^+)=\set{\Lambda_{\pm}}$ and $E_\lambda(A^-)=\set{\lambda_\pm}$. Each are defined as 
+                \begin{equation}
+                    \Lambda_{\pm}=\underset{\Lambda_a}{\underbrace{(a_{11}+b_{11})+(a_{22}+b_{22})}}\pm \underset{\Lambda_b}{\underbrace{\sqrt{(a_{11}-a_{22}+b_{11}-b_{22})^2+4(a_{12}+b_{12})^2}}}
+                \end{equation}
+                and 
+                \begin{equation}
+                    \lambda_{\pm}=\underset{\lambda_a}{\underbrace{(a_{11}-b_{11})+(a_{22}-b_{22})}}\pm \underset{\lambda_b}{\underbrace{\sqrt{(a_{11}-a_{22}-b_{11}+b_{22})^2+4(a_{12}-b_{12})^2}}}
+                \end{equation}.
+                  Our goal is $\lambda_m=\max(E_\lambda(\mathbf{J}_u))<0$. We find that $\lambda_m=\lambda_+$.
+                 There are two parts to determine this:
+                 \begin{enumerate}
+                     \item[] \textbf{Step 1:}
+                     Given that $\lambda_b,\Lambda_b\geq 0$ we know that $\lambda_{+},\Lambda_+\geq \lambda_{-},\Lambda_{-}$.
+                     \item[] \textbf{Step 2:}
+                      Since $b_{11},b_{22}<0$ it is given 
+                      \begin{equation}
+                          (a_{12}-b_{12})^2\geq (a_{12}+b_{12})^2\geq 0.
+                      \end{equation}
+                      So in the worst case we may assume that 
+                      \begin{equation}
+                          (a_{12}-b_{12})^2=(a_{12}-b_{12})^2=0 \label{eq:SI_2dim_assum}
+                      \end{equation}
+                      assuming that \cref{eq:SI_2dim_assum} is true then 
+                      \begin{align}
+                          \lambda_{+}&=2a_{11}-2b_{11}\\
+                          \Lambda_{+}&=2a_{11}+2b_{11}
+                      \end{align}
+                      Which implies that $\lambda_{+}\geq \Lambda_{+}$. Thus $\lambda_{+}=\lambda_{m}$
+                 \end{enumerate}  
+                In order for $\lambda_m<0$ the following must be true 
+                \begin{equation}
+                    (a_{11}-b_{11})+(a_{22}-b_{22})+ \sqrt{(a_{11}-a_{22}-b_{11}+b_{22})^2+4(a_{12}-b_{12})^2}<0
+                \end{equation}
+            \end{proof}
+                
+    \section{Rich Dynamics in One Dimensional Sentiment Landscapes}
+        From the previous section we have a toolbox to study most one-dimensional influencer games. To summarize, if our influencer game is in a 1-D game board i.e. $\D\subset \R$ and $\B\subset \R$, symmetric, and if the influence kernel is positive $f_{i}(x_i,B(b))>0$, in $C^2$ with respect to the strategy space $f_{i}(x_i,B(b))\in C^2(\D)$, and is quasi-concave for all players $i\in I$, we know of the existence of a symmetric Nash equilibrium by \cref{thm:SI_Reny}. Furthermore we can determine the stability of any symmetric Nash equilibrium via \cref{thm:SI_one-dimensional-stability}. Finally, if the influence kernels are log-concave with respect to their strategies then uniqueness of the Symmetric Nash is guaranteed \cref{thm:SI_uniqueness}. 
+        \subsection{Gaussian Influence Kernels}\label{subsec:SI_Gaussian}
+            One of the most popular models for measuring influence kernels has been the Gaussian model of influence. Gaussian kernels have been used to approximate political influence \cite{yang2020us} as well as species home ranges and territories in ecology \cite{}. A Gaussian influence kernel has the following form: 
+            \begin{definition}[Gaussian influence]
+                A player $i\in I$ using strategy $x_i\in \D$, $\D\subset\R$, $\B\in \R$, and Gaussian influence with 'reach' $\sigma_i$, has the influence kernel
+                \begin{equation}\label{eq:SI_Gaussian_infl}
+                    f_i(x_i,b)=\frac{1}{\sqrt{2\pi \sigma_i}}e^{-\frac{(b-x_i)^2}{2\sigma_i^2}}
+                \end{equation}
+            \end{definition}
+            If the game is symmetric then $\sigma=\sigma_i$ for all $i\in I$. 
+            
+            \subsubsection{Symmetric Nash equilibrium}
+            \begin{corollary}[Symmetric Gaussian influence Symmetric Nash Equilibrium]\label{cor:SI_stability_Gaussian}
+                If $T$ is a symmetric influencer game with influencers using influence equations as defined in \cref{eq:SI_Gaussian_infl}, and resource distribution $B(b)$, such that $\D\subset \R$ and $\B\subset \R$. Then the $T$ has a unique symmetric Nash equilibrium $\mathbf{x}^*=(x_1^*,x_2^*,\dots,x_N^*)$ with $x_i\in \D$ for all $i\in I$, at 
+                \begin{equation}
+                    x_i^*=\frac{\sum_{b\in \B}b \cdot B(b) }{\sum_{b\in \B}B(b)}
+                \end{equation}
+                equivalently $x_i^*=\mathbb{E}(B)$ if $x_i^*\in \D$ else a symmetric Nash will be on the boundary of $\D$. 
+            \end{corollary}
+            \begin{proof}
+                From \cref{lem:SI_requirements} we know that 
+                \begin{equation}
+                    \pdv{u_i(\mathbf{x})}{x_i}|_{\mathbf{x}=\mathbf{x^*}}=0
+                \end{equation}
+                and this is a unique Symmetric Nash equilibrium \cref{thm:SI_uniqueness} if $\mathbf{x}^*\in \D$ or $x_i^*$ must be on the boundary of $\mathbb{D}$. This follows from  
+                \begin{align}
+                     \pdv{u_i(\mathbf{x})}{x_{i}}&= \sum_{b\in \B} B(b)d_{i}(x_{i},b)G_i(\mathbf{x},b)G_i^c(\mathbf{x},b) \\ %
+                     &= \sum_{b\in \B} B(b)\frac{(b-x_i)}{2\sigma^2}G_i(\mathbf{x},b)G_i^c(\mathbf{x},b) \\ %
+                     \implies \pdv{u_i(\mathbf{x})}{x_{i}}|_{\mathbf{x}=\mathbf{x}^*}&=\sum_{b\in \B} B(b)\frac{(b-x_i^*)}{2\sigma^2}G_i(\mathbf{x}^*,b)G_i^c(\mathbf{x}^*,b) \\ %
+                     &=\frac{n-1}{n^2}\sum_{b\in \B}B(b)\frac{(b-x_i^*)}{2\sigma^2}
+                \end{align}
+                by \cref{lem:SI_requirements} we need this to be zero. 
+                \begin{align}
+                    \pdv{u_i(\mathbf{x})}{x_{i}}|_{\mathbf{x}=\mathbf{x}^*}&=0 \\ %
+                    \implies 0&=\frac{n-1}{n^2}\sum_{b\in \B}B(b)\frac{(b-x_i^*)}{2\sigma^2} \\ %
+                    &=\sum_{b\in \B}B(b)(b-x_i^*) \\ %
+                    &=\sum_{b\in \B}bB(b)-\sum_{b\in \B}B(b)x_i^* \\ %
+                    \implies x_i^*&=\frac{\sum_{b\in \B} bB(b)}{\sum_{b\in \B}B(b)}
+                \end{align}
+            \end{proof}            
+            So the unique symmetric Nash for a symmetric influencer game with $N$ players is the mean of the resource distribution.  
+            \subsubsection{Stability of the Symmetric Nash Equilibrium}
+            Following \cref{thm:SI_one-dimensional-stability} we have the following corollary on the stability of a symmetric Gaussian influence game. 
+            \begin{corollary}[Stability of the Symmetric Gaussian Influencer game's Symmetric Nash equilibrium]
+                If $T$ is a symmetric influencer game with Gaussian influence kernels with the internal symmetric Nash equilibrium
+                \begin{equation}
+                    x^*_i=\frac{\sum_{b\in \B} bB(b)}{\sum_{b\in \B}B(b)}
+                \end{equation}
+                then this Nash is stable if 
+                \begin{equation}
+                    \sigma > \sqrt{\frac{n-2}{n-1}} \sigma_B=t_*
+                \end{equation}
+                where 
+                \begin{equation}
+                    \sigma_b=\sqrt{\frac{\sum_{b=1}b^2B(b)-(\sum_{b\in\B}bB(b))^2}{\sum_{b\in\B}B(b)}}=\sqrt{Var(B)}
+                \end{equation}
+            \end{corollary}
+            If $\sigma>t_*$ then the symmetric Nash is stable. 
+            \begin{proof}
+                From \cref{thm:SI_one-dimensional-stability}
+                \begin{equation}
+                     -\sum_{b\in \B} B(b)d'(b)>\frac{n-2}{n-1}\sum_{b\in \B} B(b)d^2(b)
+                \end{equation}
+                We can expand,
+                \begin{align}
+                    d'(b)&=\pdv{}{x_i}d_i(x_i,b)\; \forall i\in I \\ %
+                    &=\pdv{}{x_i}\frac{(b-x_i)}{\sigma^2} \\ %
+                    &=-\frac{1}{\sigma^2}
+                \end{align}
+                and 
+                \begin{align}
+                    d^2(b)&=d_i^2(x^*_i,b) \\ %
+                    &=\frac{(b-x^*_i)^2}{\sigma^4} \\ %
+                    &=\frac{1}{\sigma^4}(b^2-2bx^*_i+(x^*_i)^2) \\ %
+                    x_i^*&=\frac{\sum_{b\in\B} bB(b)}{\sum_{b\in\B}B(b)}=\mathbb{E}[B] \\ %
+                    \implies d^2(b)&=\frac{1}{\sigma^4}(b^2-2b\mathbb{E}[B]+\mathbb{E}[B]^2).
+                \end{align}
+                Thus we can simplify 
+                \begin{align}
+                      -\sum_{b\in \B} B(b)d'(b)&>\frac{n-2}{n-1}\sum_{b\in \B} B(b)d^2(b) \\ %
+                      \implies \frac{1}{\sigma^2}\sum_{b\in \B} B(b)&>\frac{n-2}{n-1}\frac{1}{\sigma^4}\sum_{b\in \B} B(b)(b^2-2b\mathbb{E}[B]+\mathbb{E}[B]^2) \\ %
+                     \sigma>0 \implies  \sigma^2&>\frac{n-2}{n-1}\frac{\sum_{b\in \B} B(b)b^2-2\mathbb{E}[B]\sum_{b\in \B} bB(b)+\mathbb{E}[B]^2\sum_{b\in \B} B(b))}{\sum_{b\in \B} B(b)} \\ %
+                     &=\frac{n-2}{n-1}\left(\frac{\sum_{b\in \B} B(b)b^2}{{\sum_{b\in \B} B(b)}}-2\mathbb{E}[B]^2+\mathbb{E}[B]^2\right) \\ %
+                     &=\frac{n-2}{n-1}\left(\mathbb{E}[B^2]-\mathbb{E}[B]^2\right) \\ %
+                     &=\frac{n-2}{n-1}Var(B) \\ %
+                     \implies \sigma&>\sqrt{\frac{n-2}{n-1}} \sigma_B
+                \end{align}
+            \end{proof}
+            Essentially, we have that if the mean of the resources lies within the possible positions $\mathbb{D}$ space for an influencer game with $N$ players using symmetric Gaussian influence kernels, then the players may converge to the mean of the resources if the variance of their influence kernel is greater than a rescaling of the resource distribution's variance. Note that even as $N\to \infty$ $\frac{N-2}{N-1}\to 1$, implying that scaling approaches one as the number of players increases. Thus it is easier for players to converge to a symmetric Nash in a symmetric influencer game with Gaussian influence kernels when there are fewer players and the symmetric Nash is guaranteed stable with 2 players. 
+            
+        \subsection{Bifurcation of Equilibria into Local Games in Symmetric Influencer Games}
+            The results of \cref{subsec:SI_Gaussian} show what happens for $\sigma>t_*$. It is natural to explore what happens when $\sigma \leq t_*$. We know that the symmetric Nash is now unstable, so the stable Nash equilibria that players converge to must now be mixed Nash equilibria if they exist. In fact, exploring an influencer game with $\sigma<t_*$ empirically we may expect that these mixed Nash equilibria will resemble local Nash equilibria; we explore this behavior with a symmetric resource distribution in \cref{fig1}
+            \begin{figure}[ht!] 
+                \centering
+                \begin{subfigure}[b]{0.4\linewidth}
+                    \centering
+                    \includesvg[width=\textwidth]{figures/SI_plots/3_2/fig1/1d_bimodal_alpha_05.svg}
+                    \caption{The resource distribution used in the next figures. It is bimodal and symmetric around $x=0.5$ which is the mean and median of the distribution}
+                    \label{fig1:a}
+                \end{subfigure}
+                
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_2_agents.svg} 
+                    \caption{2 players} 
+                    \label{fig1:b} 
+                    \vspace{4ex}
+                \end{subfigure}%% 
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_3_agents.svg} 
+                    \caption{3 players} 
+                    \label{fig1:c} 
+                    \vspace{4ex}
+                \end{subfigure} 
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_4_agents.svg} 
+                    \caption{4 players} 
+                    \label{fig1:d}
+                    \vspace{4ex}
+                \end{subfigure}%%
+                
+                
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_5_agents.svg} 
+                    \caption{5 players }  
+                    \label{fig1:e} 
+                    \vspace{4ex}
+                \end{subfigure}
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_6_agents.svg} 
+                    \caption{6 players} 
+                    \label{fig1:f} 
+                    \vspace{4ex}
+                \end{subfigure}
+                \begin{subfigure}[b]{0.3\linewidth}
+                    \centering
+                    \includesvg[width=1\linewidth]{figures/SI_plots/3_2/fig1/1d_bifurcation_8_agents.svg} 
+                    \caption{8 players } 
+                    \label{fig1:g}
+                    \vspace{4ex}
+                \end{subfigure} 
+                \caption{The bifurcations as $\sigma$ decreases for an asymmetric initial position $n-$player(s) game with between 2 and 8 players.}
+                \label{fig1} 
+            \end{figure}
+            \clearpage
+
+
+
+
+            
+            \subsubsection{Explanation for Behavior} 
+                Though \cref{fig1} demonstrates bifurcations, it also demonstrates how having different numbers of players can have a tremendous effect on how the system bifurcates. We see in \cref{fig1:b,fig1:c,fig1:d,fig1:e} that a symmetric Nash will split into multiple different groups. Typically as $\sigma \to 0$ there are separate thresholds for each group before they bifurcate further, until a game reaches a mixed equilibrium consisting of a set of strategic positions, each of which have at most two players associated with it. One possible explanation for a bifurcation is that the games split into local games that themselves have local symmetric Nash equilibria. So the global game has mixed equilibria but the local games have unique symmetric Nash equilibria. If this is true then the results in \cref{subsec:SI_Gaussian} will extend to these local games. 
+                \begin{equation}
+                    \sigma>\sqrt{\frac{n-2}{n-1}} \sigma_{local}
+                \end{equation}
+                where $\sigma_{local}$ is the local standard deviation of a local distribution of resources. In reality, this is difficult to calculate and prove. But we can approximate this for some distributions via an empirical estimate.
+                
+            \subsubsection{Estimate for Higher Order Bifurcation Thresholds}
+                One of the features of a symmetric influencer game is that as $\sigma\to 0$ a player's influence behaves more like players have total control of the resources that they are closest to. This is looks like \cref{fig2}
+
+                \begin{figure}[htbp!]
+                \centering
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \includesvg[width=\textwidth]{figures/SI_plots/3_2_2/fig2/1d_probability_2_agents_sig_100.svg}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                       \includesvg[width=\textwidth]{figures/SI_plots/3_2_2/fig2/1d_probability_2_agents_sig_25.svg}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                       \includesvg[width=\textwidth]{figures/SI_plots/3_2_2/fig2/1d_probability_2_agents_sig_03.svg}
+                    \end{subfigure}
+                    \caption{a-c show the impact that changing $\sigma$ has on the players influence densities. Going left (a) to right (c) $\sigma=1,0.25,\approx 0$}.
+                    \label{fig:2}
+                \end{figure}
+                If we assume that groups of influencers receive with near probability 1 the resources nearest to them, this provides an upper bound for $\sigma_{local}$. We can split the resources by assuming that the resource distribution is split into local distributions with local means. Given the original symmetric Nash was at the mean, we can assume that the local mean is the symmetric Nash for these distributions.
+                \begin{align}
+                    t^+&=\sqrt{\frac{m_{1}-2}{m_{1}-1}}\sigma_{B^+} \\ %
+                    t^-&=\sqrt{\frac{m_{2}-2}{m_{2}-1}}\sigma_{B^-}
+                \end{align}
+                where $m_{g}$ is the number of members in the group $g$. 
+                Here, 
+                \begin{equation}
+                    B^+(b)=\begin{cases}
+                        B(b) & \text{ if } b\geq \mathbb{E}(B) \\ %
+                        0 & \text{ else }
+                    \end{cases}
+                \end{equation}
+                and 
+                \begin{equation}
+                    B^-(b)=\begin{cases}
+                        B(b) & \text{ if } b<\mathbb{E}(B) \\ %
+                        0 & \text{ else }
+                    \end{cases}
+                \end{equation}
+                Then $\sigma_{B^\pm}=\sqrt{Var(B^\pm)}$ this is a first approximation. Recall that in \cref{fig:2} the players split the space at the median of their positions. Then a better approximation for their position would be the sub-division created by the median of the means of $B^+$ and $B^-$. We can do this iteratively, using the following pseudo-code:
+
+                               
+\begin{lstlisting}[language=Python]
+t_estimate(num_players,$B$,refinements):
+    #estimates the higher order bifurcations
+    #B: resource distribution
+    #refinements: for approximating splits of the resources
+    num_divisions=ceil(log2(num_players))
+    ts=[]
+    for num_division in range(num_divisions):
+    if division == 0:
+        $\mu_*=symmetric Nash(B)$
+        # calculates new t_i value(s) based on stability condition
+        $\sigma_*$=t_val(num_players,B)
+        mean_divisions=[$\mu_*$]
+        ts.append[$\sigma_*$]
+    else
+        splits=mean_divisions[division-1]
+        
+        #split players into groups assumes a split favoring the upper half
+        player_groups=split_favor_top(num_players, division)
+        
+        #refines the sub-symmetric Nashes assuming 
+        #players are splitting symmetrically
+        
+        for _ in range(refinements)
+            
+            #divides the resource distribution by
+            #splitting at the symmetric Nash 
+            B_splits=split(B,division,splits)
+            
+            #mid-point of the sub-symmetric ,Nashes
+            mid_point=(B_splits[1:] + B_splits[:-1]) / 2 
+            splits=mid_point
+        
+        #calculates new t_i values after refinement
+        $\sigma$_division=t_val(player_groups,$\text{Var}$(B_splits))
+        ts.append($\sigma$_division)        
+    return(ts)
+\end{lstlisting}
+
+            Where 
+            \begin{equation}
+               \text{split}(B(b),\mu^*)= (B^+,B^-) \quad B^\pm =\begin{cases}
+                    B^+ & \text{ if } b>\mu_*\\
+                    B^- & \text{ if } b<\mu_*
+                \end{cases}  
+            \end{equation}
+    
+    
+                
+            \subsubsection{Effects of Number of Players on Higher Order Bifurcation Behavior}
+                The number of players does have impacts on the bifurcations, especially in predicting later bifurcations. This is shown in the empirically in \cref{fig3}. In particular, the figures demonstrate that players that bifurcate into 5 or 3 players are likely to split into more than 2 groups when they bifurcate or they will bifurcate into smaller groups faster than our approximation. There are two factors that may cause the bifurcation behavior to be harder to predict: 3-player bifurcation behavior or the estimate of the resource distribution having a higher variance than the actual resource distribution. A 3-player system has unique bifurcation behavior which may cause the system to diverge more quickly. We devote a section later to discussing 3 player dynamics.
+
+                \begin{figure}[ht!] 
+                    \centering
+                    \begin{subfigure}[b]{0.4\linewidth}
+                        \centering
+                        \includesvg[width=\textwidth]{figures/SI_plots/3_2/fig1/1d_bimodal_alpha_05.svg}
+                        \caption{The resource distribution used in the next figures. It is bimodal and symmetric around $x=0.5$ which is the mean and median of the distribution}
+                        \label{fig3:a}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_8_agents.svg}
+                        \caption{8 players} 
+                        \label{fig3:b} 
+                        \vspace{4ex}
+                    \end{subfigure}%% 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_9_agents.svg} 
+                        \caption{9 players} 
+                        \label{fig3:c} 
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_10_agents.svg} 
+                        \caption{10 players} 
+                        \label{fig3:d}
+                        \vspace{4ex}
+                    \end{subfigure}%%
+                    
+                    
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_11_agents.svg} 
+                        \caption{11 players }  
+                        \label{fig3:e} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_12_agents.svg} 
+                        \caption{12 players} 
+                        \label{fig3:f} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig3/1d_bifurcation_16_agents.svg} 
+                        \caption{16 players } 
+                        \label{fig3:g}
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \caption{The bifurcations as $\sigma$ decreases for an asymmetric initial position $n-$player(s) game with 9, 10, 11, 12, and 16 players.}
+                    \label{fig3} 
+                \end{figure}
+                \clearpage
+                
+                
+                    
+                
+            \subsubsection{Effects of Asymmetric Resource Distribution on Bifurcation Behavior}
+                Some other effects that can impact bifurcation structure include the resource distribution shape itself. First, we show that symmetry has a major impact on how players bifurcate, leading to earlier than expected bifurcation and more asymmetric groups of players. In \cref{fig4} we see a new behavior as players switch groups based on the value of $\sigma$ they are at, but there are still the expected number of groups.
+                
+                \begin{figure}[ht!] 
+                    \centering
+                    \begin{subfigure}[b]{0.4\linewidth}
+                        \centering
+                        \includesvg[width=\textwidth]{{figures/SI_plots/3_2_3/fig4/1d_bimodal_alpha_05_asym.svg}}
+                        \caption{The resource distribution used in the next figures. It is bimodal and asymmetric, but relatively "smooth"}
+                        \label{fig4:a}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_3_agents.svg} 
+                        \caption{3 players} 
+                        \label{fig4:b} 
+                        \vspace{4ex}
+                    \end{subfigure}%% 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_4_agents.svg}
+                        \caption{4 players} 
+                        \label{fig4:c} 
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_5_agents.svg} 
+                        \caption{5 players} 
+                        \label{fig4:d}
+                        \vspace{4ex}
+                    \end{subfigure}%%
+                    
+                    
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_6_agents.svg} 
+                        \caption{6 players }  
+                        \label{fig4:e} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_7_agents.svg} 
+                        \caption{7 players} 
+                        \label{fig4:f} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig4/1d_bifurcation_8_agents.svg} 
+                        \caption{8 players } 
+                        \label{fig4:g}
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \caption{The bifurcations as $\sigma$ decreases for an asymmetric initial position $n-$player(s) game with between 3 and 8 players in an asymmetric resource distribution. In \cref{fig4:b,fig4:c,fig4:d,fig4:e,fig4:f} the first order approximate is still accurate and the second order approximate is still a good estimate for small numbers of players. However, Now players are switching groups for different values of $\sigma$ as in  \Cref{fig4:e,fig4:f,fig4:g} where players switch groups.}
+                    \label{fig4} 
+                \end{figure}
+                \clearpage
+            \subsubsection{Noisy Resource Distributions}
+                To push our prediction to the extreme, we create a noisy model with asymmetry in \cref{fig5}, in which we see that our prediction for higher-order bifurcations is at best a lower bound for $\sigma$ values after which the second-order bifurcation will not occur.                This is likely because $\sigma_{local}$ is being underestimated via our model at some point on the path between the expected first-order bifurcation and the second-order bifurcation.
+                \begin{figure}[ht!] 
+                    \centering
+                    \begin{subfigure}[b]{0.4\linewidth}
+                        \centering
+                        \includesvg[width=\textwidth]{figures/SI_plots/3_2_3/fig5/1d_bimodal_noisy.svg}
+                        \caption{The resource distribution used in the next figures. It is a "Noisy" resource distribution}
+                        \label{fig5:a}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_3_agents.svg} 
+                        \caption{3 players} 
+                        \label{fig5:b} 
+                        \vspace{4ex}
+                    \end{subfigure}%% 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_4_agents.svg} 
+                        \caption{4 players} 
+                        \label{fig5:c} 
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_5_agents.svg} 
+                        \caption{5 players} 
+                        \label{fig5:d}
+                        \vspace{4ex}
+                    \end{subfigure}%%
+                    
+                    
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_6_agents.svg} 
+                        \caption{6 players }  
+                        \label{fig5:e} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_7_agents.svg} 
+                        \caption{7 players} 
+                        \label{fig5:f} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_3/fig5/1d_bifurcation_8_agents.svg} 
+                        \caption{8 players } 
+                        \label{fig5:g}
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \caption{The bifurcations as $\sigma$ decreases for an asymmetric initial position $n-$player game with between 3 and 8 players in a "noisy" resource distribution. The distribution in \cref{fig5:a} represents a more noisy distribution. In \cref{fig5:b,fig5:c,fig5:d,fig5:e,fig5:f} the first order approximation is still accurate but any threshold prediction for bifurcations above first order is at best a minimum $\sigma$ value before which the bifurcation will occur. \Cref{fig5:g} with 8 players shows an interesting behavior, behaving like a 3-player system with groups of $3,2,3$ players before bifurcating. }
+                    \label{fig5} 
+                \end{figure}
+                \clearpage
+                
+        \subsection{Three Player Dynamics}
+            From the previous sections, we observe that three-agent systems are unique in their behavior. There are, in fact, multiple types of dynamics we can see with three-player influencer games, which depend on $\sigma$. An emergent behavior of the influencer game dynamics we observe is games with 3+ players having groups that behave like a 3-player system, converging to one of the 3-player dynamical regimes based on $\sigma$. This appears in \cref{fig3} for influencer games with 8+ players at small $\sigma$ and in \cref{fig5:g} when 8 players split into groups with member sizes $(3,2,3)$.
+            \begin{figure}[ht!] 
+            \centering
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_25.svg} 
+                    \caption{$\sigma=0.25$: 1 shared unique equilibrium } 
+                    \label{fig6:a} 
+                \end{subfigure} 
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_17.svg}
+                    \caption{$\sigma=0.17$: 1-separated symmetrical non-unique equilibrium} 
+                    \label{fig6:b} 
+                \end{subfigure} 
+                \vspace{4ex}
+            
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_16.svg}
+                    \caption{$\sigma=0.16$: dampening cycle about a non-unique equilibrium}
+                    \label{fig6:c} 
+                \end{subfigure}
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_15.svg}
+                    \caption{$\sigma=0.15$: cycle about a non-unique equilibrium} 
+                    \label{fig6:d} 
+                \end{subfigure} 
+                \vspace{4ex}
+        
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_08.svg} 
+                    \caption{$\sigma=0.08$: 1-separate an unsymmetrical non-unique equilibrium near peak} 
+                    \label{fig6:e} 
+                \end{subfigure} 
+           
+                \caption{For a 3 player 1-D game there can be 5 different equilibrium types. In the sub-figures there are two plots: on the left, the player positions in 3-D representation and on the right, the final player positions in 1-D. In \cref{fig6:a} the players converge to a unique equilibrium at large $\sigma$ ($\sim 0.25$). For \cref{fig6:b} the players converge to a dispersed non-unique equilibrium (determined by initial positions) ($\sigma \sim 0.17$). \cref{fig6:c} is slightly different, the players stay near the equilibrium in \cref{fig6:b} but they now have dampening cycles. \cref{fig6:d} demonstrates how the players could possibly be stuck in a cycle. Finally, in \cref{fig6:e} the players reach an equilibrium around one of the peaks of the resource distribution. Each of these figures assumes that the players are not starting in the same positions, since having the same position will lead to players converging to the coalesced equilibrium in \cref{fig6:a}.}
+                \label{fig6} 
+            \end{figure}
+                
+
+        \clearpage
+
+            
+        \subsection{Other Examples}
+            \subsubsection{Exponential Influence}
+                For a symmetric game with exponential influence if $\mathbb{D}=\R$ we can show that for the exponential distribution $x_i^{*}=\mathbb{E}(B)$ is a strategic equilibrium, is unique, and is stable if
+                \begin{equation}
+                    \sigma>\sqrt{\frac{n-2}{n-1}}\sigma_B.
+                \end{equation}   
+                \begin{proof}
+                    If players have the influence kernel,
+                    \begin{align}
+                        f_i(x_i,b)&=\frac{1}{x_i}e^{-\frac{b}{x_i}} \\ %
+                        \implies \pdv{u_i(\mathbf{x})}{x_{i}}&=\sum_{k=1}^{K}B_{k}\frac{b_{k}-x_i}{x_i^2}G_{(i,k)}G_{(i,k)}^c.
+                    \end{align}
+                    if $x_{i}=x^*_i$ for all players $i\in I$, then 
+                    \begin{align}
+                        \pdv{u(\mathbf{x})}{x_{i}}|_{\mathbf{x}=\mathbf{x}^*}&=0 \\ %
+                        \implies \sum_{k=1}^{K}B_{k}\frac{b_{k}-x_i^*}{(x_i^*)^2}&=0 \\ %
+                        \implies x_i^*= \frac{\sum_{k=1}^{K}b_kB_k}{\sum_{k=1}^{K}B_k}&=\mathbb{E}(B)
+                    \end{align}
+                    by \cref{thm:SI_one-dimensional-stability} $\mathbf{x}^*$ is stable if                    \begin{equation}
+                        \sigma>\sqrt{\frac{n-2}{n-1}}\sigma_B.
+                    \end{equation}
+                \end{proof}
+                The existence and uniqueness of the symmetric Nash in a symmetric influence game with exponential influence demonstrates that even for unbounded games our results may still apply assuming there exists an symmetric Nash. 
+            \subsubsection{Matt Jones Model}
+                In Jones et al. \cite{jones2022polarization}, the authors study an influencer game in a political context. In their work, they demonstrate how candidates' positions tend to diverge from a median symmetric equilibrium because of factors including the resource distribution shape, fixed third parties, and abstaining voters. We show in a later section how other influencer kernels can demonstrate the same results with 2+ players and that their model is still in alignment with our theoretical results.Their influence kernels are given by 
+                \begin{equation}\label{eq:SI_Jones_influence_kernel}
+                    f_i(x_i,b)=\abs{x_i-b}^p
+                \end{equation}
+                Our readers may notice that $\ln(f_i(x_i,b))$ is convex everywhere except for $x_i=b$ if $p<0$ and that $\ln(f_i(x_i,b))$ is concave everywhere except for $x_i=b$ if $p>0$. Recall that \cref{thm:SI_one-dimensional-stability} shows that such a function can never have a stable symmetric Nash equilibrium if it is convex everywhere. Thus, it would be natural to expect that $x^*$ is not stable for $p<0$.
+                \begin{proof}
+                    Let $f_i$ be Jones' influence kernel, then 
+                    \begin{align}
+                        d_i(x_i,b)&=\pdv{}{x_i}\ln(\abs{x_i-b}^p) \\ %
+                        &=p\frac{(x_i-b)}{\abs{x_i-b}^2} \\ %
+                        &=p\frac{1}{(x_i-b)}
+                    \end{align}
+                    and 
+                    \begin{align}
+                        \pdv{}{x_i}d_i(x_i,b)&=\pdv{}{x_i}p\frac{1}{(x_i-b)} \\ %
+                        &=-p\frac{1}{(x_i-b)^2}.
+                    \end{align}
+                    By \cref{thm:SI_one-dimensional-stability} we need the following inequality to be true for the symmetric equilibrium to be stable. 
+                    \begin{align}
+                        -\sum_{b\in \B}B(b)\pdv{}{x_i}d_i(x_i,b)&>\frac{n-2}{n-1}\sum_{b\in \B}B(b)d_i^2(x_i,b)
+                    \end{align}
+                    using the above equations for the Jones model
+                    \begin{align}
+                        \abs{p*\pdv{}{x_i}d_i(x_i,b)}&=d_i^2(x_i,b) \\ %
+                        \implies   p&>\frac{n-2}{n-1}p^2 \\ %
+                        \implies  \frac{1}{p}&>\frac{n-2}{n-1}\geq 0
+                    \end{align}
+                    Thus this condition can never be satisfied for $p<0$. Additionally since $n>1$ this implies that $p<2$ for games with three or more players. 
+                \end{proof}
+                While this is contrary to Jones' results it does not change the underlying takeaways of their model and we demonstrate how our model can demonstrate similar results in a later section. 
+                    
+       
+    
+    \section{Multi-Dimensional Sentiment Landscapes}
+        The results can be extended in aspects to multi-dimensional systems where $\D\subset \R^L$ and $\B\subset \R^L$ has more than 1 dimension. 
+        \subsection{Multi-Variate Gaussian Influence Kernel}
+             A natural extension of our 1-D results with Gaussian influence are multi-variate Gaussian influence kernels. Which have the form of
+            \begin{equation}
+                f_{i}(x_i,b)=\exp{-\frac{1}{2}(b-x_i)^T\cdot \Sigma^{-1} \cdot (b-x_i)}.
+            \end{equation}
+             The multivariate Gaussian kernel has more parameters than the single variate Gaussian; rather than just variance $\sigma$ as in the single variable case, the multivariate Gaussian kernel has a covariance matrix $\Sigma$. A covariance matrix looks like the following, 
+            \begin{align}
+                \Sigma&=\begin{pmatrix}
+                    \text{var}(x_{i,1}) & \text{cov}(x_{(i,1)},x_{(i,2)})& \cdots &  \text{cov}(x_{(i,1)},x_{(i,L)}) \\ %
+                    \text{cov}(x_{(i,1)},x_{(i,2)}) & \text{var}(x_{i,2})& \cdots &  \text{cov}(x_{(i,2)},x_{(i,L)}) \\ %
+                   \vdots & & \ddots &\vdots   \\ %
+                    \text{cov}(x_{(i,1)},x_{(i,L)}) & \text{cov}(x_{(i,2)},x_{(i,L)})& \cdots &  \text{var}(x_{i,L})
+                \end{pmatrix}.
+            \end{align}
+            Covariance matrices allow for studying the relationship between strategic components. 
+
+            The following corollary demonstrates that the Nash equilibria's behavior is very similar to that of the 1-dimensional case. 
+            \begin{corollary}
+                In general, if we let 
+                \begin{equation}
+                    \Sigma^{-1}=\begin{pmatrix}
+                        \gamma_{11}& \gamma_{12} & \cdots & \gamma_{1L} \\ %
+                        \gamma_{12}& \gamma_{22} & \cdots & \gamma_{2L} \\ %
+                        \vdots &  & \ddots & \vdots \\ %
+                        \gamma_{1L}& \gamma_{2L} & \cdots & \gamma_{LL} \\ %
+                    \end{pmatrix}
+                \end{equation}
+                the general solution for $x_{i}^{*}=(x_{(i,1)}^*,\dots,x_{(i,L)}^*)$ is 
+                \begin{equation}
+                    x_{(i,l)}^*=\frac{\sum_{b\in \B}B(b)\sum_{j\neq l}\gamma_{lj}b_{j}}{\gamma_{ll}\sum_{b\in \B}B(b)}-\sum_{\substack{j\neq l}}\gamma_{lj}x_{(i,j)}
+                \end{equation}
+                Thus the $i$th component of the symmetric Nash is given by 
+                \begin{equation}
+                    x_{(i,l)}^*=\frac{\sum_{b\in \B}B(b) b_{l}}{\sum_{b\in \B}B(b)}
+                \end{equation}
+                 i.e. $\mathbf{x}^{*}$ is the average of the resource distribution.
+            \end{corollary}
+            \begin{proof}
+                Using the definition of $f_i(x_i,b)$
+                \begin{align}
+                    d_{(i,l)}(x_i,b)&= \pdv{}{x_{(i,l)}}\ln(f_{i}(x_i,b)) \\ %
+                    &=\pdv{}{x_{(i,l)}}-\frac{1}{2}(b-x_i)^T\Sigma^{-1}(b-x_i) \\ %
+                    &=\pdv{}{x_{(i,l)}}-\frac{1}{2}\mathbf{u}_i^T\Sigma^{-1}\mathbf{u}_i \\ %
+                    &=\pdv{}{x_{(i,l)}}-\frac{1}{2}\sum_{k=1}^{L}\sum_{j=1}^{L}u_{(i,k)}u_{(i,j)}\gamma_{kj} \\ %
+                    &=\sum_{j=1}^{L}(b_j-x_{(i,j)})\gamma_{l,j}
+                \end{align}
+                Solving for the symmetric Nash then shows
+                \begin{align}
+                    \pdv{u}{x_{(i,l)}}|_{\mathbf{x}=\mathbf{x}^*}&=0 \\ % 
+                    \implies \sum_{b\in \B} B(b) \sum_{j=l}^{L}(b_j-x_{(i,j)}^*)\gamma_{lj}&=0 \\ %
+                    \implies x_{(i,l)}^*&=\frac{\gamma_{ll}\sum_{b\in\B} B(b)b_l+\sum_{b\in\B} B(b)\sum_{j\neq l}\gamma_{lj}(b_j-x_{(i,l)}^*)}{\gamma_{ll}\sum_{b\in\B}B(b)}
+                \end{align}
+                We find this equation is satisfied when 
+                \begin{equation}
+                    x_{(i,l)}^*=\frac{\sum_{b\in \B}B(b) b_{l}}{\sum_{b\in \B}B(b)}\; \forall i\in I,\; l=1,\dots,L.
+                \end{equation}
+                which is a unique pure Nash equilibrium via \cref{thm:SI_uniqueness}.
+            \end{proof}
+            
+            Like the 1-D Gaussian there are some very nice results regarding the mean of the resource distribution. Given the result above we can then examine the stability of $\mathbf{x}^{*}$ with regards to the resource distribution shape and parameters like covariance, and variance in each dimension. We demonstrate a simplified two dimensional example below where the strategic dimensions are independent and the variance is the same in both dimensions.  
+            \begin{corollary}[MVG: 2D Stability of the symmetric Nash with no covariance in the strategic dimensions]\label{cor:SI_mvg_stability}
+                If $T(I,\mathbf{X},\mathbf{u})$ is a $N$ player symmetric influencer game with multi-variate Gaussian influence kernels $f_i(x_i,b,\Sigma)$ each having $\gamma_{ij}=0 \forall i\neq j$ and $\frac{1}{\sigma}=\gamma_{ii}=\gamma_{jj}$ $\forall i,j=1,\dots, L$, i.e. the covariance matrix is 
+                \begin{equation}
+                 \Sigma=\begin{pmatrix}
+                     \sigma &0 \\
+                     0& \sigma
+                 \end{pmatrix}
+                \end{equation}
+                Then the symmetric pure Nash $\mathbf{x}^*=(x_1^*,\dots ,x_N^*)$ at the mean of $B$ is stable for $\sigma$ that satisfies
+                \begin{align}
+                    \sigma &> \frac{N-2}{N-1}\frac{\text{Var}(B_1)+\text{Var}(B_2)+\sqrt{(\text{Var}(B_1)-4\text{Var}(B_2))^2+\text{Cov}^2(B_1,B_2)}}{2}.
+                \end{align} 
+                where $B_i$ is the $ith$ component of the resource distribution $B$. 
+            \end{corollary}
+            \begin{proof}
+                This is a direct result of \cref{thm:SI_two_dimensional_stability} where 
+                \begin{equation}
+                    a_{ii}-b_{ii}=\frac{n-1}{\sum_{b\in\B}B(b)}\left(-\gamma_{ii}+\frac{n-2}{n-1}[\gamma_{ii}\text{Var}(B_i)-\gamma_{ij}\gamma_{ii}\text{Cov}(B_1,B_2)+\gamma_{ij}\text{Var}(B_j)] \right)\; \forall i,j=1,2,\quad i\neq j
+                \end{equation}
+                and 
+                \begin{equation}
+                    a_{12}-b_{12}=\frac{n-1}{\sum_{b\in\B}B(b)}\left(\frac{n-2}{n-1}\left(\gamma_{11}\gamma_{12}\text{Var}(B_1)+\gamma_{22}\gamma_{12}\text{Var}(B_2)+(\gamma_{11}\gamma_{22}+\gamma_{12}^2)\text{Cov}(B_1,B_2)\right)\right)
+                \end{equation}
+            \end{proof}
+                \Cref{cor:SI_mvg_stability} is a niche example of stability however it does make for good examples for how the dynamics may behave in multi-dimensional systems. If we examine a system with multiple peaks we see some interesting behavior. 
+                
+                \Cref{fig7} demonstrates how the system bifurcates as $\sigma$ decreases. We see that for a 2 player system the game converges to a single point in the mean as expected; however, if there are 2+ and as $\sigma\to 0$  the game bifurcates. Unlike the 1-d system the game bifurcates to equilibria with players in a unique position, before converging to equilibria with agents sharing some positions as in \cref{fig7:f}. The behavior in 2-d demonstrates that the more dimensions that an influencer game has the more complex its bifurcation behavior is. 
+
+                We next analyze how a more complex influencer kernel can be analyzed in multiple dimensions. 
+            
+        
+                \begin{figure}[ht!] 
+                    \centering
+                    \begin{subfigure}[b]{0.6\linewidth}
+                        \centering
+                        \includesvg[width=\textwidth]{figures/SI_plots/4_1/fig7/2d_square_alpha_1.svg}
+                        \caption{The resource distribution used in the next figures. Is a multi-variate Gaussian mixture in a square formation each mode is on the corner of the domain. This is a symmetric distribution with mean in the center (2.5,2.5). }
+                        \label{fig7:a}
+                    \end{subfigure}
+                    
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_3_agents.svg} 
+                        \caption{3 players} 
+                        \label{fig7:b} 
+                        \vspace{4ex}
+                    \end{subfigure}%% 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_4_agents.svg} 
+                        \caption{4 players} 
+                        \label{fig7:c} 
+                        \vspace{4ex}
+                    \end{subfigure} 
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_5_agents.svg} 
+                        \caption{5 players} 
+                        \label{fig7:d}
+                        \vspace{4ex}
+                    \end{subfigure}%%
+                    
+                    
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_6_agents.svg} 
+                        \caption{6 players }  
+                        \label{fig7:e} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_7_agents.svg} 
+                        \caption{7 players} 
+                        \label{fig7:f} 
+                        \vspace{4ex}
+                    \end{subfigure}
+                    \begin{subfigure}[b]{0.3\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_bifurcation_8_agents.svg} 
+                        \caption{8 players } 
+                        \label{fig7:g}
+                        \vspace{4ex}
+                    \end{subfigure} 
+        
+                    \begin{subfigure}[b]{0.75\linewidth}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/4_1/fig7/2d_colorbar.svg} 
+                        \label{fig7:colorbar}
+                    \end{subfigure}
+                    
+                    \caption{The bifurcations as $\sigma$ decreases for an asymmetric initial position $n-$player(s) game with between 3 and 8 players. The dynamics are less clean than that of the 1-D case but shows the theory is extendable to multi-dimensional systems.}
+                    \label{fig7} 
+                \end{figure}
+        
+                
+                \clearpage
+
+    
+    \subsection{Dirichlet Influence Kernel on the Simplex}
+         The Dirichlet distribution has been widely used as a prior estimate in Bayesian statistics, and can be used in influencer games to flexibly study social games in a multi-dimensional resource spaces. Problems such as multi-party electoral systems like parliamentary elections, different food sources for animals, and other categorical resource problems. For a Dirichlet kernel, we use the simplex to represent the resource space $\mathbb{B}$ and $\mathbb{D}$. In particular, a probability simplex defined as the following, 
+         \begin{equation}
+             \Delta ^L=\left\{(x_1,x_2,x_3\dots,x_L )|\sum_{l\in L}x_l=1, x_l\geq 0 \;\forall l \right\}
+         \end{equation}
+         
+        For the $i$th player's influence kernel, we utilize an altered version of the Dirichlet distribution's PDF,
+        \begin{equation}
+            f_{i}\left(x_{i},v\right) = \prod_{l=1}^{L}v_{l}^{\alpha_{l}-1},\; \alpha_{l}=\frac{\alpha_\varphi}{x_{\left(i,\varphi\right)}}x_{\left(i,l\right)} \text{ for } l\neq \varphi
+        \end{equation}
+        where $x_{i}\in \D$, i.e., $x_i=\left(x_{\left(i,1\right)},x_{\left(i,2\right)},\dots, x_{\left(i,L\right)}\right)$.
+        
+        
+        For the Dirichlet influence the players have the additional parameter of $\varphi\in 1,\dots N$ and $\alpha_{\varphi}>0$. In this case we are fixing the $\varphi$ dimension's $\alpha$ value, such that the distribution is centered on the players position in $\mathbb{D}$. Additionally, the parameter $\alpha_{\varphi}$ behaves much like that of $\sigma_{i}$, but as $\alpha_{\varphi}$ goes to zero the distribution reduces completely in the $\varphi$ direction such that the distribution's dimension is decreased effectively by one.
+    
+        
+    
+    \subsubsection{Dirichlet influence: Symmetric Nash equilibrium}
+    If $\mathbb{D}, \mathbb{B}\subset \Delta^L$, $L$-simplex. This implies that we can relax the condition for the existence for unique equilibria. Since players are restricted to the simplex, we only need $f_{i}(x_i,b)$ to be log-concave in $L-1$ dimensions, since being on the $L$-simplex fixes the last dimension. Now the same result about the existence of players being in the same position is applicable to our problem for complex models like the Dirichlet distribution that is log-concave for all but one dimension. For the Dirichlet influence functions the gradient looks like the following for the non fixed dimensions, 
+    \begin{equation}\label{eq:results_dirl}
+        \pdv{}{x_{(i,l)}}u_{i}=\sum_{b\in \B} B(b)\frac{\alpha_{\varphi}}{x_{(i,\varphi)}}\left(\ln{b_{l}}-\psi(\alpha_{i})-\psi(\sum_{l}^{L}\alpha_{(i,l)}))\right)G_{i}G_{i}^{c}
+    \end{equation}
+    and for the fixed dimensions $\varphi$
+    \begin{equation}
+        \pdv{}{x_{(\varphi,l)}}u_{i}=-\sum_{b\in \B} B(b)G_{i}G_i^c \sum_{l\neq \varphi}\frac{x_{(i,l)}}{x_{(i,\varphi)}}d_{(i,l)}
+    \end{equation}
+     Note however the gradient needs to be projected to the simplex, i.e. the adaptive steps look like the following, 
+     \begin{equation}\label{eq:SI_projected_grad}
+         x_{(i,k+1)}=\text{proj}(x_{(i,k)}+\gamma\nabla_{x_{(i,k)}} u_i)
+     \end{equation}
+     $\gamma:$ the learning rate. Much like the results for the multi-variate Gaussian influence example. This opens up or model to stability analysis with the fixed hyper parameter $\alpha_{\phi}$, number of players, and environmental state. Unfortunately unlike the one dimensional or multi-variate Gaussian example we cannot solve for these conditions or the symmetric Nash equilibrium position analytically and must rely on computational methods for both. 
+     
+     One of the computational methods we utilize to study the Dirichlet influence model is adaptive dynamics via a projected gradient, as in \cref{eq:SI_projected_grad}. The projected gradient is a method well studied in computational mathematics and optimization problems. We demonstrate via adaptive dynamics with a projection gradient that players can converge to a symmetric Nash, before bifurcations occur as in \cref{fig8}. In \cref{fig8} We see that the 2 player system always converges to a unique symmetric Nash; however, this Nash moves as $\alpha_\varphi$ increases. Note this is partially because $\alpha_\varphi$ is inversely related to variance of the influence kernel. We also see that for larger number of players the game bifurcates into groups as $\alpha_\varphi$ increases. However, each does have a unique symmetric Nash that moves along the diagonal. This result demonstrates that our results can expand to more computationally difficult problems in multi-variate resource distribution and multi-dimensional game boards. 
+
+     
+    \begin{figure}[ht!] 
+            \centering
+            \begin{subfigure}[b]{0.6\linewidth}
+                \centering
+                \includesvg[width=\textwidth]{figures/SI_plots/4_2/fig8/simplex_alpha_1.svg}
+                \caption{The resource distribution used in the next figures. It is a multi-variate gaussian mixture with 3 modes, each centered on the vertices on the triangle. They are equal-distant making the mean in the center of the simplex.}
+                \label{fig8:a}
+            \end{subfigure}
+            
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_2_agents.svg} 
+                \caption{2 players} 
+                \label{fig8:b} 
+                \vspace{4ex}
+            \end{subfigure}%% 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_3_agents.svg} 
+                \caption{3 players} 
+                \label{fig8:c} 
+                \vspace{4ex}
+            \end{subfigure} 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_4_agents.svg} 
+                \caption{4 players} 
+                \label{fig8:d}
+                \vspace{4ex}
+            \end{subfigure}%%
+            
+            
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_5_agents.svg}
+                \caption{5 players }  
+                \label{fig8:e} 
+                \vspace{4ex}
+            \end{subfigure}
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_6_agents.svg}
+                \caption{6 players} 
+                \label{fig8:f} 
+                \vspace{4ex}
+            \end{subfigure}
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/4_2/fig8/simplex_bifurcation_7_agents.svg}
+                \caption{7 players } 
+                \label{fig8:g}
+                \vspace{4ex}
+            \end{subfigure} 
+
+            \begin{subfigure}[b]{0.75\linewidth}
+                \centering
+                \includesvg[width=\textwidth]{figures/SI_plots/4_2/fig8/simplex_colorbar.svg}
+                \label{fig8:colorbar}
+            \end{subfigure}
+            
+            \caption{The bifurcations as $\alpha_{\varphi}$  increases for an asymmetric initial position $n-$player(s) game with number of players between 2 and 7.}
+            \label{fig8} 
+        \end{figure}
+
+        
+        \clearpage
+     
+    \section{Applications}
+        \subsection{Applications to Political Science}
+        One of the major applications of our work in resource games is in political games where the players are the politicians and the voters are the resource they are competing for. Games like these have been extensively studied in political science and sociology literature; however the study of political games has been limited to 2 active players or systems with fixed other players \cite{jones2022polarization}. In Jones et. al.'s paper the authors examined a 1-D ideological space where players compete for votes, but are subject to different distribution shapes, fixed third parties, and abstaining voters. Jones et al. concluded that all three factors impacted the player's convergence to a mixed equilibrium away from a symmetric  equilibrium at the mean. However, in their paper the authors limited the number of active players to two, and yet they still observed instability at the symmetric equilibrium at the median. This result is in alignment with our results as we saw in section 3.4.2. Given the convex behavior as long as $0<p$ in \cref{eq:SI_Jones_influence_kernel} the model should always be divergent regardless of the number of players. Additionally, the Jones et. al. model is difficult to study via gradient ascent and adaptive dynamics due to it's non-differentiable at $x=b$ (players at resource points). 
+
+        The Jones model accomplishes much regardless of the symmetric equilibrium being always unstable. We demonstrate that the same results the authors showed can be accomplished by a differentiable and log-concave influence kernel like the Gaussian kernel.  
+        
+        \subsubsection{Voting: Fixed 3rd Parties and Abstaining Voters with Gaussian Influence}
+            Our next result is demonstrating that we can mimic Matt Jones et al.'s results given our reward function \cref{eq:methods_guassian influence} and a new function \cref{eq:pp_abstain_1d} we introduce for abstaining voters' influence. For our fixed third parties we have the following voter utility function 
+            \begin{equation}
+                f_{tp}=e^{-\frac{(0-v)^2}{2R^2}}+e^{-\frac{(1-v)^2}{2R^2}}
+            \end{equation}
+            In a similar fashion we consider the abstaining votes as voting for an "abstaining candidate". For this 1-$D$ case we write the utility for abstaining as
+            \begin{equation}
+                f_{a}=Q*\prod_{j\in J}(v-x_{i})^{2}, \label{eq:pp_abstain_1d}
+            \end{equation}
+            where $J$ is the set of all of the non-fixed candidates. 
+            \cref{fig9} shows the impact that varying the the parameters $R,Q$.
+         \begin{figure}[htbp]
+          \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_vector_2_agents_3party.svg} 
+                \caption{Fixed Third Parties} 
+                \label{fig9:b} 
+                \vspace{4ex}
+            \end{subfigure}%% 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_vector_2_agents_abs.svg} 
+                \caption{Abstaining Voters} 
+                \label{fig9:c} 
+                \vspace{4ex}
+            \end{subfigure} 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_vector_2_agents_3p_ab.svg} 
+                \caption{Both Abs. Voters and Fixed T.P.} 
+                \label{fig9:d}
+                \vspace{4ex}
+            \end{subfigure}%%
+            
+            
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_probability_2_agents_3party.svg}
+                \caption{Fixed Third Parties}  
+                \label{fig9:e} 
+                \vspace{4ex}
+            \end{subfigure}
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_probability_2_agents_abs.svg}
+                \caption{Abstaining Voters} 
+                \label{fig9:f} 
+                \vspace{4ex}
+            \end{subfigure}
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_probability_2_agents_3p_ab.svg}
+                \caption{Both Abs. Voters and fixed T.P.} 
+                \label{fig9:g}
+                \vspace{4ex}
+            \end{subfigure} 
+        \caption{a-c show the stream plots for the different values of $Q$ and $R$. d-f show the probabilities of voting for each of the potential parties. All plots have the $\sigma= 0.1$ for both players. In figure a there are no third parties and $Q=0$. In figure a the players converge to the mean as expected. In figure b $R=0.1$ and $Q=0$. In figure c $R=0.1$ and $Q=30$.}\label{fig9}
+        \end{figure}
+        We can see in \cref{fig:8-19_2} that the addition of a fixed third party at the extremes can force our candidates from the mean convergence. While the addition of abstaining voters can change the dynamics further by mitigating the third parties affects and making the major parties converge closer to the mean. This is in-line with the results form Jones et al.. Note however, these are also in line with the results we discussed since the addition of a fixed third party could explain why the stability of the symmetric Nash equilibrium is no longer guaranteed. While the abstaining 'candidate' not only adds another choice for players it also breaks the symmetry of the system. Which will result in potentially destabilizing the symmetric Nash; especially if the abstaining candidate is influential enough and dynamic.
+
+        These results are also represented in the divergence of based on the reach parameter $\sigma$. as $\sigma$ increases the asymmteric features introduced by fixed third parties and abstaining voters become less impactful, which leads to convergece to the expecte symmetric Nash equalbirium in the agents' ideological playing field, as demonstrated in \cref{fig10}
+
+        \begin{figure}[htbp]
+          \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig10/1d_bifurcation_2_agents_3party.svg} 
+                \caption{Fixed Third Parties} 
+                \label{fig10:a} 
+                \vspace{4ex}
+            \end{subfigure}%% 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig10/1d_bifurcation_2_agents_abs.svg} 
+                \caption{Abstaining Voters} 
+                \label{fig10:b} 
+                \vspace{4ex}
+            \end{subfigure} 
+            \begin{subfigure}[b]{0.3\linewidth}
+                \centering
+                \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig10/1d_bifurcation_2_agents_3p_ab.svg} 
+                \caption{Both Abs. Voters and Fixed T.P.} 
+                \label{fig10:c}
+                \vspace{4ex}
+            \end{subfigure}%%
+            
+        
+        \caption{a-c show the stream plots for the different values of $Q$ and $R$. d-f show the probabilities of voting for each of the potential parties. All plots have the $\sigma= 0.1$ for both players. In figure a there are no third parties and $Q=0$. In figure a the players converge to the mean as expected. In figure b $R=0.1$ and $Q=0$. In figure c $R=0.1$ and $Q=30$.}\label{fig10}
+        \end{figure}
+
+        One fascinating result derived from figure \cref{fig10} is that while the impact of the abstaining voters is far greater then that of the fixed third parties, the addition of both factors results in a system that is more stable then the abstaining voters on their own but less stable then the fixed third parties. This indicates that third parties (of relatively small influence) may result in stabilizing a political system with abstaining voters. 
+
+
+
+        
+          \subsubsection{Relationship to the Median Voter Theorem}
+            The results of the previous sections agree with the mean voter theorem of previous work in election dynamics.However, a notable result for our model with symmetric 1D influencer games with Gaussian influence kernels, is that in the limit $\sigma\to0$ the dynamics of our system recovers the median voter theorem. In particular, if we let $\chi$ be a sorted unique tuple of $\mathbf{x}$ i,e. 
+            \begin{equation}
+                \lim_{\sigma\to0}G_i(x_i,b)\to \frac{1}{m}(H(\chi_{i+1}-b)-H(\chi_{i}-b))
+            \end{equation}
+            where $m$ is the number of $x_j=x_i$ $j\neq i$ and $j\in I$. Here $\chi_{(i)}=\frac{x_{i}-x_{i}'}{2}$ and $x'_{i}=\sup_j(x_{j})<x_i$ or $x'_i$ is the closest bound of $\D$. Similarly $\chi_{(i+1)}=\frac{x_{i+1}'-x_{i}}{2}$ and $x'_{i+1}=\inf_j(x_{j})>x_i$ or $x'_i$ is the closest bound of $\D$. In other terms $G_i(x_i,b)=1$ for $b$ between the medians of $x_i$'s position and its next non-equal neighbor. This is exactly the behavior described in a median voter model; however, this model can expand the median voter so that there are more than 2 candidates. 
+
+
+    
+        \subsection{Applications to Ecology}
+            An influencer game has close ties to ecology models and are many possible applications of influencer games in ecology. For instance, the study of dispersal, home range size, migration, and reproductive dynamics to name a few. These problems could potentially add many layers to the model we discuss here, and allow the use of our model as a frame work for studying other influencer games in ecology.  
+            \subsubsection{Dispersal and Migration with Constant Movement Costs}
+                Consider species are competing for a resource that is spatially distributed on $\mathbb{B}$ via $B(b), b\in\ \mathbb{B}$, these species compete for resources by choosing a position in space $x_i\in \mathbb{D}$. In this way species compete for resources via an influencer game frame work with pay off of 
+                \begin{equation}
+                    u_i(\mathbf{X})=\sum_{b\in \mathbb{B}} B(b)G_i(\mathbf{x},b)
+                \end{equation}
+                where $G_i(\mathbf{x},b)$ is the probability that the $i$th player dominates a resource such that
+                \begin{equation}
+                    G_i(\mathbf{x},b)=\frac{f_i(x_i,b)}{\sum_{j=1}^{N}f_i(x_i,b)}.
+                \end{equation}
+                However, often times in nature resources are not the only thing that drive competition. For instance there can also be external costs to movement in a ecological arena, such as a risk of predation or a simple energetic cost to movement. The simplest case would have a constant cost to movement when an species moves, this changes the dynamics such that
+                \begin{equation}
+                    R_i(\mathbf{x},t)=u_i(\mathbf{x})-c\Dot{x_i}
+                \end{equation}
+                where $c$ is the cost associated with moving positions. Then solving for equilibrium is the same as solving
+                \begin{equation}
+                    \pdv{R_i}{t}= \pdv{u_i}{\mathbf{x}}\pdv{\mathbf{x}}{t}+c\Dot{\Dot{x_i}}.
+                \end{equation}
+                This is called a Li\'enard equation and has the following solution 
+                \begin{equation}
+                    \Dot{x_i}^*=\frac{1}{c}\int \pdv{u}{\mathbf{x}}dt
+                \end{equation}
+                This implies that the system will remain in equilibrium if the players are in the symmetric Nash regardless of the costs. In this way $c$ only impacts the rate that players move and not the equilibrium that they move to. 
+                       
+    \section{Relationship to Blotto Games}
+                Influencer games are similar to a Blotto game; a Blotto game is a form of resource game where a player must dedicate a number of resources from an individual pool of resources to winning over a reward from a niche. Often Blotto games are described as sending a number of armies to fight in several distinct battles or fronts. The player with more units in the battle wins and the player who wins more battles wins the game of war. In influencer games we saw that players have a function of resources tha they dedicate to several resource points, which allows influence games to study games with continuos resources and influence kernels. Naturally, we can draw upon the similarities between Blotto games and influencer games to study one another. For instance consider the influence kernel 
+                \begin{equation}\label{eq:SI_blotto_influence_kernel}
+                    f_i(x_i,k,\sigma)=\sum_{b\in \mathbb{B}}x^\sigma_b \mathbbm{1}_{b}(k)
+                \end{equation}
+                Here we have the indicator function in the influence kernel defined as
+                \begin{equation}
+                    \mathbbm{1}_{b}(k)=\begin{cases}
+                        1 & \text{if } k=b\\
+                        0 & \text{otherwise}
+                    \end{cases}
+                \end{equation}
+                This means that an agent using this influence kernel will exert $x^\sigma_b$ influence at the resource point $b=k$. Additionally if we bound the total influence a player can exert then the influence kernel has the following boundary condition,
+                \begin{equation}
+                    \sum_{b\in \mathbb{B}}f_i(x,b,1)=\text{ total influence}.
+                \end{equation}
+                Thus, the influence kernel is continuous in $x_{i,b}$ and more notably, the influence kernel in \cref{eq:SI_blotto_influence_kernel} is a convex function implying by \cref{thm:SI_one-dimensional-stability}we know that the influence kernel will never have a stable symmetric Nash equilibrium.  More explicitly we can find the following,
+                \begin{equation}
+                    \pdv{}{x_{i,b}}\ln(f_i(x,b,1))=\frac{\sigma x^{\sigma-1}_b \mathbbm{1}_{b}(k)}{\sum_{b\in\B}x_{b}^\sigma \mathbbm{1}_{b}(k)}\sim \frac{\sigma}{x_{b}}>0 \forall x_{b}>0, \sigma .
+                \end{equation}
+                Note that at $\sigma\to \infty$ the influence game becomes a n-player Blotto game. This indicates that for any number of players the Blotto game will never have a stable symmetric Nash equilibrium, and that the Blotto game is a special case of an influencer game with a convex influence kernel. The existence of the the symmetric pure Nash equilibrium has been established in the literature \cite{li2022pure}. 
+    \section{Q-learning dynamics}
+        While the model we have discussed thus far with adaptive dynamics has led to many beautiful results, adaptive dynamics may be an unrealistic method of modeling how agents learn in real world problems. It reality it may be more beneficial to study the model via reinforcement learning, where players/agents learn from their own experience and update their strategies based on the rewards they receive. In this section we will discuss how to model influencer games with multi-agent reinforcement learning via independent Q-learning. We will restrict our analysis to the case of independent Q-learning, where each agent learns independently from the others. This is a common approach in multi-agent reinforcement learning and allows us to study the dynamics of influencer games in a more tractable way.
+        \subsubsection{independent Q-learning}
+            independent Q-learning is a form of reinforcement learning where each agent learns independently from the others. Each agent maintains its own Q-table, which is a table of state-action values that represents the expected utility of taking a particular action in a particular state. The Q-table is updated based on the rewards received from the environment, and the agent uses this information to choose actions that maximize its expected utility. In this section, we will discuss how to model influencer games using independent Q-learning.
+            \begin{definition}[Q-table]
+                A Q-table is a table of state-action values that represents the expected utility of taking a particular action in a particular state. The Q-table is updated based on the rewards received from the environment, and the agent uses this information to choose actions that maximize its expected utility.
+            \end{definition}
+            \begin{definition}[Q-update] 
+                A Q-update is the process of updating the Q-table based on the rewards received from the environment. The Q-update is done using the Bellman equation, which relates the expected utility of taking a particular action in a particular state to the expected utility of taking the best action in the next state.
+            \end{definition}
+            \begin{definition}[Q-learning]
+                Q-learning is a reinforcement learning algorithm that uses the Q-table to learn the optimal policy for an agent. The Q-learning algorithm updates the Q-table based on the rewards received from the environment and the expected utility of taking the best action in the next state. The independent Q-learning algorithm is a special case of Q-learning where each agent learns independently from the others, using the following update rule:
+                \begin{equation}
+                    Q(s,a) \leftarrow Q(s,a) + \alpha \left( r + \gamma \max_{a'} Q(s',a') - Q(s,a) \right)
+                \end{equation}
+                where $s$ is the current state, $a$ is the action taken, $r$ is the reward received, $s'$ is the next state, $\alpha$ is the learning rate, and $\gamma$ is the discount factor. The independent Q-learning algorithm allows each agent to learn independently from the others, while still being able to interact with the environment and receive rewards.
+            \end{definition}
+        \subsection{Q-learning environment for influencer games}
+            All together, the Q-learning environment is defined as a tuple $(\texttt{X},\texttt{R},\texttt{A})$, where $\texttt{X}$ is the observation space, $\texttt{R}$ is the reward space, and $\texttt{A}$ is the action space. 
+            
+
+            The tuple $\texttt{X}_{t}=(\texttt{x}_1(t),\texttt{x}_2(t),\dots,\texttt{x}_N(t))$ is the observations (aka the positions) of each agent $i\in I$.
+            We restrict the observation space of each agent to just their own position, $x_i\in \D$, where $\D$ is a discrete set of positions in the resource space. This means that each agent only observes their own position and does not have access to the positions of other agents. This may provide a more realistic model of how agents learn in real-world problems, where agents may not have access to perfect information about the positions of other agents. Each agent will have an observation space defined as the following:
+             \begin{definition}[observation space]
+                 A agents' observation space is defined as their position $x_i\in \D$ where $\D\subset \R$ is the set of positions. Thus the size of the observation space for every agent $i\in I$ is $|\D|$.  
+             \end{definition}
+             We will restrict $\D$ to be a discrete set of points from $\R$ such that 
+             \begin{equation}
+                 \D=\{d_0,d_1,d_2,\dots d_s;\; |d_{i+1}-d_i|=\delta_{step},\;d_i\in\R,\; \forall i\}.
+             \end{equation}
+
+
+            We let $\texttt{R}_t=(\texttt{r}_1(t),\texttt{r}_2(t),\dots,\texttt{r}_N(t))$  be the rewards of the agents. The reward space is defined as the expected utility of the agent at their current position, which is defined as the following:
+             \begin{definition}[reward space]
+                 The reward space for each agent is defined as the expected utility of the agent at their current position, which is defined as the following:
+                 \begin{equation}
+                     R_i(x_i)=\sum_{b\in \B} B(b)G_i(x_i,b)
+                 \end{equation}
+                 where $B(b)$ is the resource distribution and $G_i(x_i,b)$ is the influence function for agent $i$ at position $x_i$ and resource $b$.
+            \end{definition}
+            with $b\in\B\subset\R$ and $B(b)\in\R$.
+            
+            
+            Each agent will also choose actions simultaneously for each episode of the Q-learning process, where the agent action spaces are  $\texttt{A}=\set{LEFT:0,STAY:1,RIGHT:2}$. Such that a agent updates their position via 
+             \begin{equation}
+                x_i(t+1)= pos\_update(a_i(t),x_i(t))=\begin{cases}
+                     x_i(t)-\delta_{step} & \text{ if } a_i(t)=0 \\ %
+                     x_i(t) & \text{ if } a_i(t)=1 \\ %
+                     x_i(t)+\delta_{step} & \text{ if }a_i(t)=2
+                  \end{cases}
+             \end{equation}  
+            
+            
+            Agents then record Q-updates individually to their own personal Q-table. In Pseudo code this looks like the following algorithm for an update to Q-table.
+             
+\begin{lstlisting}[language=Python]
+def Q_step(env,t,$\alpha$,$\gamma$):
+    a = action_choice(t)
+    X$_{t+1}$, R$_t$= env.step(action_dict)
+    for i in agent_ids:
+        Q$_{(i,t+1)}$[x$_i(t)$,a$_i(t)$] = (1-$\alpha$)*Q$_{(i,t)}$[x$_i(t)$,a$_i(t)$]+$\alpha$*(r$_i$[x$_i(t)$]+$\gamma$*$\max_a$Q$_{(i,t)}$[x$_i(t+1)$,a])
+        
+    return Q
+\end{lstlisting}
+             
+            The Q-learning algorithm is then run for a number of episodes, where each episode consists of a number of steps. Each step consists of the agents choosing an action, updating their position, and receiving a reward based on their position and the resource distribution. The Q-table is updated based on the rewards received from the environment and the expected utility of taking the best action in the next state. The independent Q-learning algorithm allows each agent to learn independently from the others, while still being able to interact with the environment and receive rewards.
+
+
+             For our model we restrict our influence kernels so that they are Gaussian, but the results should generalize to other influence kernels.
+
+            \subsubsection{Partial Observability}
+                The Q-learning model in this paper as described above is called partially observable. A partially observable learning environment is an environment where agents don't have access to all of the states in their environment. This is a realistic model since an agent in reality is unlikely to have access to perfect information as the adaptive dynamics assume. However this change does impact the convergence of our model tremendously, by grouping states into one one state the agent can't learn the entire dynamical system that the adaptive dynamics takes in account. This aggregation of information and discretization of the agents' strategy space removes some of the guarantees that our agents will converge to the symmetric Nash or an optimal policy.
+
+        \subsection{MARL dynamics vs adaptive dynamics}
+            While partial observability is one nuance that MARL introduces to our model, introduces several other factors that make modeling our influencer games more realistic then adaptive modeling. In particular agents are now moving in a epsilon greedy fashion, this indicates that while agents tend to move in a direction that maximizes there value function, they also move randomly time to time. Epsilon greedy learning mimics the stochastic nature of learning in real world scenarios. Thus, it is important that our model is tested in a MARL system as well as the adaptive system. We demonstrate several results of MARL bifurcations vs adaptive bifurcations in \cref{fig11}. In \cref{fig11} we see that the agents behave very similarly to the adaptive dynamics, reaching a first order bifurcation threshold around the theoretical threshold; however, the MARL agents tend to bifurcate later then the adaptive agents, this is likely a residual effect of the limited number of states that the MARL agents have, which increases the stability of the symmetric Nash. Additionally, the MARL agents tend to stay in the bounds of the first order bifurcation estimate, and relatively maintain the shape of the bifurcation of the adaptive dynamics. 
+
+        \begin{figure}[ht!] 
+            \centering
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_2_agents.svg} 
+                    \caption{2 agents}  
+                    \label{fig11:a} 
+                \end{subfigure} 
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_3_agents.svg}
+                    \caption{3 agents}  
+                    \label{fig11:b} 
+                \end{subfigure} 
+                \vspace{4ex}
+            
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_4_agents.svg}
+                    \caption{4 agents} 
+                    \label{fig11:c} 
+                \end{subfigure}
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_5_agents.svg}
+                    \caption{45 agents} 
+                    \label{fig11:d} 
+                \end{subfigure} 
+                \vspace{4ex}
+
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_6_agents.svg}
+                    \caption{6 agents} 
+                    \label{fig11:e} 
+                \end{subfigure}
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_7_agents.svg}
+                    \caption{7 agents} 
+                    \label{fig11:f} 
+                \end{subfigure} 
+                \vspace{4ex}
+                
+                \begin{subfigure}[b]{.47\linewidth}
+                    \includesvg[width=\linewidth]{figures/SI_plots/7_2/fig11/1d_bif_adp_marl_8_agents.svg} 
+                    \caption{8 agents} 
+                    \label{fig11:g} 
+                \end{subfigure} 
+           
+                \caption{Here the initial positions are shared among A.D. and MARL agents, but the learning methods are different. while the adaptive agents use a single instance of A.D. learning to find the final positions, the MARL agents use 500 trials of independent Q-learning with no positional reset. The MARL images then compute the average of the final positions of the agents and plot their positions in a heat map. What we then see is a similarity in the shape of both the MARL and the AD bifurcations across the number of agents, indicating the that the theoretical results are applicable to the stochastic nature of MARL and more realistic models.}
+                \label{fig11} 
+        \end{figure}
+
+        
+
+        
+        
+        \subsection{Finding an Optimal Policy}
+                Rather than letting agents learn in one shot scenarios, we may also be interested in the MARL agents learning an optimal policy in iterated instances of the game. This way agents can learn an optimal policy for a stagnant influencer game. Learning optimal policies is important in scenarios where agents are expected too face the same influencer game repeatedly, thus having access to an optimal policy decreases the time to find an optimal position where their objective functions are optimized.   
+            \subsubsection{Effects of Partial Observability}
+                One of the effects of partial observability is that agents are now making decisions in observed states that are actually amalgamations of many true states. For instance, agent 1 may be in position $x_1=d$ but agent two could be in any position $x_2\in \D$; 
+                however, agent one associates only one Q-value to $d$ and the actions it can take while agent 1's position is $d$.This results in policies that do not agree with the adaptive dynamics. In particular, agent may converge to suboptimal policies that do not agree with the symmetric Nash equilibrium. This is because the agents are not able to learn the true dynamics of the system, and instead learn a simplified version of the dynamics that does not capture the full complexity of the system. This can lead to policies that are not optimal, non-convergent, and may even lead to policies that are detrimental to the agents' performance. 
+    
+                However, we demonstrate in later subsections that even with partial observability, agents can still learn policies that lead to the symmetric Nash equilibrium. This is because the agents are still able to learn from their own experience and update their strategies based on the rewards they receive. The agents are still able to learn a policy that is close to the symmetric Nash equilibrium, even with limited information and increased complexity. This suggests that while partial observability does impact the convergence of Q-learning agents, it does not completely prevent them from learning a policy that is close to the symmetric Nash equilibrium. Rather the agents converging to a policy that leads to the symmetric Nash equilibrium demonstrates that the symmetric Nash equilibrium is a robust solution concept that can be learned even in the presence of partial observability. 
+              
+    
+            \subsubsection{Number of Observations}
+                The first factor is the amount of information that agents have access to. One might assume that having more states would make the reinforcement learning agent behave more like the adaptive agents; however, with the addition of more possible individual states (positions in our case), the Q-table that agents have to learn becomes larger. This implies that the agents have to experience more training episodes to guarantee convergence. This is because there are more paths that the players must learn to navigate their environment.So while the agents may be able to learn a policy that leads to a symmetric Nash equilibrium, it will be computationally more difficult with more states.
+    
+                In \cref{fig12} we experimented with 2 agents in 10 and 100 states respectively and two different reward distributions. It is clear that there is some tendency for the agents to converge to policies that favor the symmetric Nash equilibrium, but as the number of states increased the policies become more noisy. It is unlikely that the noisy policies are due to the number of training episodes, because the experiment was repeated 100 times each time with 10000 epochs and at most 1000 episodes. Rather the system is likely too complex for the agents to learn a policy that leads to the symmetric Nash equilibrium. This suggests that while the agents are able to learn policies that lead to the symmetric Nash equilibrium, the complexity of the system increases with the number of states, making it more difficult for the agents to learn a policy that leads to the symmetric Nash equilibrium.
+                
+                It is also clear that the shape of the resource distribution has some impact on the policies learned by the agents. In \cref{fig12} we see that the agents are able to learn policies that lead to the symmetric Nash equilibrium, but the policies are more noisy when the resource distribution has two modes. This suggests that the shape of the resource distribution does have an impact on the policies learned by the agents, but it is not as significant as the number of states. The number of states has a larger impact on the convergence of the policies than the shape of the resource distribution.
+        \clearpage
+            \begin{figure}[ht!] 
+                        \centering
+                        \begin{subfigure}[b]{0.45\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig12/1m_1step.svg} 
+                            \caption{11 states one mode} 
+                            \label{fig12:a} 
+                            \vspace{4ex}
+                        \end{subfigure}%% 
+                        \begin{subfigure}[b]{0.45\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig12/2m_1step.svg} 
+                            \caption{11 states two modes} 
+                            \label{fig12:b} 
+                            \vspace{4ex}
+                        \end{subfigure} 
+                        
+                        
+                        
+                        \begin{subfigure}[b]{0.45\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig12/1m_01step.svg} 
+                            \caption{101 states 1 mode}  
+                            \label{fig12:c} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.45\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig12/2m_01step.svg} 
+                            \caption{101 states 2 modes} 
+                            \label{fig12:d} 
+                            \vspace{4ex}
+                        \end{subfigure}
+    
+                        
+                        \caption{Averaged policies from Q-learning with 10000 epochs with 100 and 1000 iterations (dependent on step size), for $\sigma=0.15$ with 2 agents comparing how states and resource distributions impact policies. Figure a and b have 11 states while c and d have 101 states. Figure a and c have a resource distribution with one mode at $x=0.5$ (near state 5,50) and b and d have a 2 modes at $x=.25$ and $x=.75$ (near states 2,25 and states 7,75). The symmetric Nash is at x=.5. This demonstrates that while distribution shape has some impact on the policies' convergence the state space size has a larger impact on policy convergence. }
+                        \label{fig12} 
+                \end{figure}
+            \clearpage
+            \subsubsection{Effects of the Reach on Policies}
+                In the adaptive dynamics section we saw that the reach parameter, defined as $\sigma$, had a significant impact on the convergence of the agents to the symmetric Nash equilibrium. In this section, we will demonstrate that the reach parameter also has a significant impact on the policies learned by the Q-learning agents. In \cref{fig13} we compared the policies learned by the Q-learning agents with different reach parameters. We used two different step sizes, 0.1 and 0.01, to compare the policies learned by the agents with different reach parameters including $\sigma=0.15, 0.35,1.0$. The results show that the reach parameter has a significant impact on the policies learned by the agents, and that the agents are able to learn policies that lead to the symmetric Nash equilibrium, but the step size and corresponding state space size had a larger impact on the convergence of the policies. However, we note that the policies agents learned with a larger reach parameter, $\sigma=1.0$, tended to smooth the reward space and thus the policies learned by the agents were more uniform, which may lead to convergence to a uniform policy rather than a policy that favors the symmetric Nash equilibrium. Hence, in an influencer game with reinforcement learning agents, the reach parameter may prevent the agents from learning a policy that favors the symmetric Nash equilibrium, despite the theoretical stability of the symmetric Nash equilibrium. 
+            
+    
+             \begin{figure}[ht!] 
+                        \centering
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_1step_15sig.svg} 
+                            \caption{$\sigma=0.15$  11 states} 
+                            \label{fig13:a} 
+                            \vspace{4ex}
+                        \end{subfigure}%% 
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_1step_35sig.svg}
+                            \caption{$\sigma=0.35$  11 states} 
+                            \label{fig13:b} 
+                            \vspace{4ex}
+                        \end{subfigure} 
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_1step_100sig.svg}
+                            \caption{$\sigma=1.0$  11 states} 
+                            \label{fig13:c}
+                            \vspace{4ex}
+                        \end{subfigure}%%
+                        
+                        
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_01step_15sig.svg}
+                            \caption{$\sigma=0.15$ 101 states }  
+                            \label{fig13:d} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_01step_35sig.svg}
+                            \caption{$\sigma=0.35$ 101 states} 
+                            \label{fig13:e} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig13/2m_01step_100sig.svg}
+                            \caption{$\sigma=1.0$ 101 states } 
+                            \label{fig13:f}
+                            \vspace{4ex}
+                        \end{subfigure} 
+                        
+                        \caption{Averaged policies from Q-learning for two agents with up to 10000 training epochs with 100 episodes for a 0.1 step size and 1000 episodes for a 0.01 step size. This figure demonstrates how changing the reach impacts convergence to a policy that favors a symmetric Nash equilibrium. The reach parameter has three values $\sigma=0.15,0.35,1.0$. For all three $\sigma$ values the policy for 11 states converges to a policy that favors the symmetric Nash, but the $\sigma=1.0$ value in figure c demonstrates that their may be smoothing of the reward space causing corresponding policy to smooth to a uniform policy. For 101 states in figures d,e, and f, we see that non-converge as expected but a general trend indicating some preference toward movement towards the symmetric Nash, with corresponding smoothing as $\sigma$ grows.} 
+                        \label{fig13}
+                    \end{figure}
+    
+            \clearpage
+    
+            \subsubsection{Effects of Number of Agents}
+                Like the previous sub-section, the number of agents in the system also has a significant impact on the convergence of the Q-learning agents. As the number of agents increases, the complexity of the system increases, and the agents have to learn to navigate a more complex environment. This can lead to policies that are not optimal but more often are non-convergent. Traditional Q-learning is not well suited for the complexity of the system with many agents, as the agents have to learn to navigate a more complex environment the Q-tables that they learn become larger and more memory intensive. Thus Q-learning with many agents runs into the curse of dimensionality, where the number of states and actions increases exponentially with the number of agents, thus in order to converge even in a environment with complete observability the agents have to run though an exponentially higher amount of training episodes to guarantee convergence. Thus we limit our analysis to a small number of agents, and demonstrate that even with a small number of agents, the agents can still learn policies that lead to the symmetric Nash equilibrium in \cref{fig14}.
+    
+                In \cref{fig1} we saw that for 2,3, and 4 players their reach parameter $\sigma$ has a major impact on the stability of the symmetric Nash equilibrium, and consequently the players convergence to the symmetric Nash equilibrium. The same results do hold in the Q-learning model, where agents converge to a policy that favors the symmetric Nash equilibrium, unlike the adaptive dynamics though the players converge to equilibria that are markedly closer to the symmetric Nash equilibrium. Additionally in the pervious subsection we noted how at large reach values $\sigma =1$ the agents learned a uniform policy, indicating that the agents with MARL dynamics will have an even more limited region of reach values where they can learn a policy that favors the symmetric Nash equilibrium. In particular, this region decreases in width as number of agents increases, and is centered based on the particular number of agents in the system.  
+    
+            \clearpage
+                \begin{figure}[ht!] 
+                        \centering
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/2p_15sig.svg}
+                            \caption{$\sigma=0.15$ and 2 agents} 
+                            \label{fig14:a} 
+                            \vspace{4ex}
+                        \end{subfigure}%% 
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/2p_35sig.svg}
+                            \caption{$\sigma=0.35$ and 2 agents} 
+                            \label{fig14:b} 
+                            \vspace{4ex}
+                        \end{subfigure} 
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/2p_100sig.svg}
+                            \caption{$\sigma=1.0$ and 2 agents} 
+                            \label{fig14:c}
+                            \vspace{4ex}
+                        \end{subfigure}%%
+                        
+                        
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/3p_15sig.svg}
+                            \caption{$\sigma=0.15$ 3 agents }  
+                            \label{fig14:d} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/3p_35sig.svg}
+                            \caption{$\sigma=0.35$ 3 agents} 
+                            \label{fig14:e} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/3p_100sig.svg}
+                            \caption{$\sigma=1.0$ 3 agents } 
+                            \label{fig14:f}
+                            \vspace{4ex}
+                        \end{subfigure} 
+    
+    
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/4p_15sig.svg}
+                            \caption{$\sigma=0.15$ 4 agents}  
+                            \label{fig14:g} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/4p_35sig.svg}
+                            \caption{$\sigma=0.35$ 4 agents} 
+                            \label{fig14:h} 
+                            \vspace{4ex}
+                        \end{subfigure}
+                        \begin{subfigure}[b]{0.3\linewidth}
+                            \centering
+                            \includesvg[width=\linewidth]{figures/SI_plots/7_3/fig14/4p_100sig.svg} 
+                            \caption{$\sigma=1.0$ 4 agents} 
+                            \label{fig14:i}
+                            \vspace{4ex}
+                        \end{subfigure} 
+                        
+                        \caption{Averaged policies from Q-learning for two, three, and 4 agents with up to 10000 training epochs with 100 episodes for a 0.1 step size. This figure demonstrates how changing the reach impacts convergence to a policy that favors the symmetric Nash equilibrium, and how this impact changes as the number of agents changes. The reach parameter has three values $\sigma=0.15,0.35,1.0$ and the number of agents varies from 2, 3 and 4. The results for three agents mimic that of two agents, with a major difference in figure d, where the policies converge to a policy that suggests agents go to an equilibrium near the symmetric Nash. This is contrary to the results in the adaptive dynamics as seen in \cref{fig1}. The behavior of three players with $\sigma=0.15$ in figure d progresses further from the symmetric Nash in figure g with 4 players and $\sigma=0.15$. This suggests that the instability from a small $\sigma$ and increasing number of players seen in the adaptive dynamics is playing a larger part, but the agents still don't converge to the expected result of the adaptive dynamics.}
+                        \label{fig14} 
+                \end{figure}
+
+
+        
+%
+%
+%
+%        \subsection{Introduction to game theory}
+%            Game theory is generally thought as of the study of strategic interactions. Applications of game theory has been applied to a variety of domains including economics, political science, and biology to name a few. The field of game theory has advanced to far beyond the initial study of zero-sum to player games to include cooperative games, evolutionary games and more since its initial founding in the early half of the 20th century. Games have several forms which includes, extensive form, normal form, graph form games, and more. The form of game that we will focus on this work is called normal form games. 
+%            \subsubsection{Normal Form Games}
+%            Normal form games have several characteristics that constitute them. 
+%            \begin{definition}[Normal Form Game]
+%                A game is a normal form gam if it has a finite set of players $N$ 
+%                \begin{equation}
+%                    I=\set{1,2,3,\dots,N}.
+%                \end{equation}
+%                If each player has a strategy space which they draw their strategy from 
+%                \begin{equation}\label{eq:SI_strat_space}  
+%                    x_i\in X_i\; \forall i\in I.
+%                \end{equation}
+%                Finally if each player has a payoff function function
+%                \begin{equation}\label{eq:SI_payoff_gen}
+%                    u_i: X_1\times X_2\times\dots \times X_N\to \R
+%                \end{equation}
+%                Then the general form of such a normal form game is then 
+%                \begin{equation}\label{eq:SI_normal_form_def}
+%                    T(I,\mathbf{u},\mathbf{X})
+%                \end{equation}
+%                where 
+%                \begin{align}
+%                    \mathbf{u}&=\set{u_1,u_2.\dots,u_N}\
+%                    \mathbf{X}&=\set{X_1,X_2,\dots,X_N}.
+%                \end{align}
+%            \end{definition}
+%            
+%            Normal form games have appeared often in game theory and its applications. One of the most famous normal form games being the prisoners dilemma, and includes other two player matrix games like the snowdrift game and chicken. Normal form games have been studied extensively, and led to the original formalization of Nash equilibria.  
+%            \subsubsection{Nash Equilibria}
+%                Perhaps the most renowned game theorists in John Nash, for his work on the Nash equilibrium. A Nash equilibrium in colloquial terms represents a strategy tuple, also known as a strategy profile, where all players can not improve their payoff by choosing an alternative strategy. In formal terms.
+%                \begin{definition}[Nash equilibrium]
+%                    if $X_i$ is the strategy of the $i$th player then 
+%            
+%                    \begin{equation}
+%                        x=(x_i,x_{-i}) \label{eq:SI_strategy_profile}
+%                    \end{equation}
+%                    The pay off for the $i$'th player given $x$ is then $u_i(x)$. A strategy profile $x^*=(x^*_i,x^*_{-i})$ is a Nash equilibrium if 
+%                    \begin{equation}\label{eq:SI_Nash_equilibrium_def}
+%                        u_{i}(x^*_i,x_{-1}^*)\geq u_i(x_i,x_{-i}^{*}) \text{ for all } x_i \in X_i.
+%                    \end{equation}
+%                    A Nash equilibrium is said to be \textit{strict} if 
+%                    \begin{equation}\label{eq:SI_strict_Nash_equilibrium_def}
+%                        u_{i}(x^*_i,x_{-1}^*)> u_i(x_i,x_{-i}^{*}) \text{ for all } x_i \in X_i, \; x_i\neq x_{i}^{*}.
+%                    \end{equation}
+%                \end{definition}
+%
+%
+%
+%             
+%                \begin{align}
+%                     \text{split}_{even}(m_{(s,g)}) \to 
+%                     \begin{cases}
+%                     \begin{cases}
+%                         &m_{(s+1,g)} \\ %  
+%                        &m_{(s+1,g+1)}
+%                     \end{cases}
+%                        & \text{ if } g=0 \\ %
+%                     & \\ %
+%                     \begin{cases}
+%                         &m_{(s+1,g+1)} \\ %  
+%                        &m_{(s+1,g+2)}
+%                     \end{cases}
+%                        & \text{ if } g\neq 0
+%                     \end{cases}
+%                \end{align}
+%                In this way we see a 4 player game split like 
+%                
+%                \begin{forest}
+%                  for tree={
+%                    grow=0,reversed, % tree direction
+%                    parent anchor=east,child anchor=west, % edge anchors
+%                    edge={line cap=round},outer sep=+1pt, % edge/node connection
+%                    rounded corners,minimum width=15mm,minimum height=8mm, % node shape
+%                    l sep=10mm % level distance
+%                  }
+%                  [$m_{(0,0)}$, L2
+%                  [$m_{(1,0)}$, L2,name=ST1]
+%                  [$m_{(1,1)}$, L2,name=ST2]
+%                  ]
+%                \end{forest}
+%                 
+%                 \noindent In a 8 player game, 
+%                
+%                \begin{forest}
+%                  for tree={
+%                    grow=0,reversed, % tree direction
+%                    parent anchor=east,child anchor=west, % edge anchors
+%                    edge={line cap=round},outer sep=+1pt, % edge/node connection
+%                    rounded corners,minimum width=15mm,minimum height=8mm, % node shape
+%                    l sep=10mm % level distance
+%                  }
+%                  [$m_{(0,0)}$, L2
+%                  [$m_{(1,0)}$, L2
+%                  [$m_{(2,0)}$, L2]
+%                  [$m_{(2,1)}$, L2]
+%                  ]
+%                  [$m_{(1,1)}$, L2
+%                  [$m_{(2,3)}$, L2]                  [$m_{(2,4)}$, L2]
+%                  ]
+%                  ]
+%                \end{forest}
+%                This isn't always true in some case as seen in the three player case. 
+%                In a three player game we can have an even split as or what is called an odd split odd splits are harder to equilibrate.
+
+\printbibliography
+
+\end{document}

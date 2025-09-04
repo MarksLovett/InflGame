@@ -1,0 +1,938 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Asynchronous Influencer Game &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/MARL/InflGame.MARL.async_game';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Synchronous Influencer Game" href="InflGame.MARL.sync_game.html" />
+    <link rel="prev" title="Multi-Agent Learning (InflGame.MARL)" href="InflGame.MARL.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adaptive/InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.visualization.html">Plots</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../kernels/InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.MARL.html" class="nav-link">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Asynchronous Influencer Game</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.MARL.async_game">
+<span id="asynchronous-influencer-game"></span><h1>Asynchronous Influencer Game<a class="headerlink" href="#module-InflGame.MARL.async_game" title="Link to this heading">#</a></h1>
+<section id="asynchronous-multi-agent-environment-module">
+<span id="module-async_game"></span><h2>Asynchronous Multi-Agent Environment Module<a class="headerlink" href="#asynchronous-multi-agent-environment-module" title="Link to this heading">#</a></h2>
+<p>This module implements an asynchronous multi-agent environment for influencer games. The environment simulates a 
+1D domain where agents can move left, stay, or move right asynchronously. Rewards are calculated based on a 
+probability matrix and resource distribution.</p>
+<section id="mathematical-definitions">
+<h3>Mathematical Definitions:<a class="headerlink" href="#mathematical-definitions" title="Link to this heading">#</a></h3>
+<p>The reward for an agent <span class="math notranslate nohighlight">\(i\)</span> is computed as:</p>
+<div class="math notranslate nohighlight">
+\[u_i(x) = \sum_{b \in \mathbb{B}} G_i(b) \cdot B(b)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(G_i(b)\)</span> is the probability of agent <span class="math notranslate nohighlight">\(i\)</span> influencing bin <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(B(b)\)</span> is the resource available at bin <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbb{B}\)</span> is the set of all bin points</p></li>
+</ul>
+</dd>
+</dl>
+<p>The probability is calculated by the function <a class="reference internal" href="utils/InflGame.MARL.utils.MARL_utils.html#InflGame.MARL.utils.MARL_utils.prob_matrix" title="InflGame.MARL.utils.MARL_utils.prob_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.utils.MARL_utils.prob_matrix</span></code></a>.</p>
+</section>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.MARL</p></li>
+<li><p>ray.rllib</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">influencer_env_async</em> class provides an asynchronous multi-agent environment for influencer games. It supports 
+custom configurations for agents, resource distributions, and influence kernels.</p>
+</section>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">InflGame.MARL.async_game</span><span class="w"> </span><span class="kn">import</span> <span class="n">influencer_env_async</span>
+
+<span class="c1"># Define environment configuration</span>
+<span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;num_agents&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;initial_position&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+    <span class="s2">&quot;bin_points&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;resource_distribution&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="s2">&quot;domain_type&quot;</span><span class="p">:</span> <span class="s2">&quot;1d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;domain_bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="s2">&quot;infl_configs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;infl_type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+    <span class="s2">&quot;fixed_pa&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;NUM_ITERS&quot;</span><span class="p">:</span> <span class="mi">100</span>
+<span class="p">}</span>
+
+<span class="c1"># Initialize the environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">influencer_env_async</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Reset the environment</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+<span class="c1"># Perform a step</span>
+<span class="n">actions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;player0&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">LEFT</span><span class="p">,</span> <span class="s2">&quot;player1&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">STAY</span><span class="p">,</span> <span class="s2">&quot;player2&quot;</span><span class="p">:</span> <span class="n">env</span><span class="o">.</span><span class="n">RIGHT</span><span class="p">}</span>
+<span class="n">observations</span><span class="p">,</span> <span class="n">rewards</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">env</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="p">,</span> <span class="n">player</span><span class="o">=</span><span class="s2">&quot;player0&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Observations:&quot;</span><span class="p">,</span> <span class="n">observations</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Rewards:&quot;</span><span class="p">,</span> <span class="n">rewards</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Terminated:&quot;</span><span class="p">,</span> <span class="n">terminated</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">InflGame.MARL.async_game.</span></span><span class="sig-name descname"><span class="pre">influencer_env_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async" title="Link to this definition">#</a></dt>
+<dd><p>An asynchronous multi-agent environment for influencer games.</p>
+<p>This environment simulates a 1D domain where agents can move left, stay, or move right asynchronously.
+Rewards are calculated based on a probability matrix and resource distribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>action_space</strong></dt><dd></dd>
+<dt><strong>action_spaces</strong></dt><dd></dd>
+<dt><strong>max_num_agents</strong></dt><dd></dd>
+<dt><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.np_random" title="InflGame.MARL.async_game.influencer_env_async.np_random"><code class="xref py py-obj docutils literal notranslate"><span class="pre">np_random</span></code></a></dt><dd><p>Returns the environment’s internal <code class="xref py py-attr docutils literal notranslate"><span class="pre">_np_random</span></code> that if not set will initialise with a random seed.</p>
+</dd>
+<dt><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.np_random_seed" title="InflGame.MARL.async_game.influencer_env_async.np_random_seed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">np_random_seed</span></code></a></dt><dd><p>Returns the environment’s internal <code class="xref py py-attr docutils literal notranslate"><span class="pre">_np_random_seed</span></code> that if not set will first initialise with a random int as seed.</p>
+</dd>
+<dt><strong>num_agents</strong></dt><dd></dd>
+<dt><strong>observation_space</strong></dt><dd></dd>
+<dt><strong>observation_spaces</strong></dt><dd></dd>
+<dt><strong>render_mode</strong></dt><dd></dd>
+<dt><strong>spec</strong></dt><dd></dd>
+<dt><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.unwrapped" title="InflGame.MARL.async_game.influencer_env_async.unwrapped"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unwrapped</span></code></a></dt><dd><p>Returns the base non-wrapped environment.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.REWARD_MAP" title="InflGame.MARL.async_game.influencer_env_async.REWARD_MAP"><code class="xref py py-obj docutils literal notranslate"><span class="pre">REWARD_MAP</span></code></a>(observations)</p></td>
+<td><p>Compute the reward for each agent based on their positions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.close" title="InflGame.MARL.async_game.influencer_env_async.close"><code class="xref py py-obj docutils literal notranslate"><span class="pre">close</span></code></a>()</p></td>
+<td><p>After the user has finished using the environment, close contains the code necessary to &quot;clean up&quot; the environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_agent_ids</span></code>(**kwargs)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.get_wrapper_attr" title="InflGame.MARL.async_game.influencer_env_async.get_wrapper_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_wrapper_attr</span></code></a>(name)</p></td>
+<td><p>Gets the attribute <em class="xref py py-obj">name</em> from the environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.has_wrapper_attr" title="InflGame.MARL.async_game.influencer_env_async.has_wrapper_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_wrapper_attr</span></code></a>(name)</p></td>
+<td><p>Checks if the attribute <em class="xref py py-obj">name</em> exists in the environment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.initial_position_to_observation" title="InflGame.MARL.async_game.influencer_env_async.initial_position_to_observation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_position_to_observation</span></code></a>()</p></td>
+<td><p>Convert initial positions to observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.observation_to_position" title="InflGame.MARL.async_game.influencer_env_async.observation_to_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">observation_to_position</span></code></a>(observations)</p></td>
+<td><p>Convert observations to positions in the domain.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.observation_update" title="InflGame.MARL.async_game.influencer_env_async.observation_update"><code class="xref py py-obj docutils literal notranslate"><span class="pre">observation_update</span></code></a>(actions, observations, key)</p></td>
+<td><p>Update the observation of a specific agent based on its action.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.render" title="InflGame.MARL.async_game.influencer_env_async.render"><code class="xref py py-obj docutils literal notranslate"><span class="pre">render</span></code></a>()</p></td>
+<td><p>Tries to render the environment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.reset" title="InflGame.MARL.async_game.influencer_env_async.reset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset</span></code></a>(*[, seed, options])</p></td>
+<td><p>Reset the environment to its initial state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.set_wrapper_attr" title="InflGame.MARL.async_game.influencer_env_async.set_wrapper_attr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_wrapper_attr</span></code></a>(name, value)</p></td>
+<td><p>Sets the attribute <em class="xref py py-obj">name</em> on the environment with <em class="xref py py-obj">value</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.step" title="InflGame.MARL.async_game.influencer_env_async.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a>(action_dict, agent)</p></td>
+<td><p>Perform a single step in the environment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.to_base_env" title="InflGame.MARL.async_game.influencer_env_async.to_base_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_base_env</span></code></a>([make_env, num_envs, ...])</p></td>
+<td><p>Converts an RLlib MultiAgentEnv into a BaseEnv object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.with_agent_groups" title="InflGame.MARL.async_game.influencer_env_async.with_agent_groups"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_agent_groups</span></code></a>(groups[, obs_space, act_space])</p></td>
+<td><p>Convenience method for grouping together agents in this env.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>get_action_space</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>get_observation_space</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.REWARD_MAP">
+<span class="sig-name descname"><span class="pre">REWARD_MAP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.REWARD_MAP" title="Link to this definition">#</a></dt>
+<dd><p>Compute the reward for each agent based on their positions.</p>
+<div class="math notranslate nohighlight">
+\[u_i(x) = \sum_{b \in \mathbb{B}} G_i(b) \cdot R(b)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(G_i(b)\)</span> is the probability of agent <span class="math notranslate nohighlight">\(i\)</span> influencing bin <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(B(b)\)</span> is the resource available at bin <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\mathbb{B}\)</span> is the set of all bin points</p></li>
+</ul>
+</dd>
+</dl>
+<p>The probability is calculated by the function <a class="reference internal" href="utils/InflGame.MARL.utils.MARL_utils.html#InflGame.MARL.utils.MARL_utils.prob_matrix" title="InflGame.MARL.utils.MARL_utils.prob_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.utils.MARL_utils.prob_matrix</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>observations</strong> (<em>dict</em>) – Current observations of all agents.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rewards for each agent.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.close" title="Link to this definition">#</a></dt>
+<dd><p>After the user has finished using the environment, close contains the code necessary to “clean up” the environment.</p>
+<p>This is critical for closing rendering windows, database or HTTP connections.
+Calling <code class="docutils literal notranslate"><span class="pre">close</span></code> on an already closed environment has no effect and won’t raise an error.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.get_wrapper_attr">
+<span class="sig-name descname"><span class="pre">get_wrapper_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.get_wrapper_attr" title="Link to this definition">#</a></dt>
+<dd><p>Gets the attribute <em class="xref py py-obj">name</em> from the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.has_wrapper_attr">
+<span class="sig-name descname"><span class="pre">has_wrapper_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.has_wrapper_attr" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the attribute <em class="xref py py-obj">name</em> exists in the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.initial_position_to_observation">
+<span class="sig-name descname"><span class="pre">initial_position_to_observation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.initial_position_to_observation" title="Link to this definition">#</a></dt>
+<dd><p>Convert initial positions to observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of observations corresponding to initial positions.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.np_random">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">np_random</span></span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.np_random" title="Link to this definition">#</a></dt>
+<dd><p>Returns the environment’s internal <code class="xref py py-attr docutils literal notranslate"><span class="pre">_np_random</span></code> that if not set will initialise with a random seed.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Instances of <code class="xref py py-obj docutils literal notranslate"><span class="pre">np.random.Generator</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.np_random_seed">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">np_random_seed</span></span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.np_random_seed" title="Link to this definition">#</a></dt>
+<dd><p>Returns the environment’s internal <code class="xref py py-attr docutils literal notranslate"><span class="pre">_np_random_seed</span></code> that if not set will first initialise with a random int as seed.</p>
+<p>If <a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.np_random_seed" title="InflGame.MARL.async_game.influencer_env_async.np_random_seed"><code class="xref py py-attr docutils literal notranslate"><span class="pre">np_random_seed</span></code></a> was set directly instead of through <a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.reset" title="InflGame.MARL.async_game.influencer_env_async.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> or <code class="xref py py-meth docutils literal notranslate"><span class="pre">set_np_random_through_seed</span></code>,
+the seed will take the value -1.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>int: the seed of the current <a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.np_random" title="InflGame.MARL.async_game.influencer_env_async.np_random"><code class="xref py py-obj docutils literal notranslate"><span class="pre">np_random</span></code></a> or -1, if the seed of the rng is unknown</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.observation_to_position">
+<span class="sig-name descname"><span class="pre">observation_to_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observations</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.observation_to_position" title="Link to this definition">#</a></dt>
+<dd><p>Convert observations to positions in the domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>observations</strong> (<em>dict</em>) – Observations of all agents.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of positions corresponding to the observations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.observation_update">
+<span class="sig-name descname"><span class="pre">observation_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">observations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.observation_update" title="Link to this definition">#</a></dt>
+<dd><p>Update the observation of a specific agent based on its action.</p>
+<p>The observations are updated based on the actions taken by the agent via the following rules:
+- If action is LEFT, decrease the observation by 1.
+- If action is STAY, keep the observation unchanged.
+- If action is RIGHT, increase the observation by 1.
+- If the new observation is out of bounds, keep the observation unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>actions</strong> (<em>dict</em>) – Actions taken by all agents.</p></li>
+<li><p><strong>observations</strong> (<em>dict</em>) – Current observations of all agents.</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – Key of the agent whose observation is being updated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated observations.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.render" title="Link to this definition">#</a></dt>
+<dd><p>Tries to render the environment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.reset" title="Link to this definition">#</a></dt>
+<dd><p>Reset the environment to its initial state.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed for reproducibility, defaults to None.</p></li>
+<li><p><strong>options</strong> (<em>dict</em><em>, </em><em>optional</em>) – Additional options for reset, defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initial observations and an empty info dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.set_wrapper_attr">
+<span class="sig-name descname"><span class="pre">set_wrapper_attr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.set_wrapper_attr" title="Link to this definition">#</a></dt>
+<dd><p>Sets the attribute <em class="xref py py-obj">name</em> on the environment with <em class="xref py py-obj">value</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.step" title="Link to this definition">#</a></dt>
+<dd><p>Perform a single step in the environment.
+This method updates the environment based on the actions taken by all agents via the <a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.observation_update" title="InflGame.MARL.async_game.influencer_env_async.observation_update"><code class="xref py py-func docutils literal notranslate"><span class="pre">observation_update</span></code></a> method.
+It computes the rewards for each agent using the <a class="reference internal" href="#InflGame.MARL.async_game.influencer_env_async.REWARD_MAP" title="InflGame.MARL.async_game.influencer_env_async.REWARD_MAP"><code class="xref py py-func docutils literal notranslate"><span class="pre">REWARD_MAP</span></code></a> method and checks for termination conditions.</p>
+<p>Unlike the step method in synchronous environments <a class="reference internal" href="InflGame.MARL.sync_game.html#module-InflGame.MARL.sync_game" title="InflGame.MARL.sync_game"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.sync_game</span></code></a>
+where all agents take actions at the same time and the environment is updated synchronously,
+this method processes actions asynchronously</p>
+<p>Additionally, this method requires the player whose action is being processed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>action_dict</strong> (<em>dict</em>) – Actions taken by all agents.</p></li>
+<li><p><strong>agent</strong> (<em>str</em>) – The player whose action is being processed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Updated observations, rewards, termination status, truncated status, and info dictionary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.to_base_env">
+<span class="sig-name descname"><span class="pre">to_base_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_env_batch_wait_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restart_failed_sub_environments</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.to_base_env" title="Link to this definition">#</a></dt>
+<dd><p>Converts an RLlib MultiAgentEnv into a BaseEnv object.</p>
+<p>The resulting BaseEnv is always vectorized (contains n
+sub-environments) to support batched forward passes, where n may
+also be 1. BaseEnv also supports async execution via the <em class="xref py py-obj">poll</em> and
+<em class="xref py py-obj">send_actions</em> methods and thus supports external simulators.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>make_env: A callable taking an int as input (which indicates</dt><dd><p>the number of individual sub-environments within the final
+vectorized BaseEnv) and returning one individual
+sub-environment.</p>
+</dd>
+<dt>num_envs: The number of sub-environments to create in the</dt><dd><p>resulting (vectorized) BaseEnv. The already existing <em class="xref py py-obj">env</em>
+will be one of the <em class="xref py py-obj">num_envs</em>.</p>
+</dd>
+<dt>remote_envs: Whether each sub-env should be a &#64;ray.remote</dt><dd><p>actor. You can set this behavior in your config via the
+<em class="xref py py-obj">remote_worker_envs=True</em> option.</p>
+</dd>
+<dt>remote_env_batch_wait_ms: The wait time (in ms) to poll remote</dt><dd><p>sub-environments for, if applicable. Only used if
+<em class="xref py py-obj">remote_envs</em> is True.</p>
+</dd>
+<dt>restart_failed_sub_environments: If True and any sub-environment (within</dt><dd><p>a vectorized env) throws any error during env stepping, we will try to
+restart the faulty sub-environment. This is done
+without disturbing the other (still intact) sub-environments.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>The resulting BaseEnv object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.unwrapped">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unwrapped</span></span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.unwrapped" title="Link to this definition">#</a></dt>
+<dd><p>Returns the base non-wrapped environment.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Env: The base non-wrapped <code class="xref py py-class docutils literal notranslate"><span class="pre">gymnasium.Env</span></code> instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.async_game.influencer_env_async.with_agent_groups">
+<span class="sig-name descname"><span class="pre">with_agent_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">groups</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.async_game.influencer_env_async.with_agent_groups" title="Link to this definition">#</a></dt>
+<dd><p>Convenience method for grouping together agents in this env.</p>
+<p>An agent group is a list of agent IDs that are mapped to a single
+logical agent. All agents of the group must act at the same time in the
+environment. The grouped agent exposes Tuple action and observation
+spaces that are the concatenated action and obs spaces of the
+individual agents.</p>
+<p>The rewards of all the agents in a group are summed. The individual
+agent rewards are available under the “individual_rewards” key of the
+group info return.</p>
+<p>Agent grouping is required to leverage algorithms such as Q-Mix.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>groups: Mapping from group id to a list of the agent ids</dt><dd><p>of group members. If an agent id is not present in any group
+value, it will be left ungrouped. The group id becomes a new agent ID
+in the final environment.</p>
+</dd>
+<dt>obs_space: Optional observation space for the grouped</dt><dd><p>env. Must be a tuple space. If not provided, will infer this to be a
+Tuple of n individual agents spaces (n=num agents in a group).</p>
+</dd>
+<dt>act_space: Optional action space for the grouped env.</dt><dd><p>Must be a tuple space. If not provided, will infer this to be a Tuple
+of n individual agents spaces (n=num agents in a group).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.MARL.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="InflGame.MARL.sync_game.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Synchronous Influencer Game</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#asynchronous-multi-agent-environment-module">Asynchronous Multi-Agent Environment Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-definitions">Mathematical Definitions:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async"><code class="docutils literal notranslate"><span class="pre">influencer_env_async</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.REWARD_MAP"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.REWARD_MAP</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.close"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.close</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.get_wrapper_attr"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.get_wrapper_attr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.has_wrapper_attr"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.has_wrapper_attr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.initial_position_to_observation"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.initial_position_to_observation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.np_random"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.np_random</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.np_random_seed"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.np_random_seed</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.observation_to_position"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.observation_to_position</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.observation_update"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.observation_update</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.render"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.render</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.reset"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.reset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.set_wrapper_attr"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.set_wrapper_attr</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.step"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.step</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.to_base_env"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.to_base_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.unwrapped"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.unwrapped</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.async_game.influencer_env_async.with_agent_groups"><code class="docutils literal notranslate"><span class="pre">influencer_env_async.with_agent_groups</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/MARL/InflGame.MARL.async_game.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

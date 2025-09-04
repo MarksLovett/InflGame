@@ -1,0 +1,240 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{reny2020nash}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=065fca061ecc494ea82a25787b078ebb}{%
+           family={Reny},
+           familyi={R\bibinitperiod},
+           given={Philip\bibnamedelima J},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Annual Reviews}%
+      }
+      \strng{namehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{fullhash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{fullhashraw}{065fca061ecc494ea82a25787b078ebb}
+      \strng{bibnamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorbibnamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authornamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorfullhash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorfullhashraw}{065fca061ecc494ea82a25787b078ebb}
+      \field{extraname}{1}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Annual Review of Economics}
+      \field{number}{1}
+      \field{title}{Nash equilibrium in discontinuous games}
+      \field{volume}{12}
+      \field{year}{2020}
+      \field{pages}{439\bibrangedash 470}
+      \range{pages}{32}
+    \endentry
+    \entry{reny2016nash}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=065fca061ecc494ea82a25787b078ebb}{%
+           family={Reny},
+           familyi={R\bibinitperiod},
+           given={Philip\bibnamedelima J},
+           giveni={P\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{fullhash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{fullhashraw}{065fca061ecc494ea82a25787b078ebb}
+      \strng{bibnamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorbibnamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authornamehash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorfullhash}{065fca061ecc494ea82a25787b078ebb}
+      \strng{authorfullhashraw}{065fca061ecc494ea82a25787b078ebb}
+      \field{extraname}{2}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Economic Theory}
+      \field{title}{Nash equilibrium in discontinuous games}
+      \field{volume}{61}
+      \field{year}{2016}
+      \field{pages}{553\bibrangedash 569}
+      \range{pages}{17}
+    \endentry
+    \entry{sothanaphan2017determinants}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=2d2bfe2c79a8386fb773bd53c379fdef}{%
+           family={Sothanaphan},
+           familyi={S\bibinitperiod},
+           given={Nat},
+           giveni={N\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{fullhash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{fullhashraw}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{bibnamehash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{authorbibnamehash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{authornamehash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{authorfullhash}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \strng{authorfullhashraw}{2d2bfe2c79a8386fb773bd53c379fdef}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Linear Algebra and its Applications}
+      \field{title}{Determinants of block matrices with noncommuting blocks}
+      \field{volume}{512}
+      \field{year}{2017}
+      \field{pages}{202\bibrangedash 218}
+      \range{pages}{17}
+    \endentry
+    \entry{yang2020us}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=2f4e7487da5eac059a572d34135f9780}{%
+           family={Yang},
+           familyi={Y\bibinitperiod},
+           given={Vicky\bibnamedelima Chuqiao},
+           giveni={V\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=66fcde7c39454520801ef3397f761d67}{%
+           family={Abrams},
+           familyi={A\bibinitperiod},
+           given={Daniel\bibnamedelima M},
+           giveni={D\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=fde48843b0aec9780638774f2d58cd83}{%
+           family={Kernell},
+           familyi={K\bibinitperiod},
+           given={Georgia},
+           giveni={G\bibinitperiod}}}%
+        {{hash=f602939da939dcb141c802813ea93cc4}{%
+           family={Motter},
+           familyi={M\bibinitperiod},
+           given={Adilson\bibnamedelima E},
+           giveni={A\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {SIAM}%
+      }
+      \strng{namehash}{62c5dd3aa7059c4199445a8c11bfb389}
+      \strng{fullhash}{d9d7871b3e56efe40b5e241ecec5389f}
+      \strng{fullhashraw}{d9d7871b3e56efe40b5e241ecec5389f}
+      \strng{bibnamehash}{d9d7871b3e56efe40b5e241ecec5389f}
+      \strng{authorbibnamehash}{d9d7871b3e56efe40b5e241ecec5389f}
+      \strng{authornamehash}{62c5dd3aa7059c4199445a8c11bfb389}
+      \strng{authorfullhash}{d9d7871b3e56efe40b5e241ecec5389f}
+      \strng{authorfullhashraw}{d9d7871b3e56efe40b5e241ecec5389f}
+      \field{sortinit}{4}
+      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{SIAM Review}
+      \field{number}{3}
+      \field{title}{Why are US parties so polarized? A “satisficing” dynamical model}
+      \field{volume}{62}
+      \field{year}{2020}
+      \field{pages}{646\bibrangedash 657}
+      \range{pages}{12}
+    \endentry
+    \entry{jones2022polarization}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=ef819a41ae74c92b66d6d59343560c07}{%
+           family={Jones},
+           familyi={J\bibinitperiod},
+           given={Matthew\bibnamedelima I},
+           giveni={M\bibinitperiod\bibinitdelim I\bibinitperiod}}}%
+        {{hash=56c50f8848051f04cddecd7fa4e869cd}{%
+           family={Sirianni},
+           familyi={S\bibinitperiod},
+           given={Antonio\bibnamedelima D},
+           giveni={A\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=9883dde8fd76733e954b9c135f0f2299}{%
+           family={Fu},
+           familyi={F\bibinitperiod},
+           given={Feng},
+           giveni={F\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Palgrave}%
+      }
+      \strng{namehash}{19dc564bbf112abf5c04d391cc52cf2f}
+      \strng{fullhash}{71e174a964eb9250d42330b01650e97d}
+      \strng{fullhashraw}{71e174a964eb9250d42330b01650e97d}
+      \strng{bibnamehash}{71e174a964eb9250d42330b01650e97d}
+      \strng{authorbibnamehash}{71e174a964eb9250d42330b01650e97d}
+      \strng{authornamehash}{19dc564bbf112abf5c04d391cc52cf2f}
+      \strng{authorfullhash}{71e174a964eb9250d42330b01650e97d}
+      \strng{authorfullhashraw}{71e174a964eb9250d42330b01650e97d}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Humanities and Social Sciences Communications}
+      \field{number}{1}
+      \field{title}{Polarization, abstention, and the median voter theorem}
+      \field{volume}{9}
+      \field{year}{2022}
+      \field{pages}{1\bibrangedash 12}
+      \range{pages}{12}
+    \endentry
+    \entry{li2022pure}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=fae56da5ba5a4ee11720e95bb509cc9f}{%
+           family={Li},
+           familyi={L\bibinitperiod},
+           given={Xinmi},
+           giveni={X\bibinitperiod}}}%
+        {{hash=ffb97d2db5a68752cd441b0c6741f3e9}{%
+           family={Zheng},
+           familyi={Z\bibinitperiod},
+           given={Jie},
+           giveni={J\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{fullhash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{fullhashraw}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{bibnamehash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{authorbibnamehash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{authornamehash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{authorfullhash}{2cea7ec92966082c9c11ff7ee77cda35}
+      \strng{authorfullhashraw}{2cea7ec92966082c9c11ff7ee77cda35}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Mathematical Economics}
+      \field{title}{Pure strategy Nash Equilibrium in 2-contestant generalized lottery Colonel Blotto games}
+      \field{volume}{103}
+      \field{year}{2022}
+      \field{pages}{102771}
+      \range{pages}{1}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

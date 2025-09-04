@@ -1,0 +1,776 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Asynchronous IQL &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/MARL/InflGame.MARL.IQL_async';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Synchronous IQL" href="InflGame.MARL.IQL_sync.html" />
+    <link rel="prev" title="Synchronous Influencer Game" href="InflGame.MARL.sync_game.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adaptive/InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.visualization.html">Plots</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../kernels/InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.MARL.html" class="nav-link">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Asynchronous IQL</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.MARL.IQL_async">
+<span id="asynchronous-iql"></span><h1>Asynchronous IQL<a class="headerlink" href="#module-InflGame.MARL.IQL_async" title="Link to this heading">#</a></h1>
+<section id="independent-q-learning-with-asynchronous-updates-module">
+<span id="module-IQL_async"></span><h2>Independent Q-Learning with Asynchronous Updates Module<a class="headerlink" href="#independent-q-learning-with-asynchronous-updates-module" title="Link to this heading">#</a></h2>
+<p>This module implements the Independent Q-Learning (IQL) algorithm in an asynchronous multi-agent reinforcement 
+learning setting. The IQL algorithm allows agents to learn independently while interacting in a shared environment. 
+It supports epsilon-greedy and softmax policies for action selection and provides utilities for training agents 
+over multiple epochs and episodes.</p>
+<section id="mathematical-definitions">
+<h3>Mathematical Definitions:<a class="headerlink" href="#mathematical-definitions" title="Link to this heading">#</a></h3>
+<p>The Q-learning update rule for an agent <span class="math notranslate nohighlight">\(i\)</span> is defined as:</p>
+<div class="math notranslate nohighlight">
+\[Q_i(s, a) \leftarrow (1 - \alpha) Q_i(s, a) + \alpha \left( r + \gamma \max_{a'} Q_i(s', a')\right)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(s\)</span> is the current state</p></li>
+<li><p><span class="math notranslate nohighlight">\(a\)</span> is the action taken</p></li>
+<li><p><span class="math notranslate nohighlight">\(r\)</span> is the reward received</p></li>
+<li><p><span class="math notranslate nohighlight">\(s'\)</span> is the next state</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the learning rate</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma\)</span> is the discount factor</p></li>
+</ul>
+</dd>
+</dl>
+<p>This implementation supports both epsilon-greedy and softmax action selection policies.</p>
+</section>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.MARL</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">IQL_async</em> class provides an implementation of the IQL algorithm with asynchronous updates. It supports 
+custom configurations for learning rate, discount factor, epsilon decay, and more.</p>
+</section>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">InflGame.MARL.async_game</span><span class="w"> </span><span class="kn">import</span> <span class="n">influencer_env_async</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">InflGame.MARL.IQL_async</span><span class="w"> </span><span class="kn">import</span> <span class="n">IQL_async</span>
+
+<span class="c1"># Define environment configuration</span>
+<span class="n">env_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;num_agents&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">&quot;initial_position&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">],</span>
+    <span class="s2">&quot;bin_points&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;resource_distribution&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span>
+    <span class="s2">&quot;step_size&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="s2">&quot;domain_type&quot;</span><span class="p">:</span> <span class="s2">&quot;1d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;domain_bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="s2">&quot;infl_configs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;infl_type&quot;</span><span class="p">:</span> <span class="s2">&quot;gaussian&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;parameters&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
+    <span class="s2">&quot;fixed_pa&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;NUM_ITERS&quot;</span><span class="p">:</span> <span class="mi">100</span>
+<span class="p">}</span>
+
+<span class="c1"># Initialize the environment</span>
+<span class="n">env</span> <span class="o">=</span> <span class="n">influencer_env_async</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">env_config</span><span class="p">)</span>
+
+<span class="c1"># Define IQL configuration</span>
+<span class="n">iql_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;random_seed&quot;</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
+    <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="n">env</span><span class="p">,</span>
+    <span class="s2">&quot;epsilon_configs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;TYPE&quot;</span><span class="p">:</span> <span class="s2">&quot;cosine_annealing&quot;</span><span class="p">,</span> <span class="s2">&quot;epsilon_max&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;epsilon_min&quot;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+    <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">,</span>
+    <span class="s2">&quot;alpha&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+    <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">&quot;random_initialize&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;soft_max&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">&quot;episode_configs&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;TYPE&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;episode_max&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1"># Initialize and train the IQL_async agent</span>
+<span class="n">iql_agent</span> <span class="o">=</span> <span class="n">IQL_async</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">iql_config</span><span class="p">)</span>
+<span class="n">final_q_table</span> <span class="o">=</span> <span class="n">iql_agent</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training completed. Final Q-table:&quot;</span><span class="p">,</span> <span class="n">final_q_table</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">InflGame.MARL.IQL_async.</span></span><span class="sig-name descname"><span class="pre">IQL_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async" title="Link to this definition">#</a></dt>
+<dd><p>Implements Independent Q-Learning (IQL) with asynchronous updates for multi-agent reinforcement learning.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.Q_max_action" title="InflGame.MARL.IQL_async.IQL_async.Q_max_action"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Q_max_action</span></code></a>(agent)</p></td>
+<td><p>Chooses the action with the maximum Q-value for the given player.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.Q_soft_max_action" title="InflGame.MARL.IQL_async.IQL_async.Q_soft_max_action"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Q_soft_max_action</span></code></a>(agent)</p></td>
+<td><p>Chooses an action for the given player using a softmax policy based on the Q-values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.Q_step" title="InflGame.MARL.IQL_async.IQL_async.Q_step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Q_step</span></code></a>(episode)</p></td>
+<td><p>Performs a single step of Q-learning for all agents in the environment asynchronously where each agent updates its Q-table independently.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.Q_table_initiation" title="InflGame.MARL.IQL_async.IQL_async.Q_table_initiation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Q_table_initiation</span></code></a>()</p></td>
+<td><p>Initializes the Q-table for all agents.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.action_choice" title="InflGame.MARL.IQL_async.IQL_async.action_choice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">action_choice</span></code></a>(episode, agent)</p></td>
+<td><p>Chooses an action for the given player based on the epsilon-greedy policy.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.observation_initialized" title="InflGame.MARL.IQL_async.IQL_async.observation_initialized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">observation_initialized</span></code></a>()</p></td>
+<td><p>Resets the environment and initializes random observations for all agents.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.train" title="InflGame.MARL.IQL_async.IQL_async.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a>()</p></td>
+<td><p>Trains the agents using the IQL algorithm over multiple epochs and episodes.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.Q_max_action">
+<span class="sig-name descname"><span class="pre">Q_max_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.Q_max_action" title="Link to this definition">#</a></dt>
+<dd><p>Chooses the action with the maximum Q-value for the given player.</p>
+<div class="math notranslate nohighlight">
+\[a^* = \arg\max_a Q(s,a)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(s\)</span> is the current state</p></li>
+<li><p><span class="math notranslate nohighlight">\(a^*\)</span> is the action with the highest Q-value</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q(s,a)\)</span> is the Q-value for action <span class="math notranslate nohighlight">\(a\)</span> in state <span class="math notranslate nohighlight">\(s\)</span></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>agent</strong> (<em>str</em>) – The player for whom the action is being chosen.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The chosen action.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.Q_soft_max_action">
+<span class="sig-name descname"><span class="pre">Q_soft_max_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.Q_soft_max_action" title="Link to this definition">#</a></dt>
+<dd><p>Chooses an action for the given player using a softmax policy based on the Q-values.</p>
+<div class="math notranslate nohighlight">
+\[P(a|s) = \frac{e^{Q(s,a)/T}}{\sum_{a'} e^{Q(s,a')/T}}\]</div>
+<p>The temperature is adjusted based on the observation and the configuration settings via 
+the function <a class="reference internal" href="utils/InflGame.MARL.utils.IQL_utils.html#InflGame.MARL.utils.IQL_utils.adjusted_temperature" title="InflGame.MARL.utils.IQL_utils.adjusted_temperature"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.utils.IQL_utils.adjusted_temperature</span></code></a>.</p>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the temperature parameter</p></li>
+<li><p><span class="math notranslate nohighlight">\(a'\)</span> is the set of all possible actions</p></li>
+<li><p><span class="math notranslate nohighlight">\(P(a|s)\)</span> is the probability of taking action <span class="math notranslate nohighlight">\(a\)</span> in state <span class="math notranslate nohighlight">\(s\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(Q(s,a)\)</span> is the Q-value for action <span class="math notranslate nohighlight">\(a\)</span> in state <span class="math notranslate nohighlight">\(s\)</span></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>agent</strong> (<em>str</em>) – The player for whom the action is being chosen.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The chosen action.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.Q_step">
+<span class="sig-name descname"><span class="pre">Q_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.Q_step" title="Link to this definition">#</a></dt>
+<dd><p>Performs a single step of Q-learning for all agents in the environment asynchronously where each agent updates its Q-table independently.</p>
+<p>The Q-learning update step is done using the following formula:</p>
+<div class="math notranslate nohighlight">
+\[Q(s, a) \leftarrow (1 - \alpha) Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') \right)\]</div>
+<p>Where actions are chosen using the <a class="reference internal" href="#InflGame.MARL.IQL_async.IQL_async.action_choice" title="InflGame.MARL.IQL_async.IQL_async.action_choice"><code class="xref py py-obj docutils literal notranslate"><span class="pre">action_choice</span></code></a> method independently for each agent and then 
+the Q-values are updated based on the received rewards and the next state. In the next state the next agent chooses its action.
+In a loop this looks like this:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>for each agent in agent_order:</dt><dd><p>action = action_choice(agent)
+observations, rewards, terminateds, _, _ = env.step(action)
+Q table update</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>after this loop agent_order is shuffled and the loop is repeated until all episodes are passed through for the epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>episode</strong> (<em>int</em>) – The current episode number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated Q-table.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.Q_table_initiation">
+<span class="sig-name descname"><span class="pre">Q_table_initiation</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.Q_table_initiation" title="Link to this definition">#</a></dt>
+<dd><p>Initializes the Q-table for all agents.</p>
+<p>If <em class="xref py py-obj">random_initialize</em> is True, the Q-values are initialized randomly; otherwise, they are initialized to zero.</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}Q(s, a) = 
+\begin{cases} 
+\text{random value in } [0, 0.3] &amp; \text{if random initialization is enabled} \\
+0 &amp; \text{otherwise}
+\end{cases}\end{split}\]</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.action_choice">
+<span class="sig-name descname"><span class="pre">action_choice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">episode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.action_choice" title="Link to this definition">#</a></dt>
+<dd><p>Chooses an action for the given player based on the epsilon-greedy policy.</p>
+<p><span class="math notranslate nohighlight">\(\epsilon\)</span> is adjusted based on the episode number and the number of players in the environment via the function <a class="reference internal" href="utils/InflGame.MARL.utils.IQL_utils.html#InflGame.MARL.utils.IQL_utils.adjusted_epsilon" title="InflGame.MARL.utils.IQL_utils.adjusted_epsilon"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.utils.IQL_utils.adjusted_epsilon</span></code></a>.</p>
+<p>If a random value is less than <span class="math notranslate nohighlight">\(\epsilon\)</span>, a random action is chosen. Otherwise, the action is selected 
+based on the Q-values using either a softmax or max policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>episode</strong> (<em>int</em>) – The current episode number.</p></li>
+<li><p><strong>agent</strong> (<em>str</em>) – The player for whom the action is being chosen.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The chosen action.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.observation_initialized">
+<span class="sig-name descname"><span class="pre">observation_initialized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.observation_initialized" title="Link to this definition">#</a></dt>
+<dd><p>Resets the environment and initializes random observations for all agents.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.MARL.IQL_async.IQL_async.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.MARL.IQL_async.IQL_async.train" title="Link to this definition">#</a></dt>
+<dd><p>Trains the agents using the IQL algorithm over multiple epochs and episodes.</p>
+<p>The number of episodes in an epoch is adjusted based on the configuration settings via the function
+<a class="reference internal" href="utils/InflGame.MARL.utils.IQL_utils.html#InflGame.MARL.utils.IQL_utils.adjusted_episodes" title="InflGame.MARL.utils.IQL_utils.adjusted_episodes"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.MARL.utils.IQL_utils.adjusted_episodes</span></code></a>.</p>
+<p>At the end of an epoch, the environment is reset and the observations are reinitialized randomly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The final Q-table after training.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.MARL.sync_game.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Synchronous Influencer Game</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="InflGame.MARL.IQL_sync.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Synchronous IQL</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#independent-q-learning-with-asynchronous-updates-module">Independent Q-Learning with Asynchronous Updates Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-definitions">Mathematical Definitions:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async"><code class="docutils literal notranslate"><span class="pre">IQL_async</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.Q_max_action"><code class="docutils literal notranslate"><span class="pre">IQL_async.Q_max_action</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.Q_soft_max_action"><code class="docutils literal notranslate"><span class="pre">IQL_async.Q_soft_max_action</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.Q_step"><code class="docutils literal notranslate"><span class="pre">IQL_async.Q_step</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.Q_table_initiation"><code class="docutils literal notranslate"><span class="pre">IQL_async.Q_table_initiation</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.action_choice"><code class="docutils literal notranslate"><span class="pre">IQL_async.action_choice</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.observation_initialized"><code class="docutils literal notranslate"><span class="pre">IQL_async.observation_initialized</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.MARL.IQL_async.IQL_async.train"><code class="docutils literal notranslate"><span class="pre">IQL_async.train</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/MARL/InflGame.MARL.IQL_async.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

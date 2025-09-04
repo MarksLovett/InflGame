@@ -1,6 +1,14 @@
 desktop.ini
 
+// ...existing code...
+# Ignore generated data and plot directories (include lowercase and capitalized variants)
+src/inflgame/utils/data/
+src/inflgame/utils/plots/
+src/inflgame/utils/paper_plots/
 
+src/InflGame/utils/data/
+src/InflGame/utils/plots/
+src/InflGame/utils/paper_plots/
 
 
 # Byte-compiled / 

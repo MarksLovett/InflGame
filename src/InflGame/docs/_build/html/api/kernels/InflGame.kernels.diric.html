@@ -1,0 +1,693 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Dirichlet Kernel &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/kernels/InflGame.kernels.diric';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Multi-Variate Gaussian Kernel" href="InflGame.kernels.MV_gauss.html" />
+    <link rel="prev" title="Jones’ Kernel" href="InflGame.kernels.jones.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adaptive/InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.visualization.html">Plots</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.kernels.html" class="nav-link">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Dirichlet Kernel</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.kernels.diric">
+<span id="dirichlet-kernel"></span><h1>Dirichlet Kernel<a class="headerlink" href="#module-InflGame.kernels.diric" title="Link to this heading">#</a></h1>
+<section id="dirichlet-influence-kernel-module">
+<span id="module-diric"></span><h2>Dirichlet Influence Kernel Module<a class="headerlink" href="#dirichlet-influence-kernel-module" title="Link to this heading">#</a></h2>
+<p>This module implements the Dirichlet influence kernel and its associated computations. The Dirichlet kernel models the 
+influence of agents based on a multivariate probability distribution centered on their position and defined over a simplex.</p>
+<section id="mathematical-definitions">
+<h3>Mathematical Definitions:<a class="headerlink" href="#mathematical-definitions" title="Link to this heading">#</a></h3>
+<p>The Dirichlet influence kernel is defined as:</p>
+<div class="math notranslate nohighlight">
+\[f_i(\alpha, b) = \frac{1}{\beta(\alpha)} \prod_{l=1}^{L} b_{l}^{\alpha_{l} - 1}\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the vector of parameters for the Dirichlet distribution, defined by the <em class="xref py py-obj">param</em> function.</p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta(\alpha)\)</span> is the beta function.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.utils</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">param</em> function generates the alpha parameters for the Dirichlet kernel from agents positions,
+while the <em class="xref py py-obj">influence</em> function computes the influence of agents at specific bin points.
+The <em class="xref py py-obj">d_ln_f</em> function calculates the gradient of the logarithm of the Dirichlet PDF with respect to agent positions.</p>
+</section>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">InflGame.kernels.diric</span><span class="w"> </span><span class="kn">import</span> <span class="n">param</span><span class="p">,</span> <span class="n">influence</span><span class="p">,</span> <span class="n">d_ln_f</span>
+
+<span class="c1"># Define parameters</span>
+<span class="n">num_agents</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="n">parameter_instance</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]</span>
+<span class="n">agents_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">]])</span>
+<span class="n">fixed_pa</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">bin_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]])</span>
+
+<span class="c1"># Generate alpha parameters</span>
+<span class="n">alpha_matrix</span> <span class="o">=</span> <span class="n">param</span><span class="p">(</span><span class="n">num_agents</span><span class="p">,</span> <span class="n">parameter_instance</span><span class="p">,</span> <span class="n">agents_pos</span><span class="p">,</span> <span class="n">fixed_pa</span><span class="p">)</span>
+
+<span class="c1"># Compute influence for agent 0</span>
+<span class="n">influence_values</span> <span class="o">=</span> <span class="n">influence</span><span class="p">(</span><span class="n">agent_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bin_points</span><span class="o">=</span><span class="n">bin_points</span><span class="p">,</span> <span class="n">alpha_matrix</span><span class="o">=</span><span class="n">alpha_matrix</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Influence values:&quot;</span><span class="p">,</span> <span class="n">influence_values</span><span class="p">)</span>
+
+<span class="c1"># Compute gradient of the logarithm of the Dirichlet PDF</span>
+<span class="n">gradient</span> <span class="o">=</span> <span class="n">d_ln_f</span><span class="p">(</span><span class="n">agent_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">agents_pos</span><span class="o">=</span><span class="n">agents_pos</span><span class="p">,</span> <span class="n">bin_points</span><span class="o">=</span><span class="n">bin_points</span><span class="p">,</span> <span class="n">alpha_matrix</span><span class="o">=</span><span class="n">alpha_matrix</span><span class="p">,</span> <span class="n">fixed_pa</span><span class="o">=</span><span class="n">fixed_pa</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Gradient values:&quot;</span><span class="p">,</span> <span class="n">gradient</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.kernels.diric.d_ln_f">
+<span class="sig-prename descclassname"><span class="pre">InflGame.kernels.diric.</span></span><span class="sig-name descname"><span class="pre">d_ln_f</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_pa</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.kernels.diric.d_ln_f" title="Link to this definition">#</a></dt>
+<dd><p class="rubric">Computes the gradient of the logarithm of the Dirichlet PDF with respect to agent positions.</p>
+<p>The gradient is calculated as follows:</p>
+<ul>
+<li><p>For <span class="math notranslate nohighlight">\(l \neq \varphi\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[d_{(i,l)} = \frac{\alpha_{i,\varphi}}{x_{i,\varphi}} \left(\ln(b_{l}) - \psi(\alpha_{i,l}) + \psi\left(\sum_{l=1}^{L} \alpha_{i,l}\right)\right)\]</div>
+</li>
+<li><p>For <span class="math notranslate nohighlight">\(l = \varphi\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}d_{(i,\varphi)} = - \sum_{\substack{j=1 \\ j \neq \varphi}}^{L} \frac{x_{i,j}}{x_{i,\varphi}} \cdot d_{(i,j)}\end{split}\]</div>
+</li>
+</ul>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(L\)</span> is the number of dimensions.</p></li>
+<li><p><span class="math notranslate nohighlight">\(b_{l}\)</span> is the bin point in dimension <span class="math notranslate nohighlight">\(l\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_{i,l}\)</span> is the position of agent <span class="math notranslate nohighlight">\(i\)</span> in dimension <span class="math notranslate nohighlight">\(l\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> is the fixed parameter index.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha_{i,l}\)</span> is the parameter for agent <span class="math notranslate nohighlight">\(i\)</span> in dimension <span class="math notranslate nohighlight">\(l\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\psi\)</span> is the digamma function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_id</strong> (<em>int</em>) – The ID of the agent (<span class="math notranslate nohighlight">\(i\)</span>).</p></li>
+<li><p><strong>agents_pos</strong> (<em>np.ndarray</em>) – Current positions of all agents (<span class="math notranslate nohighlight">\(x_{i,l}\)</span>).</p></li>
+<li><p><strong>bin_points</strong> (<em>np.ndarray</em>) – Locations of the resource/bin points (<span class="math notranslate nohighlight">\(b\)</span>).</p></li>
+<li><p><strong>alpha_matrix</strong> (<em>torch.Tensor</em>) – Alpha parameters for the Dirichlet influence (<span class="math notranslate nohighlight">\(\alpha\)</span>).</p></li>
+<li><p><strong>fixed_pa</strong> (<em>int</em>) – Index of the fixed coordinate direction (<span class="math notranslate nohighlight">\(\varphi\)</span>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradient values (<span class="math notranslate nohighlight">\(d_{(i,l)}\)</span>) for all <span class="math notranslate nohighlight">\(l\)</span> values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.kernels.diric.influence">
+<span class="sig-prename descclassname"><span class="pre">InflGame.kernels.diric.</span></span><span class="sig-name descname"><span class="pre">influence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_matrix</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.kernels.diric.influence" title="Link to this definition">#</a></dt>
+<dd><p class="rubric">Computes the influence of an agent using the Dirichlet kernel.</p>
+<p>The influence is calculated as the Dirichlet PDF evaluated at the bin points:</p>
+<div class="math notranslate nohighlight">
+\[f_i(\alpha, b) = \frac{1}{\beta(\alpha)} \prod_{l=1}^{L} b_{l}^{\alpha_{l} - 1}\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(L\)</span> is the number of dimensions.</p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the vector of parameters for the Dirichlet distribution calculated by the <a class="reference internal" href="#InflGame.kernels.diric.param" title="InflGame.kernels.diric.param"><code class="xref py py-obj docutils literal notranslate"><span class="pre">param</span></code></a> function.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta(\alpha)\)</span> is the beta function.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_id</strong> (<em>int</em>) – The ID of the agent (<span class="math notranslate nohighlight">\(i\)</span>).</p></li>
+<li><p><strong>bin_points</strong> (<em>np.ndarray</em>) – Locations of the resource/bin points (<span class="math notranslate nohighlight">\(b\)</span>).</p></li>
+<li><p><strong>alpha_matrix</strong> (<em>torch.Tensor</em>) – Alpha parameters for the Dirichlet influence (<span class="math notranslate nohighlight">\(\alpha\)</span>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Influence values for the agent at each bin point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.kernels.diric.param">
+<span class="sig-prename descclassname"><span class="pre">InflGame.kernels.diric.</span></span><span class="sig-name descname"><span class="pre">param</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_pa</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.kernels.diric.param" title="Link to this definition">#</a></dt>
+<dd><p class="rubric">Generates a matrix of alpha parameters for all agents based on their positions and a fixed parameter.</p>
+<p>The alpha matrix is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}A = \begin{bmatrix}
+  \alpha_{1,1} &amp; \alpha_{1,2} &amp; \cdots &amp; \alpha_{1,L} \\ 
+  \alpha_{2,1} &amp; \alpha_{2,2} &amp; \cdots &amp; \alpha_{2,L} \\ 
+  \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\ 
+  \alpha_{N,1} &amp; \alpha_{N,2} &amp; \cdots &amp; \alpha_{N,L}
+\end{bmatrix}\end{split}\]</div>
+<p>The alpha parameters are calculated as follows:</p>
+<ul>
+<li><p>If <span class="math notranslate nohighlight">\(l \neq \varphi\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\alpha_{i,l} = \frac{\alpha_{i}}{x_{i,\varphi}} \cdot x_{i,l}\]</div>
+</li>
+<li><p>If <span class="math notranslate nohighlight">\(l = \varphi\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\alpha_{i,l} = \alpha_{i}\]</div>
+</li>
+</ul>
+<dl class="simple">
+<dt>Where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(N\)</span> is the number of agents</p></li>
+<li><p><span class="math notranslate nohighlight">\(L\)</span> is the number of dimensions</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_{i,l}\)</span> is the position of agent <span class="math notranslate nohighlight">\(i\)</span> in dimension <span class="math notranslate nohighlight">\(l\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\varphi\)</span> is the fixed parameter index</p></li>
+<li><p><span class="math notranslate nohighlight">\(\alpha_{i}\)</span> is the parameter for agent <span class="math notranslate nohighlight">\(i\)</span> and is a fixed parameter.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_agents</strong> (<em>int</em>) – Number of agents (<span class="math notranslate nohighlight">\(N\)</span>).</p></li>
+<li><p><strong>parameter_instance</strong> (<em>list</em><em> | </em><em>np.ndarray</em><em> | </em><em>torch.Tensor</em>) – Fixed alpha values for each agent (<span class="math notranslate nohighlight">\(\alpha_i\)</span>).</p></li>
+<li><p><strong>agents_pos</strong> (<em>list</em><em> | </em><em>np.ndarray</em>) – Positions of agents in the space (<span class="math notranslate nohighlight">\(x_{i,l}\)</span>).</p></li>
+<li><p><strong>fixed_pa</strong> (<em>int</em>) – Index of the fixed coordinate direction (<span class="math notranslate nohighlight">\(\varphi\)</span>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Alpha matrix (<span class="math notranslate nohighlight">\(A\)</span>), where each row corresponds to the alpha parameters of an agent.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.kernels.jones.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Jones’ Kernel</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="InflGame.kernels.MV_gauss.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Multi-Variate Gaussian Kernel</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dirichlet-influence-kernel-module">Dirichlet Influence Kernel Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-definitions">Mathematical Definitions:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.kernels.diric.d_ln_f"><code class="docutils literal notranslate"><span class="pre">d_ln_f</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.kernels.diric.influence"><code class="docutils literal notranslate"><span class="pre">influence</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.kernels.diric.param"><code class="docutils literal notranslate"><span class="pre">param</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/kernels/InflGame.kernels.diric.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

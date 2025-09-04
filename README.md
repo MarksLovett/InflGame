@@ -16,13 +16,13 @@ $$
     u_i(\mathbf{x})=\sum_{b\in \mathbb{B}} B(b)G_{i}(x_i,x_{-i},b).
 $$
 
-For a continous resource distribution the game has the following form 
+For a continuous resource distribution the game has the following form 
 
 $$
     u_i(\mathbf{x})=\int_{\mathbb{B}} B(b)G_{i}(x_i,x_{-i},b)db.
 $$
 
-Where $G_{i}(x_i,x_{-i},b)$ is the probability of influence and is the ratio of a players influence over a resource point to the sum of all influence on that point. The proability of influence is defined as 
+Where $G_{i}(x_i,x_{-i},b)$ is the probability of influence and is the ratio of a players influence over a resource point to the sum of all influence on that point. The probability of influence is defined as 
 
 $$ 
     G_i(x_i,x_{-i},b)= \frac{f_{i}(x_i,b)}{\sum_{j\in I} f_{j}(x_j,b)},
@@ -32,10 +32,10 @@ where $f_{i}(x_i,b)$ is the $i$ th players influence over a resource point $b$.
 
 ## Why study influencer games?
 There are many games in society that take the form of a influence game with spatial influence playing a major role. To list a few:
-1. Voter dynamics: The compition for votes or influence over the masses in poltics is an exmaple where polticians are players who must optimize thier expected return of votes to win elections. politcians can optimize thier voter turn by changing thier ideological point of view or that of thier campaign at least or by changing the reach of thier influence to reach un-touched voter populations who choese an "abstaining" canidate. 
-2. Fishing and net choice: Fisherman try to optimize thier hual via choosing optimal finishing territories aka thier influence over fish populations or by chainging thier strategies to harvest thier territory more efficently (effectively chaning thie reach)
-3. Marketing and content genration: Influencers and marketers compete for limited consumer view time by choosing content topics in the form of a zero sum influence game
-4. Market maker compeition: Market makers comepete for resources in the form of volumes of trades, which creates a zero sum influence game.
+1. Voter dynamics: The competition for votes or influence over the masses in politics is an example where politicians are players who must optimize their expected return of votes to win elections. politicians can optimize their voter turn by changing their ideological point of view or that of their campaign at least or by changing the reach of their influence to reach un-touched voter populations who choose an "abstaining" candidate. 
+2. Fishing and net choice: Fisherman try to optimize their haul via choosing optimal finishing territories aka their influence over fish populations or by changing their strategies to harvest their territory more efficiently (effectively changing their reach)
+3. Marketing and content generation: Influencer and marketers compete for limited consumer view time by choosing content topics in the form of a zero sum influence game
+4. Market maker competition: Market makers compete for resources in the form of volumes of trades, which creates a zero sum influence game.
 5. And many more  
 
-The influce game package allows scholars to use a code frame work to study these games and understand how thier influence kernels impact the existance and stability of symmetric Nash. 
+The influence game package allows scholars to use a code frame work to study these games and understand how their influence kernels impact the existence and stability of symmetric Nash. 

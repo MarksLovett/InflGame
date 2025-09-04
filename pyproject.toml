@@ -8,7 +8,7 @@ build-backend = "hatchling.build"
 
 
 [project]
-name = "influencer_games"
+name = "InGame"
 version = "0.1.0"
 authors = [
   { name="Mark Lovett", email="mark.s.lovett981@gmail.com" },
