@@ -1,0 +1,1317 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Plots &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/adaptive/InflGame.adaptive.visualization';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Multi-Agent Learning (InflGame.MARL)" href="../MARL/InflGame.MARL.html" />
+    <link rel="prev" title="Adaptive Environment" href="InflGame.adaptive.grad_func_env.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Plots</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../kernels/InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.adaptive.html" class="nav-link">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Plots</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.adaptive.visualization">
+<span id="plots"></span><h1>Plots<a class="headerlink" href="#module-InflGame.adaptive.visualization" title="Link to this heading">#</a></h1>
+<section id="visualization-module">
+<span id="module-visualization"></span><h2>Visualization Module<a class="headerlink" href="#visualization-module" title="Link to this heading">#</a></h2>
+<p>This module provides visualization tools for analyzing and understanding the dynamics of adaptive environments and agent interactions for influencer games.
+It includes plotting utilities for various domains (1D, 2D, and simplex) and supports visualizing agent positions, gradients, 
+influence distributions, and bifurcation dynamics.</p>
+<p>The module is designed to work with the <em class="xref py py-obj">AdaptiveEnv</em> class and provides a framework for creating visual representations of agent behaviors 
+in influencer game environments.</p>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.utils</p></li>
+<li><p>InflGame.kernels</p></li>
+<li><p>InflGame.domains</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">Shell</em> class can be used to visualize the results of simulations performed using the <em class="xref py py-obj">AdaptiveEnv</em> class. It supports various visualization types, including position plots, gradient plots, probability plots, and bifurcation plots.</p>
+</section>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">InflGame.adaptive.visualization</span> <span class="kn">import</span> <span class="n">Shell</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Initialize the Shell</span>
+<span class="n">shell</span> <span class="o">=</span> <span class="n">Shell</span><span class="p">(</span>
+    <span class="n">num_agents</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">agents_pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]),</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span>
+    <span class="n">resource_distribution</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]),</span>
+    <span class="n">bin_points</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]),</span>
+    <span class="n">infl_configs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;infl_type&#39;</span><span class="p">:</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">},</span>
+    <span class="n">learning_rate_type</span><span class="o">=</span><span class="s1">&#39;cosine_annealing&#39;</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">domain_type</span><span class="o">=</span><span class="s1">&#39;1d&#39;</span><span class="p">,</span>
+    <span class="n">domain_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Set up the adaptive environment</span>
+<span class="n">shell</span><span class="o">.</span><span class="n">setup_adaptive_env</span><span class="p">()</span>
+
+<span class="c1"># Plot agent positions</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">shell</span><span class="o">.</span><span class="n">pos_plot</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.visualization.</span></span><span class="sig-name descname"><span class="pre">Shell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'infl_type':</span> <span class="pre">'gaussian'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_annealing'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0001,</span> <span class="pre">0.01,</span> <span class="pre">15]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_fshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1d'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'na'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_refinement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_zero_infl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell" title="Link to this definition">#</a></dt>
+<dd><p>The Shell class provides a framework for simulating and visualizing adaptive dynamics
+in various domains (1D, 2D, and simplex). It supports gradient ascent, influence distribution
+calculations, and plotting utilities for analyzing agent behaviors in resource distribution environments.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.analyze_near_critical_point" title="InflGame.adaptive.visualization.Shell.analyze_near_critical_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analyze_near_critical_point</span></code></a>(x_star[, ...])</p></td>
+<td><p>Perform high-resolution analysis near the theoretical critical point x*.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.analyze_zero_crossings" title="InflGame.adaptive.visualization.Shell.analyze_zero_crossings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analyze_zero_crossings</span></code></a>(refined_parameters, ...)</p></td>
+<td><p>Perform detailed analysis of zero crossings in the refined parameter space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_direction_and_strength" title="InflGame.adaptive.visualization.Shell.calc_direction_and_strength"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_direction_and_strength</span></code></a>([...])</p></td>
+<td><p>Calculate the direction and strength of gradients for agents via interacting with <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#module-InflGame.adaptive.grad_func_env" title="InflGame.adaptive.grad_func_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env</span></code></a> .</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist" title="InflGame.adaptive.visualization.Shell.calc_infl_dist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_infl_dist</span></code></a>(pos, parameter_instance)</p></td>
+<td><p>Calculate the influence distribution for agents via thier influence kernels by interacting with the class <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#module-InflGame.adaptive.grad_func_env" title="InflGame.adaptive.grad_func_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env</span></code></a> .</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.dist_plot" title="InflGame.adaptive.visualization.Shell.dist_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist_plot</span></code></a>(agent_id[, parameter_instance, ...])</p></td>
+<td><p>Plot the agents' influence distributions distributions via the function <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist" title="InflGame.adaptive.visualization.Shell.calc_infl_dist"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_infl_dist</span></code></a> .</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.dist_pos_gif" title="InflGame.adaptive.visualization.Shell.dist_pos_gif"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist_pos_gif</span></code></a>(max_frames[, output_filename, ...])</p></td>
+<td><p>Plot the agents' influence distributions and their positions into a gif.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.dist_pos_plot" title="InflGame.adaptive.visualization.Shell.dist_pos_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist_pos_plot</span></code></a>(parameter_instance[, ...])</p></td>
+<td><p>Plots the agents' influence distributions with their their positions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.equilibrium_bifurcation_plot" title="InflGame.adaptive.visualization.Shell.equilibrium_bifurcation_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">equilibrium_bifurcation_plot</span></code></a>([reach_start, ...])</p></td>
+<td><p>Plots the equilibrium bifurcation for agents over a range of reach parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.final_pos_over_reach" title="InflGame.adaptive.visualization.Shell.final_pos_over_reach"><code class="xref py py-obj docutils literal notranslate"><span class="pre">final_pos_over_reach</span></code></a>(reach_parameters, ...)</p></td>
+<td><p>Calculate the final positions of agents over a range of reach parameters via repeated initiations of  <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> over a group of parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.find_and_analyze_zero_crossings" title="InflGame.adaptive.visualization.Shell.find_and_analyze_zero_crossings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_and_analyze_zero_crossings</span></code></a>(test_eval, ...)</p></td>
+<td><p>Complete workflow to find, refine, and analyze eigenvalue zero crossings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.find_zero_crossings" title="InflGame.adaptive.visualization.Shell.find_zero_crossings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_zero_crossings</span></code></a>(test_eval, parameters_list)</p></td>
+<td><p>Identify parameter values where eigenvalue real parts are close to zero.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.first_order_bifurcation_plot" title="InflGame.adaptive.visualization.Shell.first_order_bifurcation_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_order_bifurcation_plot</span></code></a>(...[, ...])</p></td>
+<td><p>Plots the first-order bifurcation for agents over a range of alpha values (resource parameters) via func:<a class="reference internal" href="#InflGame.adaptive.visualization.Shell.jacobian_stability_fast" title="InflGame.adaptive.visualization.Shell.jacobian_stability_fast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jacobian_stability_fast</span></code></a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.grad_plot" title="InflGame.adaptive.visualization.Shell.grad_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grad_plot</span></code></a>([title_ads, save, name_ads, font, ...])</p></td>
+<td><p>Plots the gradients of agents as the lines versus time.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.jacobian_stability_fast" title="InflGame.adaptive.visualization.Shell.jacobian_stability_fast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jacobian_stability_fast</span></code></a>(...[, ...])</p></td>
+<td><p>Calculate the stability of the symmetric Nash equalbirium via analytically calculating the maximum Eigenvalues of the Jacobian.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view" title="InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_3d_fixed_diagonal_view</span></code></a>([resolution, ...])</p></td>
+<td><p>Creates a 3D plot with fixed view looking down the x=y=z diagonal line, with optional parallel processing for improved performance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view_gif" title="InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view_gif"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_3d_fixed_diagonal_view_gif</span></code></a>(max_frames)</p></td>
+<td><p>Create a 3D diagonal view GIF showing gradient ascent traces over varying reach parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.pos_plot" title="InflGame.adaptive.visualization.Shell.pos_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pos_plot</span></code></a>([title_ads, save, name_ads, font, ...])</p></td>
+<td><p>Plots the positions of agents over gradient ascent steps.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.position_at_equalibirum_histogram" title="InflGame.adaptive.visualization.Shell.position_at_equalibirum_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">position_at_equalibirum_histogram</span></code></a>([...])</p></td>
+<td><p>Plot the histogram of agents' positions at equilibrium for a given reach parameter via the function <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> .</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.prob_plot" title="InflGame.adaptive.visualization.Shell.prob_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prob_plot</span></code></a>([position, parameters, title_ads, ...])</p></td>
+<td><p>Plot the probability distribution of agents' influence over a bin/resource point via their relative influence over that point</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.refine_parameter_space" title="InflGame.adaptive.visualization.Shell.refine_parameter_space"><code class="xref py py-obj docutils literal notranslate"><span class="pre">refine_parameter_space</span></code></a>(zero_params[, ...])</p></td>
+<td><p>Create a refined parameter space around zero crossings for higher precision analysis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.setup_adaptive_env" title="InflGame.adaptive.visualization.Shell.setup_adaptive_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_adaptive_env</span></code></a>()</p></td>
+<td><p>Set up the adaptive environment for the simulation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.simple_diagonal_test_point" title="InflGame.adaptive.visualization.Shell.simple_diagonal_test_point"><code class="xref py py-obj docutils literal notranslate"><span class="pre">simple_diagonal_test_point</span></code></a>([point])</p></td>
+<td><p>Test a single point to verify gradient ascent works.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.three_agent_pos_3d" title="InflGame.adaptive.visualization.Shell.three_agent_pos_3d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">three_agent_pos_3d</span></code></a>([x_star, title_ads, ...])</p></td>
+<td><p>Visualize dynamics for three players: demonstrates the players positions changing in time in 3-d space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.visualization.Shell.vect_plot" title="InflGame.adaptive.visualization.Shell.vect_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vect_plot</span></code></a>([agent_id, parameter_instance, ...])</p></td>
+<td><p>Plot the vector field of gradients for a specific agents calculated by the function <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_direction_and_strength" title="InflGame.adaptive.visualization.Shell.calc_direction_and_strength"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_direction_and_strength</span></code></a> .</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>bifurcation_plot_AD_MARL</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>three_agent_pos_3A1d</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.analyze_near_critical_point">
+<span class="sig-name descname"><span class="pre">analyze_near_critical_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_star</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.analyze_near_critical_point" title="Link to this definition">#</a></dt>
+<dd><p>Perform high-resolution analysis near the theoretical critical point x*.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>x_star: Theoretical critical point
+padding: Range to examine on either side of x*
+num_points: Number of parameter points to examine</p>
+</dd>
+<dt>Returns:</dt><dd><p>Analysis results focused on the critical point</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.analyze_zero_crossings">
+<span class="sig-name descname"><span class="pre">analyze_zero_crossings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">refined_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refined_eval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_star</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.analyze_zero_crossings" title="Link to this definition">#</a></dt>
+<dd><p>Perform detailed analysis of zero crossings in the refined parameter space.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>refined_parameters: Tensor of refined parameter values
+refined_eval: Tensor of eigenvalues at refined parameters
+x_star: Theoretical critical point (if available)</p>
+</dd>
+<dt>Returns:</dt><dd><p>Dictionary of analysis results and figure handles</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.calc_direction_and_strength">
+<span class="sig-name descname"><span class="pre">calc_direction_and_strength</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.calc_direction_and_strength" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the direction and strength of gradients for agents via interacting with <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#module-InflGame.adaptive.grad_func_env" title="InflGame.adaptive.grad_func_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env</span></code></a> .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>agent_id</strong> (<em>int</em>) – ID of the agent.</p></li>
+<li><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – IDs of agents of interest.</p></li>
+<li><p><strong>pos</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Positions of agents.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The calculated gradients.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.calc_infl_dist">
+<span class="sig-name descname"><span class="pre">calc_infl_dist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the influence distribution for agents via thier influence kernels by interacting with the class <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#module-InflGame.adaptive.grad_func_env" title="InflGame.adaptive.grad_func_env"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env</span></code></a> .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> (<em>torch.Tensor</em>) – Positions of agents.</p></li>
+<li><p><strong>parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Parameters for the influence function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The influence distribution.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.dist_plot">
+<span class="sig-name descname"><span class="pre">dist_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelabels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'dist_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.dist_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot the agents’ influence distributions distributions via the function <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist" title="InflGame.adaptive.visualization.Shell.calc_infl_dist"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_infl_dist</span></code></a> .</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_id</strong> (<em>int</em>) – ID of the agent.</p></li>
+<li><p><strong>parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>cmap</strong> (<em>str</em>) – Colormap for the plot.</p></li>
+<li><p><strong>typelabels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Labels for agent types.</p></li>
+<li><p><strong>kwargs</strong> – Additional arguments for plotting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.dist_pos_gif">
+<span class="sig-name descname"><span class="pre">dist_pos_gif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'timelapse_test.gif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.dist_pos_gif" title="Link to this definition">#</a></dt>
+<dd><p>Plot the agents’ influence distributions and their positions into a gif. Works for all domain types  ‘1d’, ‘2d’, ‘simplex’. This is done by 
+putting together frames of <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.dist_pos_plot" title="InflGame.adaptive.visualization.Shell.dist_pos_plot"><code class="xref py py-func docutils literal notranslate"><span class="pre">dist_pos_plot</span></code></a> .</p>
+<p><strong>Optimized Performance Features:</strong>
+- Direct memory writing without intermediate files
+- Matplotlib figure recycling for memory efficiency
+- Optimized frame sampling
+- Configurable quality vs speed trade-offs</p>
+<p><strong>Simplex example</strong></p>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="../../_images/timelapse.gif"><img alt="../../_images/timelapse.gif" src="../../_images/timelapse.gif" style="width: 976.5px; height: 567.0px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 3 player influence distribution and position plot gif for a simplex domain`.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_frames</strong> (<em>int</em>) – Maximum number of frames for the gif.</p></li>
+<li><p><strong>output_filename</strong> (<em>str</em>) – Name of the output GIF file.</p></li>
+<li><p><strong>optimize_memory</strong> (<em>bool</em>) – Whether to use memory optimization techniques.</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>) – DPI for the frames (lower = faster, higher = better quality).</p></li>
+<li><p><strong>fps</strong> (<em>int</em>) – Frames per second for the GIF.</p></li>
+<li><p><strong>quality</strong> (<em>int</em>) – GIF compression quality (1-10, lower = smaller file).</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Whether to print progress information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated gif figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.dist_pos_plot">
+<span class="sig-name descname"><span class="pre">dist_pos_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelabels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'twilight'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'dist_pos_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.dist_pos_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plots the agents’ influence distributions with their their positions. The influence distributions are calculated from <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist" title="InflGame.adaptive.visualization.Shell.calc_infl_dist"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_infl_dist</span></code></a> and the position vectors are calculated 
+via <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> . This function works with all 3 domain types ‘1d’,’2d’, and ‘simplex’.</p>
+<p>** In one dimension**</p>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="../../_images/dist_pos_1d.png"><img alt="../../_images/dist_pos_1d.png" src="../../_images/dist_pos_1d.png" style="width: 1018.5px; height: 562.5px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 3 player influence distribution and position plot for a 1d domain`.</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p><strong>For a simplex</strong></p>
+<figure class="align-default" id="id3">
+<a class="reference internal image-reference" href="../../_images/dist_pos.png"><img alt="../../_images/dist_pos.png" src="../../_images/dist_pos.png" style="width: 976.5px; height: 567.75px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 2 player influence distribution and position plot for a simplex domain`.</span><a class="headerlink" href="#id3" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>typelabels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Labels for agent types.</p></li>
+<li><p><strong>cmap1</strong> (<em>str</em>) – Colormap for the plot.</p></li>
+<li><p><strong>cmap2</strong> (<em>str</em>) – Colormap for the plot.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.equilibrium_bifurcation_plot">
+<span class="sig-name descname"><span class="pre">equilibrium_bifurcation_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refinements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmaps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'crit':</span> <span class="pre">'Greys',</span> <span class="pre">'heat':</span> <span class="pre">'Blues',</span> <span class="pre">'trajectory':</span> <span class="pre">'#851321'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbar_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'center_labels':</span> <span class="pre">True,</span> <span class="pre">'label_alignment':</span> <span class="pre">'center',</span> <span class="pre">'shrink':</span> <span class="pre">0.8}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'equilibrium_bifurcation_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_pred</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optional_vline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.equilibrium_bifurcation_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plots the equilibrium bifurcation for agents over a range of reach parameters. As <span class="math notranslate nohighlight">\(\sigma\)</span> or as variance goes to zero for players’ influence kernels, 
+the players begin to bifuricate. This plotting function computes the gradient ascent alogorithm repetively for varying parameter values util the players reach an equalbiirum.</p>
+<p>I.e. each player will have a vector of final positions <span class="math notranslate nohighlight">\(X_i=[x_1,x_2,\dots,x_A]\)</span> where <span class="math notranslate nohighlight">\(A\)</span> is the number of test parameters and
+<span class="math notranslate nohighlight">\(x_i\)</span> is the final postion of the <span class="math notranslate nohighlight">\(i\)</span> th player. Then the plot plots each players final postion.</p>
+<p>This is done via the function <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.final_pos_over_reach" title="InflGame.adaptive.visualization.Shell.final_pos_over_reach"><code class="xref py py-func docutils literal notranslate"><span class="pre">final_pos_over_reach</span></code></a>.</p>
+<p><strong>1d example</strong></p>
+<figure class="align-default" id="id4">
+<a class="reference internal image-reference" href="../../_images/bifurcation.png"><img alt="../../_images/bifurcation.png" src="../../_images/bifurcation.png" style="width: 343.5px; height: 344.25px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 5 player positions bifurication plot for a 1d domain`.</span><a class="headerlink" href="#id4" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>the critical values are estimated via <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.domains.one_d.utils.critical_values_plot</span></code>.</p>
+<p><strong>2d example</strong></p>
+<figure class="align-default" id="id5">
+<a class="reference internal image-reference" href="../../_images/2d_bifurcation.png"><img alt="../../_images/2d_bifurcation.png" src="../../_images/2d_bifurcation.png" style="width: 309.0px; height: 327.75px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 6 player positions bifurication plot for a 2d domain`.</span><a class="headerlink" href="#id5" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p><strong>Simplex example</strong></p>
+<figure class="align-default" id="id6">
+<a class="reference internal image-reference" href="../../_images/simplex_bifurcation.png"><img alt="../../_images/simplex_bifurcation.png" src="../../_images/simplex_bifurcation.png" style="width: 332.25px; height: 327.75px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a 3 player positions bifurication plot for a simplex`.</span><a class="headerlink" href="#id6" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reach_start</strong> (<em>float</em>) – Starting value of reach parameter.</p></li>
+<li><p><strong>reach_end</strong> (<em>float</em>) – Ending value of reach parameter.</p></li>
+<li><p><strong>reach_num_points</strong> (<em>int</em>) – Number of points in the reach parameter range.</p></li>
+<li><p><strong>num_interations</strong> (<em>int</em>) – Number of gradient ascent steps.</p></li>
+<li><p><strong>intitial_pos</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Initial positions of agents.</p></li>
+<li><p><strong>current_alpha</strong> (<em>float</em>) – Current alpha value.</p></li>
+<li><p><strong>tolerance</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Tolerance for convergence.</p></li>
+<li><p><strong>tolerated_agents</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of agents allowed to tolerate deviations.</p></li>
+<li><p><strong>refinements</strong> (<em>int</em>) – Refinement level for plotting.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+<li><p><strong>return_matrix</strong> (<em>bool</em>) – Whether to return the final position matrix.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em>) – Whether to use parallel processing.</p></li>
+<li><p><strong>max_workers</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Maximum number of parallel workers (defaults to CPU count).</p></li>
+<li><p><strong>batch_size</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Batch size for processing (auto-calculated if None).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure or final position matrix.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[torch.Tensor, matplotlib.figure.Figure]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.final_pos_over_reach">
+<span class="sig-name descname"><span class="pre">final_pos_over_reach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.final_pos_over_reach" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the final positions of agents over a range of reach parameters via repeated initiations of 
+<code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> over a group of parameters.</p>
+<p>This method has been optimized with:
+- Vectorized operations where possible
+- Parallel processing support
+- Comprehensive error handling
+- Input validation
+- Progress logging</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reach_parameters</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Reach parameters to iterate over</p></li>
+<li><p><strong>tolerance</strong> (<em>float</em>) – Tolerance for convergence</p></li>
+<li><p><strong>tolerated_agents</strong> (<em>int</em>) – Number of agents allowed to tolerate deviations</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em>) – Whether to use parallel processing</p></li>
+<li><p><strong>max_workers</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Maximum number of parallel workers (defaults to CPU count)</p></li>
+<li><p><strong>batch_size</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Batch size for processing (auto-calculated if None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The final positions of agents for each parameter</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If input parameters are invalid</p></li>
+<li><p><strong>RuntimeError</strong> – If computation fails</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.find_and_analyze_zero_crossings">
+<span class="sig-name descname"><span class="pre">find_and_analyze_zero_crossings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_eval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_star</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.find_and_analyze_zero_crossings" title="Link to this definition">#</a></dt>
+<dd><p>Complete workflow to find, refine, and analyze eigenvalue zero crossings.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>test_eval: Tensor of eigenvalues
+parameters_list: Tensor of parameter values
+x_star: Theoretical critical point (if available)
+threshold: Maximum absolute value to consider “close to zero”</p>
+</dd>
+<dt>Returns:</dt><dd><p>Analysis results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.find_zero_crossings">
+<span class="sig-name descname"><span class="pre">find_zero_crossings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_eval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.find_zero_crossings" title="Link to this definition">#</a></dt>
+<dd><p>Identify parameter values where eigenvalue real parts are close to zero.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>test_eval: Tensor of eigenvalues [n_params, n_agents]
+parameters_list: Tensor of parameter values [n_params, n_agents]
+threshold: Maximum absolute value to consider “close to zero”</p>
+</dd>
+<dt>Returns:</dt><dd><p>Tuple of (parameter indices, parameter values) near zero crossings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.first_order_bifurcation_plot">
+<span class="sig-name descname"><span class="pre">first_order_bifurcation_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_parameter_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_current</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_st</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varying_paramter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_parameters_lst</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'first_order_bifurcation_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.first_order_bifurcation_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plots the first-order bifurcation for agents over a range of alpha values (resource parameters) via func:<a class="reference internal" href="#InflGame.adaptive.visualization.Shell.jacobian_stability_fast" title="InflGame.adaptive.visualization.Shell.jacobian_stability_fast"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jacobian_stability_fast</span></code></a>. Currently only works for 
+Gaussian influence and multi-variate Gaussian influence kernels.</p>
+<p><strong>Gaussian example</strong></p>
+<figure class="align-default" id="id7">
+<a class="reference internal image-reference" href="../../_images/first_order.png"><img alt="../../_images/first_order.png" src="../../_images/first_order.png" style="width: 346.5px; height: 345.75px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is a first order bifurcations plot for 5 players using symmetric Gaussian influence kernels.</span><a class="headerlink" href="#id7" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>resource_distribution_type</strong> (<em>str</em>) – Type of resource distribution.</p></li>
+<li><p><strong>resource_entropy</strong> (<em>bool</em>) – Whether to calculate resource entropy.</p></li>
+<li><p><strong>infl_entropy</strong> (<em>bool</em>) – Whether to calculate influence entropy.</p></li>
+<li><p><strong>alpha_current</strong> (<em>float</em>) – Current alpha value.</p></li>
+<li><p><strong>alpha_st</strong> (<em>float</em>) – Starting value of alpha.</p></li>
+<li><p><strong>alpha_end</strong> (<em>float</em>) – Ending value of alpha.</p></li>
+<li><p><strong>varying_paramter_type</strong> (<em>str</em>) – Type of varying parameter (e.g., ‘mean’).</p></li>
+<li><p><strong>fixed_parameters_lst</strong> (<em>Optional</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>]</em>) – List of fixed parameters.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.grad_plot">
+<span class="sig-name descname"><span class="pre">grad_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'grad_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.grad_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plots the gradients of agents as the lines versus time.</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial}{\partial x_{(i,l)}}u_i(x)=\sum_{k=1}^{K}G_{i,k}(x_i,b_k)\frac{\partial}{\partial x_{(i,l)}}ln(f_{i}(x_i,b_k))\]</div>
+<p>Where <span class="math notranslate nohighlight">\(x_i\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th players position, <span class="math notranslate nohighlight">\(b_k\in \mathbb{B}\)</span> are the bin/resource points, <span class="math notranslate nohighlight">\(B(b_k)\)</span> is the resource value at <span class="math notranslate nohighlight">\(b_k\)</span>, and <span class="math notranslate nohighlight">\(G_i(x_i,b_k)\)</span> 
+probability of player <span class="math notranslate nohighlight">\(i\)</span> influencing the bin point <span class="math notranslate nohighlight">\(b\)</span>. The gradients are calculated via <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.jacobian_stability_fast">
+<span class="sig-name descname"><span class="pre">jacobian_stability_fast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_parameter_instance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_entropy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.jacobian_stability_fast" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the stability of the symmetric Nash equalbirium via analytically calculating the maximum Eigenvalues of the Jacobian. This function only works for 
+multi-variate Gaussian influence and 1d Gaussian kernels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>resource_distribution_type</strong> (<em>str</em>) – Type of resource distribution.</p></li>
+<li><p><strong>resource_parameters</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Resource parameters.</p></li>
+<li><p><strong>resource_entropy</strong> (<em>bool</em>) – Whether to calculate resource entropy.</p></li>
+<li><p><strong>infl_entropy</strong> (<em>bool</em>) – Whether to calculate influence entropy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The stability parameters, resource entropy, and influence entropy.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[List[torch.Tensor], List[float], List[float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view">
+<span class="sig-name descname"><span class="pre">plot_3d_fixed_diagonal_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_planes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(12,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view" title="Link to this definition">#</a></dt>
+<dd><p>Creates a 3D plot with fixed view looking down the x=y=z diagonal line,
+with optional parallel processing for improved performance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view_gif">
+<span class="sig-name descname"><span class="pre">plot_3d_fixed_diagonal_view_gif</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_frames</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'3d_diagonal_traces.gif'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_planes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(12,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">45</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimize_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view_gif" title="Link to this definition">#</a></dt>
+<dd><p>Create a 3D diagonal view GIF showing gradient ascent traces over varying reach parameters.
+Similar to dist_pos_gif but for 3D visualization. Works by varying the reach parameters
+and creating frames of <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view" title="InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_3d_fixed_diagonal_view</span></code></a> .</p>
+<p><strong>Optimized Performance Features:</strong>
+- Direct memory writing without intermediate files
+- Matplotlib figure recycling for memory efficiency
+- Optimized frame sampling
+- Configurable quality vs speed trade-offs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_frames</strong> (<em>int</em>) – Maximum number of frames for the gif.</p></li>
+<li><p><strong>output_filename</strong> (<em>str</em>) – Name of the output GIF file.</p></li>
+<li><p><strong>resolution</strong> (<em>int</em>) – Resolution for point sampling in 3D plot.</p></li>
+<li><p><strong>time_steps</strong> (<em>int</em>) – Number of gradient ascent steps.</p></li>
+<li><p><strong>show_planes</strong> (<em>bool</em>) – Whether to show equality planes in 3D plot.</p></li>
+<li><p><strong>figsize</strong> (<em>tuple</em>) – Figure size for each frame.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – Random seed for reproducibility.</p></li>
+<li><p><strong>include_boundaries</strong> (<em>bool</em>) – Whether to include boundary points in 3D plot.</p></li>
+<li><p><strong>elev</strong> (<em>int</em>) – Elevation angle for 3D view.</p></li>
+<li><p><strong>azim</strong> (<em>int</em>) – Azimuth angle for 3D view.</p></li>
+<li><p><strong>num_workers</strong> (<em>int</em>) – Number of parallel workers for 3D processing.</p></li>
+<li><p><strong>use_parallel</strong> (<em>bool</em>) – Whether to use parallel processing for 3D plots.</p></li>
+<li><p><strong>reach_start</strong> (<em>float</em>) – Starting reach parameter value.</p></li>
+<li><p><strong>reach_end</strong> (<em>float</em>) – Ending reach parameter value.</p></li>
+<li><p><strong>optimize_memory</strong> (<em>bool</em>) – Whether to use memory optimization techniques.</p></li>
+<li><p><strong>dpi</strong> (<em>int</em>) – DPI for the frames (lower = faster, higher = better quality).</p></li>
+<li><p><strong>fps</strong> (<em>int</em>) – Frames per second for the GIF.</p></li>
+<li><p><strong>quality</strong> (<em>int</em>) – GIF compression quality (1-10, lower = smaller file).</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – Whether to print progress information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The final frame figure for display.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.pos_plot">
+<span class="sig-name descname"><span class="pre">pos_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'pos_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.pos_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plots the positions of agents over gradient ascent steps. The positions of players are calculated via the 
+results of <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.position_at_equalibirum_histogram">
+<span class="sig-name descname"><span class="pre">position_at_equalibirum_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_parameter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_interations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intitial_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'position_at_equalibirum_histogram',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.position_at_equalibirum_histogram" title="Link to this definition">#</a></dt>
+<dd><p>Plot the histogram of agents’ positions at equilibrium for a given reach parameter via the function <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> .
+This only works for ‘1d’ domains.</p>
+<figure class="align-default" id="id8">
+<a class="reference internal image-reference" href="../../_images/histogram.png"><img alt="../../_images/histogram.png" src="../../_images/histogram.png" style="width: 328.5px; height: 342.75px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is the histogram of player postions at equalibirum for 5 player game.</span><a class="headerlink" href="#id8" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reach_parameter</strong> (<em>float</em>) – Reach parameter value.</p></li>
+<li><p><strong>num_interations</strong> (<em>int</em>) – Number of gradient ascent steps.</p></li>
+<li><p><strong>intitial_pos</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>]</em>) – Initial positions of agents.</p></li>
+<li><p><strong>current_alpha</strong> (<em>float</em>) – Current alpha value.</p></li>
+<li><p><strong>tolerance</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Tolerance for convergence.</p></li>
+<li><p><strong>tolerated_agents</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Number of agents allowed to tolerate deviations.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+<li><p><strong>return_pos</strong> (<em>bool</em>) – Whether to return the final positions.</p></li>
+<li><p><strong>parallel</strong> (<em>bool</em>) – Whether to use parallel processing.</p></li>
+<li><p><strong>max_workers</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Maximum number of parallel workers (defaults to CPU count).</p></li>
+<li><p><strong>batch_size</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em>) – Batch size for processing (auto-calculated if None).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure or final positions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.prob_plot">
+<span class="sig-name descname"><span class="pre">prob_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'prob_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.prob_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot the probability distribution of agents’ influence over a bin/resource point via their relative influence over that point</p>
+<div class="math notranslate nohighlight">
+\[G_{i,k}(\mathbf{x},b_k)=\frac{f_{i}(x_i,b_k)}{\sum_{j=1}^{N}f_{j}(x_j,b_k)}.\]</div>
+<p>where <span class="math notranslate nohighlight">\(f_{i}(x_i,b_k)\)</span> is the <span class="math notranslate nohighlight">\(i\)</span> th players influence. The probabilities are calculated via <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.prob_matrix</span></code> .</p>
+<figure class="align-default" id="id9">
+<a class="reference internal image-reference" href="../../_images/probability.png"><img alt="../../_images/probability.png" src="../../_images/probability.png" style="width: 338.25px; height: 341.25px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is an example of the a three player game with agents in position <span class="math notranslate nohighlight">\([.1,.45,.9]\)</span> . 
+Here the the influence kernels are symmetric gaussian with with parameter (reach) <span class="math notranslate nohighlight">\(\sigma=0.25\)</span> .</span><a class="headerlink" href="#id9" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<p>There can is also the option to have a fixed third party (infl_csift==True) and/or abstaining voters if (infl_fshift==True).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> (<em>np.ndarray</em>) – Positions of agents.</p></li>
+<li><p><strong>parameters</strong> (<em>np.ndarray</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.refine_parameter_space">
+<span class="sig-name descname"><span class="pre">refine_parameter_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zero_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_positions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.refine_parameter_space" title="Link to this definition">#</a></dt>
+<dd><p>Create a refined parameter space around zero crossings for higher precision analysis.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>vis: Shell visualization object
+zero_params: Tensor of parameter values where real parts are close to zero
+padding: Additional parameter range to include around zero crossings
+num_points: Number of points to sample in each refined region</p>
+</dd>
+<dt>Returns:</dt><dd><p>Refined parameter list and corresponding test_eval values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.setup_adaptive_env">
+<span class="sig-name descname"><span class="pre">setup_adaptive_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.setup_adaptive_env" title="Link to this definition">#</a></dt>
+<dd><p>Set up the adaptive environment for the simulation. This initializes the
+gradient function environment with the provided parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.simple_diagonal_test_point">
+<span class="sig-name descname"><span class="pre">simple_diagonal_test_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.simple_diagonal_test_point" title="Link to this definition">#</a></dt>
+<dd><p>Test a single point to verify gradient ascent works.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.three_agent_pos_3d">
+<span class="sig-name descname"><span class="pre">three_agent_pos_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_star</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'three_players',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.three_agent_pos_3d" title="Link to this definition">#</a></dt>
+<dd><p>Visualize dynamics for three players: demonstrates the players positions changing in time in 3-d space. Demonstrating the instability of 3-players in influencer games. Given that this function 
+is in 3-d space for players with 1-d strategies there isn’t a way to visualize the 3 player dynamics in games with more then 1d strategy spaces. The positions of players are calculated via the 
+results of <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.gradient_ascent</span></code> .</p>
+<figure class="align-default" id="id10">
+<a class="reference internal image-reference" href="../../_images/three_player.png"><img alt="../../_images/three_player.png" src="../../_images/three_player.png" style="width: 297.0px; height: 310.5px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is an example of the three player dynamics via their positions in time`.</span><a class="headerlink" href="#id10" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_star</strong> (<em>Optional</em><em>[</em><em>float</em><em>]</em>) – Equilibrium position.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.visualization.Shell.vect_plot">
+<span class="sig-name descname"><span class="pre">vect_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter_instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'viridis'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typelabels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'vect_plot',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'A'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">15,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'title_size':</span> <span class="pre">18}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alt_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.visualization.Shell.vect_plot" title="Link to this definition">#</a></dt>
+<dd><p>Plot the vector field of gradients for a specific agents calculated by the function <a class="reference internal" href="#InflGame.adaptive.visualization.Shell.calc_direction_and_strength" title="InflGame.adaptive.visualization.Shell.calc_direction_and_strength"><code class="xref py py-func docutils literal notranslate"><span class="pre">calc_direction_and_strength</span></code></a> . <strong>Currently only supports 1d domains</strong></p>
+<figure class="align-default" id="id11">
+<a class="reference internal image-reference" href="../../_images/vector_field.png"><img alt="../../_images/vector_field.png" src="../../_images/vector_field.png" style="width: 338.25px; height: 341.25px;" />
+</a>
+<figcaption>
+<p><span class="caption-text">This is an example of the vector field for a three player game with only players 1 and 2 dynamics shown (player 3 is fixed)`.</span><a class="headerlink" href="#id11" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent_id</strong> (<em>int</em>) – ID of the agent.</p></li>
+<li><p><strong>parameter_instance</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><em>float</em><em>]</em><em>, </em><em>np.ndarray</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Parameters for the influence function.</p></li>
+<li><p><strong>cmap</strong> (<em>str</em>) – Colormap for the plot.</p></li>
+<li><p><strong>typelabels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Labels for agent types.</p></li>
+<li><p><strong>ids</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – IDs of agents of interest.</p></li>
+<li><p><strong>pos</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Positions of agents.</p></li>
+<li><p><strong>title_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional titles for the plot.</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) – Whether to save the plot.</p></li>
+<li><p><strong>name_ads</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Additional names for saved files.</p></li>
+<li><p><strong>save_types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – File types to save the plot.</p></li>
+<li><p><strong>kwargs</strong> – Additional arguments for plotting.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generated plot figure.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>matplotlib.figure.Figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.adaptive.grad_func_env.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Adaptive Environment</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../MARL/InflGame.MARL.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization-module">Visualization Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example:</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell"><code class="docutils literal notranslate"><span class="pre">Shell</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.analyze_near_critical_point"><code class="docutils literal notranslate"><span class="pre">Shell.analyze_near_critical_point</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.analyze_zero_crossings"><code class="docutils literal notranslate"><span class="pre">Shell.analyze_zero_crossings</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.calc_direction_and_strength"><code class="docutils literal notranslate"><span class="pre">Shell.calc_direction_and_strength</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.calc_infl_dist"><code class="docutils literal notranslate"><span class="pre">Shell.calc_infl_dist</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.dist_plot"><code class="docutils literal notranslate"><span class="pre">Shell.dist_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.dist_pos_gif"><code class="docutils literal notranslate"><span class="pre">Shell.dist_pos_gif</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.dist_pos_plot"><code class="docutils literal notranslate"><span class="pre">Shell.dist_pos_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.equilibrium_bifurcation_plot"><code class="docutils literal notranslate"><span class="pre">Shell.equilibrium_bifurcation_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.final_pos_over_reach"><code class="docutils literal notranslate"><span class="pre">Shell.final_pos_over_reach</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.find_and_analyze_zero_crossings"><code class="docutils literal notranslate"><span class="pre">Shell.find_and_analyze_zero_crossings</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.find_zero_crossings"><code class="docutils literal notranslate"><span class="pre">Shell.find_zero_crossings</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.first_order_bifurcation_plot"><code class="docutils literal notranslate"><span class="pre">Shell.first_order_bifurcation_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.grad_plot"><code class="docutils literal notranslate"><span class="pre">Shell.grad_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.jacobian_stability_fast"><code class="docutils literal notranslate"><span class="pre">Shell.jacobian_stability_fast</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view"><code class="docutils literal notranslate"><span class="pre">Shell.plot_3d_fixed_diagonal_view</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.plot_3d_fixed_diagonal_view_gif"><code class="docutils literal notranslate"><span class="pre">Shell.plot_3d_fixed_diagonal_view_gif</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.pos_plot"><code class="docutils literal notranslate"><span class="pre">Shell.pos_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.position_at_equalibirum_histogram"><code class="docutils literal notranslate"><span class="pre">Shell.position_at_equalibirum_histogram</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.prob_plot"><code class="docutils literal notranslate"><span class="pre">Shell.prob_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.refine_parameter_space"><code class="docutils literal notranslate"><span class="pre">Shell.refine_parameter_space</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.setup_adaptive_env"><code class="docutils literal notranslate"><span class="pre">Shell.setup_adaptive_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.simple_diagonal_test_point"><code class="docutils literal notranslate"><span class="pre">Shell.simple_diagonal_test_point</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.three_agent_pos_3d"><code class="docutils literal notranslate"><span class="pre">Shell.three_agent_pos_3d</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.visualization.Shell.vect_plot"><code class="docutils literal notranslate"><span class="pre">Shell.vect_plot</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/adaptive/InflGame.adaptive.visualization.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

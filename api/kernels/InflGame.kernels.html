@@ -1,0 +1,609 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>InflGame.kernels (InflGame.kernels) &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/kernels/InflGame.kernels';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Gaussian kernel" href="InflGame.kernels.gauss.html" />
+    <link rel="prev" title="Utilities" href="../domains/simplex/utils.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../adaptive/InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../adaptive/InflGame.adaptive.visualization.html">Plots</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="inflgame-kernels-inflgame-kernels">
+<h1>InflGame.kernels (<a class="reference internal" href="#module-InflGame.kernels" title="InflGame.kernels"><code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code></a>)<a class="headerlink" href="#inflgame-kernels-inflgame-kernels" title="Link to this heading">#</a></h1>
+<section id="module-InflGame.kernels">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-InflGame.kernels" title="Link to this heading">#</a></h2>
+<section id="kernels-inflgame-kernels">
+<h3>kernels (<a class="reference internal" href="#module-InflGame.kernels" title="InflGame.kernels"><code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code></a>)<a class="headerlink" href="#kernels-inflgame-kernels" title="Link to this heading">#</a></h3>
+<p>Pre-made influence kernels from the paper including Gaussian, Multi-variate Gaussian, Dirichlet, and Matt Jones’ kernel.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Submodules</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="InflGame.kernels.diric.html#module-diric" title="diric: Implements the Dirichlet influence kernel for modeling agent interactions with resources in simplex domains."><code class="xref py py-obj docutils literal notranslate"><span class="pre">diric</span></code></a></p></td>
+<td><p>Dirichlet influence kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="InflGame.kernels.gauss.html#module-gauss" title="gauss: Implements the Gaussian influence kernel for modeling agent interactions with resources in 1D domains."><code class="xref py py-obj docutils literal notranslate"><span class="pre">gauss</span></code></a></p></td>
+<td><p>Gaussian influence kernels</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="InflGame.kernels.jones.html#module-jones" title="jones: Implements the Jones influence kernel for modeling agent interactions in 1D domains."><code class="xref py py-obj docutils literal notranslate"><span class="pre">jones</span></code></a></p></td>
+<td><p>Mathew Jones influence kernels</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="InflGame.kernels.MV_gauss.html#module-MV_gauss" title="MV_gauss: Implements the multivariate Gaussian influence kernel for modeling agent interactions in 2D domains."><code class="xref py py-obj docutils literal notranslate"><span class="pre">MV_gauss</span></code></a></p></td>
+<td><p>Multi Variate Gaussian kernels</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="dirichlet-influence-kernel">
+<h3>Dirichlet Influence Kernel<a class="headerlink" href="#dirichlet-influence-kernel" title="Link to this heading">#</a></h3>
+<section id="mathematical-definitions">
+<h4>Mathematical Definitions:<a class="headerlink" href="#mathematical-definitions" title="Link to this heading">#</a></h4>
+<p>The Dirichlet influence kernel is defined as:</p>
+<div class="math notranslate nohighlight">
+\[f_i(\alpha, b) = \frac{1}{\beta(\alpha)} \prod_{l=1}^{L} b_{l}^{\alpha_{l} - 1}\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(\alpha\)</span> is the vector of parameters for the Dirichlet distribution, defined by the <em class="xref py py-obj">param</em> function.</p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\beta(\alpha)\)</span> is the beta function.</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="gaussian-influence-kernel">
+<h3>Gaussian Influence Kernel<a class="headerlink" href="#gaussian-influence-kernel" title="Link to this heading">#</a></h3>
+<section id="id1">
+<h4>Mathematical Definitions:<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<p>The Gaussian influence kernel is defined as:</p>
+<div class="math notranslate nohighlight">
+\[f_i(x_i, b) = \exp\left(-\frac{(b - x_i)^2}{2\sigma_i^2}\right)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_i\)</span> is the position of agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point</p></li>
+<li><p><span class="math notranslate nohighlight">\(\sigma_i\)</span> is the parameter for agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="jones-influence-kernel">
+<h3>Jones Influence Kernel<a class="headerlink" href="#jones-influence-kernel" title="Link to this heading">#</a></h3>
+<p>This influence kernel is from the work of Mathew Jones et al in their paper “Polarization, abstention, and the median voter
+theorem” (<a class="reference external" href="https://www.nature.com/articles/s41599-022-01056-0.pdf">paper</a>).</p>
+<section id="id2">
+<h4>Mathematical Definitions:<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p>The Jones influence kernel is defined as:</p>
+<div class="math notranslate nohighlight">
+\[f_i(x_i, b) = \frac{1}{|x_i - b|^{P_i}}\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_i\)</span> is the position of agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point</p></li>
+<li><p><span class="math notranslate nohighlight">\(P_i\)</span> is the parameter for agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="multi-variate-gaussian-influence-kernel">
+<h3>Multi Variate Gaussian Influence Kernel<a class="headerlink" href="#multi-variate-gaussian-influence-kernel" title="Link to this heading">#</a></h3>
+<section id="id3">
+<h4>Mathematical Definitions:<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<p>The multivariate Gaussian influence kernel is defined as:</p>
+<div class="math notranslate nohighlight">
+\[f_i(x_i, b) = \exp\left(-\frac{1}{2} (b - x_i)^T \Sigma_i^{-1} (b - x_i)\right)\]</div>
+<dl class="simple">
+<dt>where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(x_i\)</span> is the position of agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(b\)</span> is the bin point</p></li>
+<li><p><span class="math notranslate nohighlight">\(\Sigma_i\)</span> is the covariance matrix for agent <span class="math notranslate nohighlight">\(i\)</span></p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../domains/simplex/utils.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Utilities</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="InflGame.kernels.gauss.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Gaussian kernel</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-InflGame.kernels">Module contents</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernels-inflgame-kernels">kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dirichlet-influence-kernel">Dirichlet Influence Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-definitions">Mathematical Definitions:</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gaussian-influence-kernel">Gaussian Influence Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Mathematical Definitions:</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#jones-influence-kernel">Jones Influence Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Mathematical Definitions:</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-variate-gaussian-influence-kernel">Multi Variate Gaussian Influence Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Mathematical Definitions:</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/kernels/InflGame.kernels.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
