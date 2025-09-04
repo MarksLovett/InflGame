@@ -11,9 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - name: Install dependencies
+      - name: Install Sphinx and documentation dependencies
         run: |
-            pip install sphinx numpydoc matplotlib scipy myst_nb sphinx_copybutton sphinx_design pydata_sphinx_theme sphinx sphinx_rtd_theme myst_parser
+          pip install sphinx myst-nb matplotlib scipy numpydoc sphinx-copybutton sphinx-design pydata-sphinx-theme intersphinx_registry
       - name: Sphinx build
         run: |
           sphinx-build docs _build
