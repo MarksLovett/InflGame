@@ -1,7 +1,7 @@
 [build-system]
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
+packages = ["src/InflGame"]
 
 
 
@@ -37,4 +37,4 @@ license-files = ["LICEN[CS]E*"]
 packages = ["src/InflGame"]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
+Homepage = "https://markslovett.github.io/InflGame/index.html"
