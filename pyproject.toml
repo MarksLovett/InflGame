@@ -12,7 +12,7 @@ version = "0.1.0"
 authors = [
   { name="Mark Lovett", email="mark.s.lovett981@gmail.com" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["gymnasium>=1.0.0",
 "hickle>=5.0.3",
 "imageio>=2.37.0",
