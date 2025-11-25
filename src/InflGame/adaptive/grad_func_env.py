@@ -1,5 +1,4 @@
-"""
-
+""".
 .. module:: grad_func_env
    :synopsis: A module for handling adaptive dynamics for agents interacting in influence games.
 
@@ -71,8 +70,242 @@ import InflGame.kernels.gauss as gauss
 import InflGame.kernels.jones as jones
 import InflGame.kernels.diric as diric
 import InflGame.kernels.MV_gauss as MV_gauss
+import InflGame.kernels.beta as beta_kernel
 
 import InflGame.domains.simplex.simplex_utils as simplex_utils
+
+
+@torch.jit.script
+def _compute_prob_matrix_core(infl_matrix: torch.Tensor, 
+                             ignore_zero_infl: bool,
+                             small_threshold: float = 1e-25) -> torch.Tensor:
+    """
+    JIT-compiled core probability computation for optimal performance.
+    
+    This function performs the core mathematical operations of probability matrix
+    computation using vectorized tensor operations that can be optimized by JIT.
+    
+    :param infl_matrix: Influence matrix of shape (N, K)
+    :type infl_matrix: torch.Tensor
+    :param ignore_zero_infl: Whether to ignore zero influence denominators
+    :type ignore_zero_infl: bool
+    :param small_threshold: Threshold for numerical stability
+    :type small_threshold: float
+    :return: Probability matrix of shape (N, K)
+    :rtype: torch.Tensor
+    """
+    # Vectorized probability computation with numerical stability
+    # Compute column sums (denominator for each bin point)
+    denom = torch.sum(infl_matrix, dim=0, keepdim=False)  # Shape: (K,)
+    
+    # Handle zero denominators based on ignore_zero_infl flag
+    if ignore_zero_infl:
+        # Avoid division by zero by setting zero denominators to small value
+        denom = torch.where(denom > 0, denom, torch.tensor(small_threshold, dtype=infl_matrix.dtype))
+    
+    # Efficient vectorized division with broadcasting
+    # infl_matrix: (N, K), denom: (K,) -> result: (N, K)
+    agent_prob_matrix = infl_matrix / denom.unsqueeze(0)  # Broadcasting: (N, K) / (1, K)
+    
+    return agent_prob_matrix
+
+
+@torch.jit.script
+def _compute_gradient_1d_core(d_matrix: torch.Tensor,
+                             pr_matrix: torch.Tensor, 
+                             pr_matrix_c: torch.Tensor,
+                             resource_tensor: torch.Tensor) -> torch.Tensor:
+    """
+    JIT-compiled core gradient computation for 1D domains.
+    
+    :param d_matrix: Derivative matrix of shape (N, K)
+    :param pr_matrix: Probability matrix of shape (N, K)  
+    :param pr_matrix_c: Complementary probability matrix (1 - pr_matrix)
+    :param resource_tensor: Resource distribution of shape (K,)
+    :return: Gradient vector of shape (N,)
+    """
+    # Vectorized element-wise multiplication and summation
+    gradient_terms = d_matrix * pr_matrix * pr_matrix_c * resource_tensor.unsqueeze(0)
+    grad = torch.sum(gradient_terms, dim=1)  # Sum across bin points
+    return grad
+
+
+@torch.jit.script
+def _compute_gradient_md_core(d_matrix: torch.Tensor,
+                             pr_matrix: torch.Tensor,
+                             pr_matrix_c: torch.Tensor, 
+                             resource_tensor: torch.Tensor,
+                             num_agents: int,
+                             num_dims: int) -> torch.Tensor:
+    """
+    JIT-compiled core gradient computation for multi-dimensional domains.
+    
+    :param d_matrix: Derivative matrix of shape (N, dims, K)
+    :param pr_matrix: Probability matrix of shape (N, K)
+    :param pr_matrix_c: Complementary probability matrix (1 - pr_matrix)
+    :param resource_tensor: Resource distribution of shape (K,)
+    :param num_agents: Number of agents
+    :param num_dims: Number of dimensions
+    :return: Gradient matrix of shape (N, dims) or (N,) if num_dims=1
+    """
+    # Compute probability product
+    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
+    
+    # Expand for broadcasting with multi-dimensional derivative
+    pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
+    
+    # Expand resource tensor for broadcasting  
+    resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(num_agents, num_dims, -1)
+    
+    # Vectorized element-wise multiplication
+    gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
+    
+    # Sum across bin points for each agent and dimension
+    grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
+    
+    # Flatten if single dimension
+    if num_dims == 1:
+        grad = grad.squeeze(1)  # Shape: (N,)
+        
+    return grad
+
+
+@torch.jit.script
+def _apply_functional_shift_1d(gradient_terms: torch.Tensor,
+                              shift_matrix: torch.Tensor,
+                              pr_matrix: torch.Tensor,
+                              resource_tensor: torch.Tensor) -> torch.Tensor:
+    """
+    JIT-compiled functional shift application for 1D gradients.
+    
+    :param gradient_terms: Current gradient terms of shape (N, K)
+    :param shift_matrix: Shift matrix of shape (N, K)
+    :param pr_matrix: Probability matrix of shape (N, K)
+    :param resource_tensor: Resource distribution of shape (K,)
+    :return: Modified gradient terms of shape (N, K)
+    """
+    shift_terms = shift_matrix * pr_matrix * resource_tensor.unsqueeze(0)
+    return gradient_terms - shift_terms
+
+
+@torch.jit.script
+def _compute_gradient_function_1d_core(
+    d_matrix: torch.Tensor,
+    pr_matrix: torch.Tensor,
+    pr_matrix_c: torch.Tensor,
+    resource_tensor: torch.Tensor,
+    infl_fshift: int,
+    two_a: bool,
+    ids: List[int],
+    num_agents: int,
+    alt_form: bool,
+    shift_matrix: Optional[torch.Tensor] = None
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for 1D gradient function.
+    
+    Args:
+        d_matrix: Derivative matrix (N, K)
+        pr_matrix: Probability matrix (N, K)  
+        pr_matrix_c: Complementary probability matrix (N, K)
+        resource_tensor: Resource distribution (K,)
+        infl_fshift: Functional shift flag (0 or 1)
+        two_a: Whether to compute gradients for all agents
+        ids: Agent IDs to compute gradients for
+        num_agents: Number of agents
+        alt_form: Alternative form flag
+        shift_matrix: Optional shift matrix for functional shifts (N, K)
+    
+    Returns:
+        torch.Tensor: Computed gradients
+    """
+    # Determine which agents to compute gradients for (vectorized)
+    if two_a:
+        agent_indices = torch.arange(num_agents, dtype=torch.long)
+    else:
+        agent_indices = torch.tensor(ids, dtype=torch.long)
+    
+    # Vectorized gradient computation for selected agents
+    selected_d_matrix = d_matrix[agent_indices]  # Shape: (selected_agents, K)
+    selected_pr_matrix = pr_matrix[agent_indices]  # Shape: (selected_agents, K)
+    selected_pr_matrix_c = pr_matrix_c[agent_indices]  # Shape: (selected_agents, K)
+    
+    # Compute base gradient terms (vectorized)
+    base_grad_terms = selected_d_matrix * selected_pr_matrix * selected_pr_matrix_c * resource_tensor.unsqueeze(0)
+    
+    # Handle functional shift if enabled
+    if infl_fshift == 1 and shift_matrix is not None:
+        selected_shift_matrix = shift_matrix[agent_indices]  # Shape: (selected_agents, K)
+        shift_terms = selected_shift_matrix * selected_pr_matrix * resource_tensor.unsqueeze(0)
+        # Apply shift correction (vectorized)
+        gradient_terms = base_grad_terms - shift_terms
+    else:
+        gradient_terms = base_grad_terms
+    
+    # Sum across bin points for each agent (vectorized)
+    agent_gradients = torch.sum(gradient_terms, dim=1)  # Shape: (selected_agents,)
+    
+    # Create full gradient tensor with zeros for non-selected agents
+    if two_a:
+        grad = agent_gradients  # All agents computed
+    else:
+        grad = torch.zeros(2, dtype=torch.float32)
+        grad[agent_indices] = agent_gradients
+    
+    return grad
+
+
+@torch.jit.script
+def _compute_gradient_function_md_core(
+    d_matrix: torch.Tensor,
+    pr_matrix: torch.Tensor,
+    pr_matrix_c: torch.Tensor,
+    resource_tensor: torch.Tensor,
+    num_agents: int
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for multi-dimensional gradient function.
+    
+    Args:
+        d_matrix: Derivative matrix (N, K) or (N, dims, K)
+        pr_matrix: Probability matrix (N, K)
+        pr_matrix_c: Complementary probability matrix (N, K)
+        resource_tensor: Resource distribution (K,)
+        num_agents: Number of agents
+    
+    Returns:
+        torch.Tensor: Computed gradients
+    """
+    # Multi-dimensional domain vectorized computation
+    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
+    
+    # Vectorized computation for all agents
+    # Broadcasting: d_matrix (N, K) or (N, dims, K), pr_prod (N, K), resource_tensor (K,)
+    if d_matrix.dim() == 2:
+        # 2D case: d_matrix is (N, K)
+        gradient_terms = d_matrix * pr_prod * resource_tensor.unsqueeze(0)  # Shape: (N, K)
+        grad = torch.sum(gradient_terms, dim=1)  # Shape: (N,)
+        
+    elif d_matrix.dim() == 3:
+        # Multi-dimensional case: d_matrix is (N, dims, K)
+        num_dims = d_matrix.shape[1]
+        
+        # Expand pr_prod and resource_tensor for broadcasting
+        pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
+        resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(num_agents, num_dims, -1)  # Shape: (N, dims, K)
+        
+        # Vectorized element-wise multiplication
+        gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
+        
+        # Sum across bin points for each agent and dimension
+        grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
+        
+    else:
+        # This shouldn't happen in normal usage, but provide a fallback
+        raise ValueError(f"Unexpected derivative matrix dimensions: {d_matrix.shape}")
+    
+    return grad
+
 
 class AdaptiveEnv:
     """
@@ -188,7 +421,9 @@ class AdaptiveEnv:
             
         
 
-    def influence_matrix(self, parameter_instance: Union[List[float], np.ndarray, torch.Tensor]) -> torch.Tensor:
+    def influence_matrix(self,
+                         parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None
+                         ) -> torch.Tensor:
         """
         Compute the influence matrix for all agents using vectorized operations.
         
@@ -206,7 +441,8 @@ class AdaptiveEnv:
         :raises TypeError: If input types are not supported.
         :raises NotImplementedError: If functional shift is requested for multi-dimensional agents.
         """
-        
+        if parameter_instance is None:
+            parameter_instance = self.parameters
         try:
             # Validate parameter_instance
             if len(parameter_instance) == 0:
@@ -252,6 +488,12 @@ class AdaptiveEnv:
                         bin_points=self.bin_points,
                         sigma_inv=self.sigma_inv
                     )
+                elif self.infl_type == 'beta':
+                    infl_matrix = beta_kernel.influence_vectorized(
+                        parameter_instance=parameter_instance,
+                        agents_pos=self.agents_pos,
+                        bin_points=self.bin_points
+                    )
                 elif self.infl_type == 'custom':
                     # Validate custom influence configuration
                     if 'custom_influence' not in self.infl_configs:
@@ -294,6 +536,12 @@ class AdaptiveEnv:
             # Check for non-positive influence values
             if torch.any(infl_matrix <= 0):
                 warnings.warn("Non-positive values detected in base influence matrix this may result in unpredictable behavior", UserWarning)
+            if self.ignore_zero_infl and torch.any(infl_matrix <= 0):
+                warnings.warn("Non-positive values detected in base influence matrix. Zeros will be smoothed out, only works for log-concave functions.", UserWarning)
+                #set the zero values to the next closest positive value by index in the row 
+                infl_matrix=general.smoothing_zeros_batch(infl_matrix)
+
+    
 
             # Add constant shift if enabled
             if self.infl_cshift:
@@ -359,7 +607,7 @@ class AdaptiveEnv:
                 raise RuntimeError(f"Unexpected error in influence matrix computation: {str(e)}") from e
 
     def prob_matrix(self,
-                    parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
+                    parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None,
                     ) -> torch.Tensor:
         r"""
         Computes the probability matrix for agents influencing a resource based on their influence kernel :math:'f_{i}(x_i,b_k)` computed by :func:`influence` . 
@@ -388,6 +636,8 @@ class AdaptiveEnv:
         :raises RuntimeError: If computation fails due to numerical issues.
         :raises TypeError: If input types are not supported.
         """
+        if parameter_instance is None:
+            parameter_instance = self.parameters
         
         try:
             # Get influence matrix with error handling
@@ -397,34 +647,30 @@ class AdaptiveEnv:
                 raise RuntimeError(f"Failed to compute influence matrix: {str(e)}") from e
             
             
-            # Vectorized probability computation with numerical stability
-            # Compute column sums (denominator for each bin point)
-            denom = torch.sum(infl_matrix, dim=0, keepdim=False)  # Shape: (K,)
-            
-            # Check for zero denominators (no influence at some bin points)
-            zero_denom_mask = (denom == 0)
-            if self.ignore_zero_infl==False:
+            # Pre-computation validation for zero denominators (only if not ignoring)
+            if not self.ignore_zero_infl:
+                # Compute column sums for validation
+                denom_check = torch.sum(infl_matrix, dim=0, keepdim=False)  # Shape: (K,)
+                zero_denom_mask = (denom_check == 0)
                 if torch.any(zero_denom_mask):
                     zero_bins = torch.where(zero_denom_mask)[0]
                     raise RuntimeError(f"Zero total influence detected at bin points: {zero_bins.tolist()}. "
                                      f"This indicates that no agents have influence at these locations.")
 
-            # Check for very small denominators (potential numerical instability)
-            small_denom_threshold = 1e-25
-            small_denom_mask = (denom < small_denom_threshold) & (denom > 0)
-            if torch.any(small_denom_mask):
-                small_bins = torch.where(small_denom_mask)[0]
-                warnings.warn(f"Very small total influence detected at bin points {small_bins.tolist()}. "
-                             f"This may lead to numerical instability.", UserWarning)
+                # Check for very small denominators (potential numerical instability)
+                small_denom_threshold = 1e-25
+                small_denom_mask = (denom_check < small_denom_threshold) & (denom_check > 0)
+                if torch.any(small_denom_mask):
+                    small_bins = torch.where(small_denom_mask)[0]
+                    warnings.warn(f"Very small total influence detected at bin points {small_bins.tolist()}. "
+                                 f"This may lead to numerical instability.", UserWarning)
             
-            # Efficient vectorized division with broadcasting
-            # infl_matrix: (N, K), denom: (K,) -> result: (N, K)
-            if self.ignore_zero_infl==True:
-                # Avoid division by zero by setting zero denominators to small value
-                denom = torch.where(denom > 0, denom, torch.tensor(small_denom_threshold, dtype=infl_matrix.dtype))
-                agent_prob_matrix = infl_matrix / denom.unsqueeze(0)  # Broadcasting: (N, K) / (1, K)
-            else:
-                agent_prob_matrix = infl_matrix / denom.unsqueeze(0)  # Broadcasting: (N, K) / (1, K)
+            # Call JIT-compiled core computation for optimal performance
+            agent_prob_matrix = _compute_prob_matrix_core(
+                infl_matrix=infl_matrix,
+                ignore_zero_infl=self.ignore_zero_infl,
+                small_threshold=1e-25
+            )
             
             # Validate output
             if self.infl_fshift and self.infl_cshift:
@@ -551,7 +797,7 @@ class AdaptiveEnv:
                 raise RuntimeError(f"Unexpected error in reward computation: {str(e)}") from e
 
     def d_lnf_matrix(self,
-                     parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
+                     parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None,
                      ) -> Union[int, torch.Tensor]:
         r"""
         Computes the derivative of the log of the influence function matrix , i.e. 
@@ -588,6 +834,10 @@ class AdaptiveEnv:
             
             (infl_type=='multi_gaussian')
         
+        - **Beta influence kernel**
+            
+            (infl_type=='beta')
+        
         **For custom influence kernels** use :func:`d_torch`. This is automatically done if infl_type==custom_influence by the adaptive_env class.
 
         :param parameter_instance: Parameters for the influence kernels.
@@ -595,7 +845,8 @@ class AdaptiveEnv:
         :return: Derivative matrix.
         :rtype: Union[int, torch.Tensor]
         """
-
+        if parameter_instance is None:
+            parameter_instance = self.parameters
         if self.infl_type=='gaussian':
             d_matrix=gauss.d_ln_f_vectorized(parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
         elif self.infl_type=='Jones_M':
@@ -605,6 +856,8 @@ class AdaptiveEnv:
             d_matrix=diric.d_ln_f_vectorized(agents_pos=self.agents_pos,bin_points=self.bin_points,alpha_matrix=self.alpha_matrix,fixed_pa=self.fp)
         elif self.infl_type=='multi_gaussian':
             d_matrix=MV_gauss.d_ln_f_vectorized(sigma_inv=self.sigma_inv,agents_pos=self.agents_pos,bin_points=self.bin_points)
+        elif self.infl_type=='beta':
+            d_matrix=beta_kernel.d_ln_f_vectorized(parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
 
         return d_matrix 
     
@@ -961,7 +1214,7 @@ class AdaptiveEnv:
             try:
                 if self.infl_type == 'custom':
                     d_matrix = self.d_torch(parameter_instance)
-                elif self.infl_type in ['multi_gaussian', 'gaussian', 'Jones_M', 'dirichlet']:
+                elif self.infl_type in ['multi_gaussian', 'gaussian', 'Jones_M', 'dirichlet', 'beta']:
                     d_matrix = self.d_lnf_matrix(parameter_instance)
                     
             except Exception as e:
@@ -996,34 +1249,41 @@ class AdaptiveEnv:
             resource_tensor = self.resource_distribution.clone().detach()
             # Vectorized gradient computation based on domain type
             if self.domain_type == '1d':
-                # Optimized 1D vectorized computation
+                # Use JIT-compiled 1D gradient computation for optimal performance
                 try: 
-                    # Element-wise product: d_matrix * pr_matrix * pr_matrix_c * resource_tensor
-                    gradient_terms = d_matrix * pr_matrix * pr_matrix_c * resource_tensor.unsqueeze(0)  # Shape: (N, K)
+                    # Call JIT-compiled core computation
+                    grad = _compute_gradient_1d_core(
+                        d_matrix=d_matrix,
+                        pr_matrix=pr_matrix, 
+                        pr_matrix_c=pr_matrix_c,
+                        resource_tensor=resource_tensor
+                    )
                     
                     # Handle functional shift if enabled
-                    if self.infl_fshift ==1:
-                        
+                    if self.infl_fshift == 1:
                         try:
                             shift_matrix = self.shift_matrix(parameter_instance)
                             if shift_matrix.shape != (self.num_agents, len(self.bin_points)):
                                 raise ValueError(f"Shift matrix shape {shift_matrix.shape} doesn't match expected ({self.num_agents}, {len(self.bin_points)})")
                             
-                            # Subtract shift contribution (vectorized)
-                            shift_terms = shift_matrix * pr_matrix * resource_tensor.unsqueeze(0)  # Shape: (N, K)
-                            gradient_terms = gradient_terms - shift_terms
+                            # Apply JIT-compiled functional shift
+                            gradient_terms = d_matrix * pr_matrix * pr_matrix_c * resource_tensor.unsqueeze(0)
+                            gradient_terms_modified = _apply_functional_shift_1d(
+                                gradient_terms=gradient_terms,
+                                shift_matrix=shift_matrix,
+                                pr_matrix=pr_matrix,
+                                resource_tensor=resource_tensor
+                            )
+                            grad = torch.sum(gradient_terms_modified, dim=1)
                             
                         except Exception as e:
                             raise RuntimeError(f"Failed to compute functional shift: {str(e)}") from e
-                    
-                    # Sum across bin points for each agent (vectorized)
-                    grad = torch.sum(gradient_terms, dim=1)  # Shape: (N,)
                     
                 except Exception as e:
                     raise RuntimeError(f"Failed in 1D gradient computation: {str(e)}") from e
             
             else:
-                # Multi-dimensional vectorized computation
+                # Use JIT-compiled multi-dimensional gradient computation
                 try:
                     # Determine number of dimensions
                     if d_matrix.dim() == 3:  # Shape: (N, dims, K)
@@ -1034,24 +1294,15 @@ class AdaptiveEnv:
                     else:
                         raise ValueError(f"Unexpected derivative matrix dimensions: {d_matrix.shape}")
                     
-                    # Compute complementary probability and product terms
-                    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
-                    
-                    # Expand probability product for broadcasting with multi-dimensional derivative
-                    pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
-                    
-                    # Expand resource tensor for broadcasting
-                    resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(self.num_agents, num_dims, -1)  # Shape: (N, dims, K)
-                    # Vectorized element-wise multiplication
-                    gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
-                    
-                    
-                    # Sum across bin points for each agent and dimension
-                    grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
-                    
-                    # If single dimension, flatten to (N,)
-                    if num_dims == 1:
-                        grad = grad.squeeze(1)  # Shape: (N,)
+                    # Call JIT-compiled multi-dimensional gradient computation
+                    grad = _compute_gradient_md_core(
+                        d_matrix=d_matrix,
+                        pr_matrix=pr_matrix,
+                        pr_matrix_c=pr_matrix_c,
+                        resource_tensor=resource_tensor,
+                        num_agents=self.num_agents,
+                        num_dims=num_dims
+                    )
                         
                 except Exception as e:
                     raise RuntimeError(f"Failed in multi-dimensional gradient computation: {str(e)}") from e
@@ -1192,7 +1443,8 @@ class AdaptiveEnv:
                         lr = general.learning_rate(
                             iter=time_step,
                             learning_rate_type=self.learning_rate_type,
-                            learning_rate=self.learning_rate
+                            learning_rate=self.learning_rate,
+                            gradient=processed_grad,
                         )
                     except Exception as e:
                         raise RuntimeError(f"Learning rate computation failed at step {time_step}: {str(e)}") from e
@@ -1412,7 +1664,8 @@ class AdaptiveEnv:
                         lr = general.learning_rate(
                             iter=time_step,
                             learning_rate_type=self.learning_rate_type,
-                            learning_rate=self.learning_rate
+                            learning_rate=self.learning_rate,
+                            gradient=grad_vec_row
                         )
                     except Exception as e:
                         raise RuntimeError(f"Learning rate computation failed at step {time_step}: {str(e)}") from e
@@ -1456,10 +1709,10 @@ class AdaptiveEnv:
                             raise RuntimeError(f"Reward computation failed at step {time_step}: {str(e)}") from e
                     
                     # Vectorized convergence check
-                    if time_step > 5:
+                    if time_step > 10:
                         try:
                             # Compare with position 2 steps ago for 1D case
-                            comparison_step = max(0, time_step - 2)
+                            comparison_step = max(0, time_step - 10)
                             position_diff = current_positions - pos_history[comparison_step]
                             
                             # Compute absolute differences for each agent (vectorized)
@@ -1467,6 +1720,8 @@ class AdaptiveEnv:
                             
                             # Count agents that have converged
                             converged_agents = torch.sum(abs_differences <= self.tolerance).item()
+
+                            # check if gradients have gone to zero 
                             
                             if converged_agents >= self.tolerated_agents:
                                 converged_at_step = time_step
@@ -1738,7 +1993,7 @@ class AdaptiveEnv:
                     raise
                 else:
                     raise RuntimeError(f"Input validation failed: {str(e)}") from e
-            
+        
             # Update environment state
             try:
                 self.agents_pos = agents_pos_tensor
@@ -1758,7 +2013,8 @@ class AdaptiveEnv:
                 
             except Exception as e:
                 self.agents_pos = og_pos  # Restore on failure
-                self.alpha_matrix = og_alpha
+                if self.infl_type == 'dirichlet':
+                    self.alpha_matrix = og_alpha
                 raise RuntimeError(f"Matrix computation failed: {str(e)}") from e
             
             # Validate matrix dimensions
@@ -1792,88 +2048,38 @@ class AdaptiveEnv:
                     resource_tensor = self.resource_distribution.clone()
             except Exception as e:
                 self.agents_pos = og_pos
-                self.alpha_matrix = og_alpha
+                if self.infl_type == 'dirichlet':
+                    self.alpha_matrix = og_alpha
                 raise RuntimeError(f"Failed to convert resource distribution to tensor: {str(e)}") from e
             
-            # Vectorized gradient computation based on domain type
+            # Vectorized gradient computation based on domain type using JIT-compiled helpers
             try:
                 if self.domain_type == '1d':
-                    # 1D domain vectorized computation
+                    # Handle alternative form if enabled
                     if self.alt_form:
                         if self.num_agents < 3:
                             raise RuntimeError("Alternative form requires at least 3 agents")
                         # fixes all other agents postions to the the postion of the first agent
                         self.agents_pos[2:] = self.agents_pos[0]
-
-                    # Determine which agents to compute gradients for (vectorized)
-                    if two_a:
-                        agent_indices = torch.arange(self.num_agents, dtype=torch.long)
-                    else:
-                        agent_indices = torch.tensor(ids, dtype=torch.long)
                     
-                    # Vectorized gradient computation for selected agents
-                    selected_d_matrix = d_matrix[agent_indices]  # Shape: (selected_agents, K)
-                    selected_pr_matrix = pr_matrix[agent_indices]  # Shape: (selected_agents, K)
-                    selected_pr_matrix_c = pr_matrix_c[agent_indices]  # Shape: (selected_agents, K)
+                    # Get shift matrix if functional shift is enabled
+                    shift_matrix = None
+                    if self.infl_fshift == 1:
+                        shift_matrix = self.shift_matrix(parameter_tensor)
+                        if shift_matrix is None:
+                            raise RuntimeError("Shift matrix computation returned None")
                     
-                    # Compute base gradient terms (vectorized)
-                    base_grad_terms = selected_d_matrix * selected_pr_matrix * selected_pr_matrix_c * resource_tensor.unsqueeze(0)
-                    
-                    # Handle functional shift if enabled
-                    if self.infl_fshift ==1:
-                        try:
-                            shift_matrix = self.shift_matrix(parameter_tensor)
-                            if shift_matrix is None:
-                                raise RuntimeError("Shift matrix computation returned None")
-                            
-                            selected_shift_matrix = shift_matrix[agent_indices]  # Shape: (selected_agents, K)
-                            shift_terms = selected_shift_matrix * selected_pr_matrix * resource_tensor.unsqueeze(0)
-                            
-                            # Apply shift correction (vectorized)
-                            gradient_terms = base_grad_terms - shift_terms
-                            
-                        except Exception as e:
-                            raise RuntimeError(f"Functional shift computation failed: {str(e)}") from e
-                    else:
-                        gradient_terms = base_grad_terms
-                    
-                    # Sum across bin points for each agent (vectorized)
-                    agent_gradients = torch.sum(gradient_terms, dim=1)  # Shape: (selected_agents,)
-                    
-                    # Create full gradient tensor with zeros for non-selected agents
-                    if two_a:
-                        grad = agent_gradients  # All agents computed
-                    else:
-                        grad = torch.zeros(2, dtype=torch.float32)
-                        grad[agent_indices] = agent_gradients
+                    # Use JIT-compiled 1D gradient computation for optimal performance
+                    grad = _compute_gradient_function_1d_core(
+                        d_matrix, pr_matrix, pr_matrix_c, resource_tensor,
+                        self.infl_fshift, two_a, ids, self.num_agents, self.alt_form, shift_matrix
+                    )
                 
                 else:
-                    # Multi-dimensional domain vectorized computation
-                    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
-                    
-                    # Vectorized computation for all agents
-                    # Broadcasting: d_matrix (N, K) or (N, dims, K), pr_prod (N, K), resource_tensor (K,)
-                    if d_matrix.dim() == 2:
-                        # 2D case: d_matrix is (N, K)
-                        gradient_terms = d_matrix * pr_prod * resource_tensor.unsqueeze(0)  # Shape: (N, K)
-                        grad = torch.sum(gradient_terms, dim=1)  # Shape: (N,)
-                        
-                    elif d_matrix.dim() == 3:
-                        # Multi-dimensional case: d_matrix is (N, dims, K)
-                        num_dims = d_matrix.shape[1]
-                        
-                        # Expand pr_prod and resource_tensor for broadcasting
-                        pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
-                        resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(self.num_agents, num_dims, -1)  # Shape: (N, dims, K)
-                        
-                        # Vectorized element-wise multiplication
-                        gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
-                        
-                        # Sum across bin points for each agent and dimension
-                        grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
-                        
-                    else:
-                        raise ValueError(f"Unexpected derivative matrix dimensions: {d_matrix.shape}")
+                    # Use JIT-compiled multi-dimensional gradient computation
+                    grad = _compute_gradient_function_md_core(
+                        d_matrix, pr_matrix, pr_matrix_c, resource_tensor, self.num_agents
+                    )
                 
                 # Validate output for numerical stability
                 if torch.any(torch.isnan(grad)):

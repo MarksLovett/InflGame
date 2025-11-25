@@ -2378,15 +2378,21 @@
     <bcf:datasource type="file" datatype="bibtex" glob="false">refs.bib</bcf:datasource>
   </bcf:bibdata>
   <bcf:section number="0">
-    <bcf:citekey order="1" intorder="1">reny2020nash</bcf:citekey>
-    <bcf:citekey order="1" intorder="2">reny2016nash</bcf:citekey>
-    <bcf:citekey order="2" intorder="1">reny2020nash</bcf:citekey>
-    <bcf:citekey order="2" intorder="2">reny2016nash</bcf:citekey>
-    <bcf:citekey order="3" intorder="1">sothanaphan2017determinants</bcf:citekey>
-    <bcf:citekey order="4" intorder="1">yang2020us</bcf:citekey>
-    <bcf:citekey order="5" intorder="1">jones2022polarization</bcf:citekey>
-    <bcf:citekey order="6" intorder="1">jones2022polarization</bcf:citekey>
-    <bcf:citekey order="7" intorder="1">li2022pure</bcf:citekey>
+    <bcf:citekey order="1" intorder="1">robertson1998cake</bcf:citekey>
+    <bcf:citekey order="1" intorder="2">brams2016fair</bcf:citekey>
+    <bcf:citekey order="2" intorder="1">kovenock2012colonel</bcf:citekey>
+    <bcf:citekey order="2" intorder="2">roberson2006colonel</bcf:citekey>
+    <bcf:citekey order="3" intorder="1">reny2020nash</bcf:citekey>
+    <bcf:citekey order="3" intorder="2">reny2016nash</bcf:citekey>
+    <bcf:citekey order="4" intorder="1">reny2020nash</bcf:citekey>
+    <bcf:citekey order="4" intorder="2">reny2016nash</bcf:citekey>
+    <bcf:citekey order="5" intorder="1">sothanaphan2017determinants</bcf:citekey>
+    <bcf:citekey order="6" intorder="1">yang2020us</bcf:citekey>
+    <bcf:citekey order="7" intorder="1">borger2008effects</bcf:citekey>
+    <bcf:citekey order="8" intorder="1">jones2022polarization</bcf:citekey>
+    <bcf:citekey order="9" intorder="1">jones2022polarization</bcf:citekey>
+    <bcf:citekey order="10" intorder="1">jones2022polarization</bcf:citekey>
+    <bcf:citekey order="11" intorder="1">li2022pure</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

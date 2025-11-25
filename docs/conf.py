@@ -31,7 +31,7 @@ from scipy.stats._multivariate import multi_rv_generic
 
 
 
-
+autodoc_mock_imports = ["tree", "tkinter"]
 
 
 

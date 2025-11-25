@@ -21,7 +21,7 @@ where:
   - :math:`\beta(\alpha)` is the beta function.
 
 Dependencies:
--------------
+-------------yy
 - InflGame.utils
 
 Usage:
@@ -80,6 +80,125 @@ from scipy.stats import dirichlet
 from scipy.special import psi
 import InflGame.utils.general as general
 from typing import Union, List
+
+
+# ========================= JIT-COMPILED HELPER FUNCTIONS =========================
+
+@torch.jit.script
+def _param_vectorized_core(
+    parameter_tensor: torch.Tensor,
+    agents_pos_tensor: torch.Tensor,
+    fixed_pa: int
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for vectorized alpha parameter generation.
+    
+    Args:
+        parameter_tensor: Fixed alpha values for each agent (N,)
+        agents_pos_tensor: Agent positions (N, L)
+        fixed_pa: Index of fixed coordinate direction
+    
+    Returns:
+        torch.Tensor: Alpha matrix (N, L)
+    """
+    # Extract fixed parameter positions for all agents: shape (num_agents,)
+    fixed_positions = agents_pos_tensor[:, fixed_pa]  # Shape: (N,)
+    
+    # Expand for broadcasting
+    params_expanded = parameter_tensor.unsqueeze(1)  # Shape: (N, 1)
+    fixed_expanded = fixed_positions.unsqueeze(1)    # Shape: (N, 1)
+    
+    # Compute alpha matrix using vectorized operations
+    alpha_matrix = (params_expanded / fixed_expanded) * agents_pos_tensor  # Shape: (N, L)
+    
+    # Set fixed parameter column to original parameter values
+    alpha_matrix[:, fixed_pa] = parameter_tensor  # Shape: (N,)
+    
+    # Apply minimum value constraint
+    alpha_matrix = torch.maximum(alpha_matrix, torch.tensor(1e-7, dtype=torch.float32))
+    
+    return alpha_matrix
+
+@torch.jit.script
+def _influence_log_computation_core(
+    bin_points_tensor: torch.Tensor,
+    agent_alpha: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core for Dirichlet influence computation in log space.
+    
+    Args:
+        bin_points_tensor: Valid bin points (K, L)
+        agent_alpha: Alpha parameters for single agent (L,)
+    
+    Returns:
+        torch.Tensor: Log influence values (K,)
+    """
+    num_dims = agent_alpha.shape[0]
+    num_bins = bin_points_tensor.shape[0]
+    
+    # Compute log influence using vectorized operations
+    log_influence = torch.zeros(num_bins, dtype=torch.float32)
+    
+    for dim in range(num_dims):
+        log_bins = torch.log(bin_points_tensor[:, dim] + 1e-10)
+        log_influence += (agent_alpha[dim] - 1.0) * log_bins
+    
+    # Add normalization constant (log beta function)
+    log_beta = torch.sum(torch.lgamma(agent_alpha)) - torch.lgamma(torch.sum(agent_alpha))
+    log_influence -= log_beta
+    
+    return log_influence
+
+@torch.jit.script
+def _gradient_computation_core(
+    bin_points_tensor: torch.Tensor,
+    agent_pos: torch.Tensor,
+    agent_alpha: torch.Tensor,
+    fixed_pa: int,
+    psi_alpha: torch.Tensor,
+    psi_sum: float
+) -> torch.Tensor:
+    """
+    JIT-compiled core for Dirichlet gradient computation.
+    
+    Args:
+        bin_points_tensor: Bin points (K, L)
+        agent_pos: Single agent position (L,)
+        agent_alpha: Single agent alpha parameters (L,)
+        fixed_pa: Fixed parameter index
+        psi_alpha: Digamma values for alpha parameters (L,)
+        psi_sum: Digamma of sum of alpha parameters
+    
+    Returns:
+        torch.Tensor: Gradient matrix (L, K)
+    """
+    num_dims = agent_pos.shape[0]
+    num_bins = bin_points_tensor.shape[0]
+    
+    # Pre-allocate gradient matrix
+    gradient_matrix = torch.zeros((num_dims, num_bins), dtype=torch.float32)
+    
+    # Common factor for non-fixed dimensions
+    c_f = agent_alpha[fixed_pa] / agent_pos[fixed_pa]
+    
+    # Vectorized computation for each dimension
+    for dim in range(num_dims):
+        if dim != fixed_pa:
+            # Non-fixed dimension: vectorized computation across all bin points
+            log_bins = torch.log(bin_points_tensor[:, dim] + 1e-10)  # Shape: (num_bins,)
+            gradient_matrix[dim] = c_f * (log_bins - psi_alpha[dim] + psi_sum)
+    
+    # Compute fixed dimension as weighted sum of other dimensions
+    fixed_gradient = torch.zeros(num_bins, dtype=torch.float32)
+    for dim in range(num_dims):
+        if dim != fixed_pa:
+            weight = -agent_pos[dim] / agent_pos[fixed_pa]
+            fixed_gradient += weight * gradient_matrix[dim]
+    
+    gradient_matrix[fixed_pa] = fixed_gradient
+    
+    return gradient_matrix
 
 
 # ========================= VECTORIZED FUNCTIONS =========================
@@ -159,25 +278,9 @@ def param_vectorized(num_agents: int,
         else:
             raise TypeError(f"agents_pos must be list, np.ndarray, or torch.Tensor, got {type(agents_pos)}")
         
-        # Vectorized alpha computation
+        # Use JIT-compiled core for optimal performance
         try:
-            # Extract fixed parameter positions for all agents: shape (num_agents,)
-            fixed_positions = agents_pos_tensor[:, fixed_pa]  # Shape: (N,)
-            
-            # Expand parameter_tensor and fixed_positions for broadcasting
-            params_expanded = parameter_tensor.unsqueeze(1)  # Shape: (N, 1)
-            fixed_expanded = fixed_positions.unsqueeze(1)    # Shape: (N, 1)
-            
-            # Compute alpha matrix using vectorized operations
-            # For non-fixed dimensions: alpha_i,l = (alpha_i / x_i,fixed) * x_i,l
-            # For fixed dimension: alpha_i,fixed = alpha_i
-            alpha_matrix = (params_expanded / fixed_expanded) * agents_pos_tensor  # Shape: (N, L)
-            
-            # Set fixed parameter column to original parameter values
-            alpha_matrix[:, fixed_pa] = parameter_tensor  # Shape: (N,)
-            
-            # Apply minimum value constraint to prevent numerical issues
-            alpha_matrix = torch.maximum(alpha_matrix, torch.tensor(1e-7, dtype=torch.float32))
+            alpha_matrix = _param_vectorized_core(parameter_tensor, agents_pos_tensor, fixed_pa)
             
             # Final validation
             if torch.any(torch.isnan(alpha_matrix)):
@@ -268,27 +371,18 @@ def influence_vectorized(bin_points: Union[np.ndarray, torch.Tensor],
             # Pre-allocate result matrix
             influence_matrix = torch.zeros((num_agents, num_bins), dtype=torch.float32)
             
-            # Compute influence for each agent using vectorized operations
+            # Compute influence for each agent using JIT-optimized operations
             for agent_id in range(num_agents):
                 agent_alpha = alpha_matrix[agent_id]  # Shape: (num_dims,)
                 
-                # Vectorized computation across all bin points for this agent
                 # Check for zero or negative bin points
                 valid_mask = torch.all(bin_points_tensor > 1e-10, dim=1)  # Shape: (num_bins,)
                 
                 if torch.any(valid_mask):
                     valid_bins = bin_points_tensor[valid_mask]  # Shape: (valid_bins, num_dims)
                     
-                    # Compute Dirichlet PDF for valid bin points
-                    # Using log-space computation for numerical stability
-                    log_influence = torch.zeros(valid_bins.shape[0], dtype=torch.float32)
-                    
-                    for dim in range(num_dims):
-                        log_influence += (agent_alpha[dim] - 1) * torch.log(valid_bins[:, dim] + 1e-10)
-                    
-                    # Add normalization constant (log beta function)
-                    log_beta = torch.sum(torch.lgamma(agent_alpha)) - torch.lgamma(torch.sum(agent_alpha))
-                    log_influence -= log_beta
+                    # Use JIT-compiled core for log-space computation
+                    log_influence = _influence_log_computation_core(valid_bins, agent_alpha)
                     
                     # Convert back from log space
                     valid_influence = torch.exp(log_influence)
@@ -393,39 +487,24 @@ def d_ln_f_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
             # Pre-allocate result tensor: (num_agents, num_dims, num_bins)
             gradient_matrix = torch.zeros((num_agents, num_dims, num_bins), dtype=torch.float32)
             
-            # Compute gradients for all agents using vectorized operations
+            # Compute gradients for all agents using JIT-optimized operations
             for agent_id in range(num_agents):
                 agent_pos = agents_pos_tensor[agent_id]  # Shape: (num_dims,)
                 agent_alpha = alpha_matrix[agent_id]     # Shape: (num_dims,)
                 
-                # Common factor for non-fixed dimensions
-                c_f = agent_alpha[fixed_pa] / agent_pos[fixed_pa]
-                
-                # Compute psi terms (digamma function)
+                # Compute psi terms (digamma function) - must stay in Python due to scipy dependency
                 psi_alpha = torch.zeros(num_dims, dtype=torch.float32)
                 for dim in range(num_dims):
                     psi_alpha[dim] = psi(agent_alpha[dim].item())
                 
                 psi_sum = psi(torch.sum(agent_alpha).item())
                 
-                # Vectorized computation for each dimension
-                for dim in range(num_dims):
-                    if dim == fixed_pa:
-                        # Fixed dimension: compute as sum of other dimensions
-                        gradient_matrix[agent_id, dim] = torch.zeros(num_bins)
-                    else:
-                        # Non-fixed dimension: vectorized computation across all bin points
-                        log_bins = torch.log(bin_points_tensor[:, dim] + 1e-10)  # Shape: (num_bins,)
-                        gradient_matrix[agent_id, dim] = c_f * (log_bins - psi_alpha[dim] + psi_sum)
+                # Use JIT-compiled core for gradient computation
+                agent_gradients = _gradient_computation_core(
+                    bin_points_tensor, agent_pos, agent_alpha, fixed_pa, psi_alpha, psi_sum
+                )
                 
-                # Compute fixed dimension as weighted sum of other dimensions
-                fixed_gradient = torch.zeros(num_bins, dtype=torch.float32)
-                for dim in range(num_dims):
-                    if dim != fixed_pa:
-                        weight = -agent_pos[dim] / agent_pos[fixed_pa]
-                        fixed_gradient += weight * gradient_matrix[agent_id, dim]
-                
-                gradient_matrix[agent_id, fixed_pa] = fixed_gradient
+                gradient_matrix[agent_id] = agent_gradients
             
             # Final validation
             if torch.any(torch.isnan(gradient_matrix)):

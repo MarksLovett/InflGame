@@ -1,5 +1,4 @@
-"""
-
+""".
 .. module:: grad_func_env
    :synopsis: A module for handling adaptive dynamics for agents interacting in influence games.
 
@@ -63,9 +62,10 @@ Example:
 import numpy as np
 import torch
 from typing import Union, List, Dict, Optional, Tuple
-
+import warnings
 
 import InflGame.utils.general as general
+import InflGame.utils.validation as validation
 import InflGame.kernels.gauss as gauss
 import InflGame.kernels.jones as jones
 import InflGame.kernels.diric as diric
@@ -100,6 +100,7 @@ class AdaptiveEnv:
                  domain_bounds: Union[List[float], torch.Tensor] = [0, 1],
                  tolerance: float = 10**-5,
                  tolerated_agents: Optional[int] = None,
+                 ignore_zero_infl: bool = False,
                  ) -> None:
         """
         Initialize the AdaptiveEnv class.
@@ -141,185 +142,226 @@ class AdaptiveEnv:
         :param tolerated_agents: Number of agents that need to meet tolerance before breaking.
         :type tolerated_agents: Optional[int]
         """
-        
-        self.num_agents=num_agents
-        self.agents_pos = agents_pos
-        self.infl_type=infl_configs['infl_type']
-        self.infl_configs=infl_configs
-        self.parameters=parameters
-        self.resource_distribution=resource_distribution
-        self.bin_points=bin_points
-        self.learning_rate=learning_rate
-        self.time_steps=time_steps
-        self.fixed_pa=fp
-        self.learning_rate_type=learning_rate_type
-        self.infl_cshift=infl_cshift
-        self.cshift=cshift
-        self.infl_fshift=infl_fshift
-        self.Q=Q
-        self.domain_type=domain_type
-        self.domain_bounds=domain_bounds
-        self.sigma_inv=0
-        self.tolerance=tolerance
-        if tolerated_agents == None:
-            tolerated_agents = num_agents
-        else:
-            self.tolerated_agents=tolerated_agents
-        
-
-    def influence(self,
-                  agent_id: int,
-                  parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
-                  alpha_matrix: torch.Tensor = 0,
-                  ) -> torch.Tensor:
-        r"""
-        Compute the influence of a specific agent's influence kernel over the bin points.
-        
-        i.e.
-
-        .. math::
-           f_{i}(x_i,b)
-
-        Where :math:`x_i` is the position of the :math:`i` th agent and :math:`b \in \mathbb{B}` is the resource/bin points in the environment.
-
-        There are several types of preset influence kernels, including:
-
-        - **Gaussian influence kernel**
-
-          .. math::
-             f_i(x_i,b,\sigma) = e^{-\frac {(x_i-b)^2}{2\sigma^2}}
-
-        - **Jones influence kernel**
-
-          .. math::
-             f_i(x_i,b,p) = |x-b|^p
-
-        - **Dirichlet influence kernel**
-
-          .. math::
-             f_i(\mathbb{\alpha},b)=\frac{1}{\beta(\alpha)}\prod_{l=1}^{L} b_l^{(\alpha_l-1)}
-
-        where :math:`L` is the number of dimensions and :math:`b_l` is the :math:`l` th component of the bin point :math:`b`.
-        
-        Here :math:`\mathbf{\alpha}` is the parameter vector for the Dirichlet influence kernel, but :math:`\alpha_\phi` is the fixed parameter such that
-
-          .. math::
-             \alpha_l=\frac{\alpha_\phi}{x_{(i,\phi)}}*x_{(i,l)}
-
-        where :math:`x_{(i,\phi)}` is the :math:`\phi` th component of the position of the :math:`i` th agent and :math:`x_{(i,l)}` is the the :math:`l` th component of the position of the :math:`i` th agent.
-
-        - **Multi-variate Gaussian influence kernel**
-
-          .. math::
-            f_i(\mathbf{x}_i,\mathbf{b},\Sigma) = e^{-\frac{(\mathbf{x}_i-\mathbf{b})^T \Sigma^{-1} (\mathbf{x}_i-\mathbf{b})}{2}}
-
-        where :math:`\Sigma` is the covariance matrix of the multi-variate Gaussian influence kernel.
-
-        - **Custom influence kernel (user-defined)**
-
-        This influence kernel is defined by the user and can be any function that takes in the agent's position, bin points, and parameters.
-        Examples of custom influence kernels are provided in the demos.
-
-        :param agent_id: ID of the agent.
-        :type agent_id: int
-        :param parameter_instance: Parameters for influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param alpha_matrix: Alpha matrix for Dirichlet influence.
-        :type alpha_matrix: torch.Tensor
-        :return: Influence values for the agent.
-        :rtype: torch.Tensor
-        """
-
-        if self.infl_cshift==True and agent_id==self.num_agents:
-            infl=torch.tensor(self.cshift)
-        elif self.infl_fshift==True and agent_id>=self.num_agents:
-            #This part determines if we are shifting our influence matrix by a custom function (right now just takes the abstaining function)
-            infl=[]
-            if len(self.agents_pos.shape)>1:
-                print('Not done yet')
-            else:
-                for bin_point in self.bin_points:
-                   infl_instance=1
-                   for pos in self.agents_pos:
-                        infl_instance=infl_instance*(bin_point-pos)**2
-                   infl_instance=self.Q*infl_instance
-                   infl.append(infl_instance)
-                infl=torch.tensor(infl)
-        else:
-            if self.infl_type=='gaussian':
-                infl=gauss.influence(agent_id=agent_id,parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
+        validated = validation.validate_adaptive_config(
+            num_agents=num_agents,
+            agents_pos=agents_pos,
+            parameters=parameters,
+            resource_distribution=resource_distribution,
+            bin_points=bin_points,
+            infl_configs=infl_configs,
+            learning_rate_type=learning_rate_type,
+            learning_rate=learning_rate,
+            time_steps=time_steps,
+            fp=fp,
+            infl_cshift=infl_cshift,
+            cshift=cshift,
+            infl_fshift=infl_fshift,
+            Q=Q,
+            domain_type=domain_type,
+            domain_bounds=domain_bounds,
+            tolerance=tolerance,
+            tolerated_agents=tolerated_agents
+        )
+        self.num_agents = validated['num_agents']
+        self.agents_pos = validated['agents_pos']
+        self.infl_type = validated['infl_type']
+        self.infl_configs = validated['infl_configs']
+        self.parameters = validated['parameters']
+        self.resource_distribution = validated['resource_distribution']
+        self.bin_points = validated['bin_points']
+        self.learning_rate = validated['learning_rate']
+        self.time_steps = validated['time_steps']
+        self.fp = validated['fp']
+        self.learning_rate_type = validated['learning_rate_type']
+        self.infl_cshift = validated['infl_cshift']
+        self.cshift = validated['cshift']
+        self.infl_fshift = validated['infl_fshift']
+        self.Q = validated['Q']
+        self.domain_type = validated['domain_type']
+        self.domain_bounds = validated['domain_bounds']
+        self.sigma_inv = 0
+        self.tolerance = validated['tolerance']
+        self.tolerated_agents = validated['tolerated_agents']
+        self.ignore_zero_infl = ignore_zero_infl
+        self.alt_form=False  # whether to use alternative form for 1d gradient calculation
             
-            elif self.infl_type=='Jones_M':
-                infl=jones.influence(agent_id=agent_id,parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
-
-            elif self.infl_type=='dirichlet':
-                infl=diric.influence(agent_id=agent_id,bin_points=self.bin_points,alpha_matrix=alpha_matrix)
-
-            elif self.infl_type=='multi_gaussian':
-                self.sigma_inv=MV_gauss.cov_matrix(parameter_instance=parameter_instance)
-
-                infl=MV_gauss.influence(agent_id=agent_id,agents_pos=self.agents_pos,bin_points=self.bin_points,sigma_inv=self.sigma_inv)
-            elif self.infl_type=='custom':
-                custom_influence=self.infl_configs['custom_influence']
-                x_torch=torch.tensor(self.agents_pos[agent_id])
-                p=np.array([parameter_instance[agent_id]])
-                infl=custom_influence(x_torch,bin_points=self.bin_points,parameter_instance=p[0])
-            else:
-                print('no method selected!') 
-        return infl
-    
-    def influence_matrix(self,
-                         parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
-                         ) -> torch.Tensor:
-        r"""
-        Computes the influence matrix for all agents in the environment. The influence matrix is a :math:`N \times K` matrix where :math:`N` is the number of agents and
-        K is the number of bin/resource points. The entry :math:`\iota_{i,k}` is a the influence of the :math:`i` th agent on the :math:`k` th bin/resource point.
-        i.e.
-
-          .. math:: 
-             \begin{bmatrix}
-             \iota_{1,1} & \iota_{1,2} & \cdots & \iota_{1,K} \\
-             \iota_{2,1} & \iota_{2,2} & \cdots & \iota_{2,K} \\
-             \vdots & \vdots & \ddots & \vdots \\
-             \iota_{N,1} & \iota_{N,2} & \cdots & \iota_{N,K}
-             \end{bmatrix}
         
-        where :math:`\iota_{i,k}=f_i(x_i,b_k)`. 
 
+    def influence_matrix(self,
+                         parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None
+                         ) -> torch.Tensor:
+        """
+        Compute the influence matrix for all agents using vectorized operations.
+        
+        This function computes the influence values for all agents across all bin points,
+        with optional constant and functional shifts. The function supports multiple
+        influence kernel types and provides comprehensive error handling.
+        
         :param parameter_instance: Parameters for the influence kernels.
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Influence matrix.
+        :return: Influence matrix of shape (N, K) or (N+shifts, K) where N is number of agents,
+                K is number of bin points, and shifts are additional rows for constant/functional shifts.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
+        :raises NotImplementedError: If functional shift is requested for multi-dimensional agents.
         """
+        if parameter_instance is None:
+            parameter_instance = self.parameters
+        try:
+            # Validate parameter_instance
+            if len(parameter_instance) == 0:
+                raise ValueError("Parameter instance cannot be empty")
 
-
-        
-        #For dirichlet influence only
-        if self.infl_type=='dirichlet':
-            alpha_matrix=diric.param(num_agents=self.num_agents,parameter_instance=parameter_instance,agents_pos=self.agents_pos,fixed_pa=self.fixed_pa)
-        else:
-            alpha_matrix=0
-        self.alpha_matrix=alpha_matrix
-
-        #For types of shifts
-        agents=self.num_agents
-        if self.infl_cshift==True:
-            agents=agents+1
-        if self.infl_fshift==True:
-            agents=agents+1
-        
-        #Assembling the influence matrix for all agents
-        infl_matrix=0
-        for agent_id in range(agents):
-            infl_row=self.influence(agent_id,parameter_instance,alpha_matrix)
-
-            infl_matrix=general.matrix_builder(row_id=agent_id,row=infl_row,matrix=infl_matrix)
+            if isinstance(parameter_instance, (list, np.ndarray)):
+                    if len(parameter_instance) != self.num_agents:
+                        raise ValueError(f"Parameter instance length ({len(parameter_instance)}) must match number of agents ({self.num_agents})")
             
-        return infl_matrix
-    
+            # Compute base influence matrix based on kernel type
+            try:
+                if self.infl_type == 'gaussian':
+                    infl_matrix = gauss.influence_vectorized(
+                        parameter_instance=parameter_instance,
+                        agents_pos=self.agents_pos,
+                        bin_points=self.bin_points
+                    )
+                elif self.infl_type == 'Jones_M':
+                    infl_matrix = jones.influence_vectorized(
+                        parameter_instance=parameter_instance,
+                        agents_pos=self.agents_pos,
+                        bin_points=self.bin_points
+                    )
+                elif self.infl_type == 'dirichlet':
+                    # Validate Dirichlet-specific requirements
+                    if not hasattr(self, 'fp'):
+                        raise ValueError("Fixed parameter 'fp' is required for Dirichlet kernel")
+                    
+                    self.alpha_matrix = diric.param(
+                        num_agents=self.num_agents,
+                        parameter_instance=parameter_instance,
+                        agents_pos=self.agents_pos,
+                        fixed_pa=self.fp
+                    )
+                    infl_matrix = diric.influence_vectorized(
+                        bin_points=self.bin_points,
+                        alpha_matrix=self.alpha_matrix,
+                    )
+                elif self.infl_type == 'multi_gaussian':
+                    self.sigma_inv = MV_gauss.cov_matrix_vectorized(parameter_instances=parameter_instance)
+                    infl_matrix = MV_gauss.influence_vectorized(
+                        agents_pos=self.agents_pos,
+                        bin_points=self.bin_points,
+                        sigma_inv=self.sigma_inv
+                    )
+                elif self.infl_type == 'custom':
+                    # Validate custom influence configuration
+                    if 'custom_influence' not in self.infl_configs:
+                        raise ValueError("Custom influence function not provided in infl_configs")
+                    
+                    custom_influence = self.infl_configs['custom_influence']
+                    if not callable(custom_influence):
+                        raise TypeError("Custom influence must be a callable function")
+                    if not torch.is_tensor(self.agents_pos):
+                        self.agents_pos = torch.tensor(self.agents_pos, dtype=torch.float32)
+                    if not torch.is_tensor(self.bin_points):
+                        self.bin_points = torch.tensor(self.bin_points, dtype=torch.float32)  
+                    if not torch.is_tensor(parameter_instance):
+                        parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)  
+                    try:
+                        infl_matrix = custom_influence(
+                            self.agents_pos,
+                            bin_points=self.bin_points,
+                            parameter_instance=parameter_instance
+                        )
+                    except Exception as e:
+                        raise RuntimeError(f"Custom influence function failed: {str(e)}") from e
+                    
+            except Exception as e:
+                if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                    raise
+                else:
+                    raise RuntimeError(f"Failed to compute base influence matrix: {str(e)}") from e
+            
+            # Validate base influence matrix
+            if infl_matrix is None:
+                raise RuntimeError("Base influence matrix computation returned None")
+            
+            if infl_matrix.shape[0] != self.num_agents:
+                raise ValueError(f"Influence matrix rows ({infl_matrix.shape[0]}) must match number of agents ({self.num_agents})")
+            
+            if infl_matrix.shape[1] != len(self.bin_points):
+                raise ValueError(f"Influence matrix columns ({infl_matrix.shape[1]}) must match bin points length ({len(self.bin_points)})")
+            
+            # Check for non-positive influence values
+            if torch.any(infl_matrix <= 0):
+                warnings.warn("Non-positive values detected in base influence matrix this may result in unpredictable behavior", UserWarning)
+
+            # Add constant shift if enabled
+            if self.infl_cshift:
+                try: 
+                    # Vectorized constant shift creation
+                    infl_matrix = torch.cat([infl_matrix, self.cshift], dim=0)
+                    
+                except Exception as e:
+                    raise RuntimeError(f"Failed to add constant shift: {str(e)}") from e
+            
+            # Add functional shift if enabled (vectorized where possible)
+            if self.infl_fshift:
+                try:
+
+                    # Vectorized functional shift computation
+                    if torch.is_tensor(self.bin_points):
+                        bin_points_tensor = self.bin_points
+                    else:
+                        bin_points_tensor = torch.tensor(self.bin_points, dtype=torch.float32)
+                    if not torch.is_tensor(self.agents_pos):
+                        agents_pos_tensor = torch.tensor(self.agents_pos, dtype=torch.float32)
+                    else:
+                        agents_pos_tensor = self.agents_pos
+
+                    # Broadcasting for vectorized computation
+                    # bin_points: (1, K), agents_pos: (N, 1) -> diff: (N, K)
+                    bin_points_expanded = bin_points_tensor.unsqueeze(0)  # Shape: (1, K)
+                    agents_pos_expanded = agents_pos_tensor.unsqueeze(1)  # Shape: (N, 1)
+                    
+                    # Compute (bin_point - agent_pos)^2 for all combinations
+                    diff_squared = (bin_points_expanded - agents_pos_expanded) ** 2  # Shape: (N, K)
+                    
+                    # Product across all agents for each bin point
+                    fshift_values = torch.prod(diff_squared, dim=0) * self.Q  # Shape: (K,)
+                    
+                    # Add as new row
+                    fshift_row = fshift_values.unsqueeze(0)  # Shape: (1, K)
+                    infl_matrix = torch.cat([infl_matrix, fshift_row], dim=0)
+                    
+                except Exception as e:
+                    if isinstance(e, NotImplementedError):
+                        raise
+                    else:
+                        raise RuntimeError(f"Failed to add functional shift: {str(e)}") from e
+            
+            # Final validation and numerical checks
+            if torch.any(torch.isnan(infl_matrix)):
+                raise RuntimeError("NaN values detected in final influence matrix")
+            
+            if torch.any(torch.isinf(infl_matrix)):
+                raise RuntimeError("Infinite values detected in final influence matrix")
+            
+            # Ensure consistent data type
+            if infl_matrix.dtype != torch.float32:
+                infl_matrix = infl_matrix.to(torch.float32)
+            
+            return infl_matrix
+            
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError, NotImplementedError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in influence matrix computation: {str(e)}") from e
 
     def prob_matrix(self,
-                    parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
+                    parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None,
                     ) -> torch.Tensor:
         r"""
         Computes the probability matrix for agents influencing a resource based on their influence kernel :math:'f_{i}(x_i,b_k)` computed by :func:`influence` . 
@@ -344,19 +386,95 @@ class AdaptiveEnv:
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
         :return: Probability matrix.
         :rtype: torch.Tensor
+        :raises ValueError: If input dimensions are incompatible or contain invalid values.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
-
-
-        infl_matrix=self.influence_matrix(parameter_instance)
-        denom=torch.sum(infl_matrix, 0)
-        numer=infl_matrix
-        agent_prob_matrix=numer/denom
+        if parameter_instance is None:
+            parameter_instance = self.parameters
         
-        return agent_prob_matrix
+        try:
+            # Get influence matrix with error handling
+            try:
+                infl_matrix = self.influence_matrix(parameter_instance)
+            except Exception as e:
+                raise RuntimeError(f"Failed to compute influence matrix: {str(e)}") from e
+            
+            
+            # Vectorized probability computation with numerical stability
+            # Compute column sums (denominator for each bin point)
+            denom = torch.sum(infl_matrix, dim=0, keepdim=False)  # Shape: (K,)
+            
+            # Check for zero denominators (no influence at some bin points)
+            zero_denom_mask = (denom == 0)
+            if self.ignore_zero_infl==False:
+                if torch.any(zero_denom_mask):
+                    zero_bins = torch.where(zero_denom_mask)[0]
+                    raise RuntimeError(f"Zero total influence detected at bin points: {zero_bins.tolist()}. "
+                                     f"This indicates that no agents have influence at these locations.")
+
+            # Check for very small denominators (potential numerical instability)
+            small_denom_threshold = 1e-25
+            small_denom_mask = (denom < small_denom_threshold) & (denom > 0)
+            if torch.any(small_denom_mask):
+                small_bins = torch.where(small_denom_mask)[0]
+                warnings.warn(f"Very small total influence detected at bin points {small_bins.tolist()}. "
+                             f"This may lead to numerical instability.", UserWarning)
+            
+            # Efficient vectorized division with broadcasting
+            # infl_matrix: (N, K), denom: (K,) -> result: (N, K)
+            if self.ignore_zero_infl==True:
+                # Avoid division by zero by setting zero denominators to small value
+                denom = torch.where(denom > 0, denom, torch.tensor(small_denom_threshold, dtype=infl_matrix.dtype))
+                agent_prob_matrix = infl_matrix / denom.unsqueeze(0)  # Broadcasting: (N, K) / (1, K)
+            else:
+                agent_prob_matrix = infl_matrix / denom.unsqueeze(0)  # Broadcasting: (N, K) / (1, K)
+            
+            # Validate output
+            if self.infl_fshift and self.infl_cshift:
+                # If both shifts are applied, the last two rows are shifts
+                if agent_prob_matrix.shape[0] != self.num_agents + 2:
+                    raise ValueError(f"Probability matrix rows ({agent_prob_matrix.shape[0]}) must match number of agents plus shifts ({self.num_agents + 2})")
+            # exactly one of these are true then
+            elif (self.infl_fshift + self.infl_cshift) == 1:
+                # If only one shift is applied, the last row is a shift
+                if agent_prob_matrix.shape[0] != self.num_agents + 1:
+                    raise ValueError(f"Probability matrix rows ({agent_prob_matrix.shape[0]}) must match number of agents plus one shift ({self.num_agents + 1})")
+            else:
+                if agent_prob_matrix.shape[0] != self.num_agents:
+                    raise ValueError(f"Probability matrix rows ({agent_prob_matrix.shape[0]}) must match number of agents ({self.num_agents})")
+            if agent_prob_matrix.shape[1] != len(self.bin_points):
+                raise ValueError(f"Probability matrix columns ({agent_prob_matrix.shape[1]}) must match bin points length ({len(self.bin_points)})")
+            # Check for NaN or Inf values in the probability matrix
+            if torch.any(torch.isnan(agent_prob_matrix)):
+                raise RuntimeError("NaN values detected in computed probability matrix")
+            if torch.any(torch.isinf(agent_prob_matrix)):
+                raise RuntimeError("Infinite values detected in computed probability matrix")
+            # Check for negative probabilities
+            if torch.any(agent_prob_matrix < 0):
+                raise RuntimeError("Negative probabilities detected in computed probability matrix. "
+                                 "This indicates an issue with the influence computation or normalization.")
+            # Check for probabilities greater than 1
+            if torch.any(agent_prob_matrix > 1):
+                raise RuntimeError("Probabilities greater than 1 detected in computed probability matrix. "
+                                 "This indicates an issue with the influence computation or normalization.")
+            
+            
+            # Ensure consistent data type
+            if agent_prob_matrix.dtype != torch.float32:
+                agent_prob_matrix = agent_prob_matrix.to(torch.float32)
+            
+            return agent_prob_matrix
+            
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in probability matrix computation: {str(e)}") from e
     
     def reward_F(self,
                  parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
-                 ) -> Union[int, torch.Tensor]:
+                 ) -> torch.Tensor:
         r"""
         Compute the expected reward for each agent given a reward distribution and all agents influence kernels. The probability of an agent influencing a point is their relative influence over the bin points.
         
@@ -387,17 +505,57 @@ class AdaptiveEnv:
         :param parameter_instance: Parameters for the influence kernels.
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
         :return: Reward values for agents.
-        :rtype: Union[int, torch.Tensor]
+        :rtype: torch.Tensor
+        :raises ValueError: If input dimensions are incompatible or contain invalid values.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
-
-
-        pr_matrix=self.prob_matrix(parameter_instance)
-        reward=torch.sum(pr_matrix*torch.tensor(self.resource_distribution),1)
-        return reward
-
+        
+        try:
+            # Convert resource distribution to tensor for efficient computation
+            if not isinstance(self.resource_distribution, torch.Tensor):
+                resource_tensor = torch.tensor(self.resource_distribution, dtype=torch.float32)
+            else:
+                resource_tensor = self.resource_distribution.clone().detach()
+                if resource_tensor.dtype != torch.float32:
+                    resource_tensor = resource_tensor.to(torch.float32)
+            
+            # Get probability matrix with error handling
+            try:
+                pr_matrix = self.prob_matrix(parameter_instance)
+            except Exception as e:
+                raise RuntimeError(f"Failed to compute probability matrix: {str(e)}") from e
+            
+            # Validate probability matrix
+            if pr_matrix is None:
+                raise RuntimeError("Probability matrix computation returned None")
+            
+            # Vectorized reward computation using optimized matrix multiplication
+            # This is equivalent to: reward[i] = sum(pr_matrix[i, k] * resource_tensor[k] for k in range(K))
+            # but much more efficient using tensor operations
+            reward = torch.mv(pr_matrix, resource_tensor)  # Matrix-vector multiplication: (N, K) @ (K,) = (N,)
+            
+            # Validate output
+            if torch.any(torch.isnan(reward)):
+                raise RuntimeError("NaN values detected in computed rewards")
+            
+            if torch.any(torch.isinf(reward)):
+                raise RuntimeError("Infinite values detected in computed rewards")
+            
+            # Ensure reward tensor has correct shape
+            if reward.dim() == 0:
+                reward = reward.unsqueeze(0)
+            
+            return reward
+            
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in reward computation: {str(e)}") from e
 
     def d_lnf_matrix(self,
-                     parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
+                     parameter_instance: Union[List[float], np.ndarray, torch.Tensor] = None,
                      ) -> Union[int, torch.Tensor]:
         r"""
         Computes the derivative of the log of the influence function matrix , i.e. 
@@ -441,32 +599,20 @@ class AdaptiveEnv:
         :return: Derivative matrix.
         :rtype: Union[int, torch.Tensor]
         """
+        if parameter_instance is None:
+            parameter_instance = self.parameters
+        if self.infl_type=='gaussian':
+            d_matrix=gauss.d_ln_f_vectorized(parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
+        elif self.infl_type=='Jones_M':
+            d_matrix=jones.d_ln_f_vectorized(parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
+        elif self.infl_type=='dirichlet':
+            self.alpha_matrix=diric.param(num_agents=self.num_agents,parameter_instance=parameter_instance,agents_pos=self.agents_pos,fixed_pa=self.fp)
+            d_matrix=diric.d_ln_f_vectorized(agents_pos=self.agents_pos,bin_points=self.bin_points,alpha_matrix=self.alpha_matrix,fixed_pa=self.fp)
+        elif self.infl_type=='multi_gaussian':
+            d_matrix=MV_gauss.d_ln_f_vectorized(sigma_inv=self.sigma_inv,agents_pos=self.agents_pos,bin_points=self.bin_points)
 
-        d_matrix=0
-        for agent_id in range(self.num_agents):
-            if self.infl_type=='gaussian':
-                d_row=gauss.d_ln_f(agent_id=agent_id,parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
-
-            elif self.infl_type=='Jones_M':
-                d_row=jones.d_ln_f(agent_id=agent_id,parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
-
-            elif self.infl_type=='dirichlet':
-
-                self.alpha_matrix=diric.param(num_agents=self.num_agents,parameter_instance=parameter_instance,agents_pos=self.agents_pos,fixed_pa=self.fixed_pa)
-
-                d_row=diric.d_ln_f(agent_id,agents_pos=self.agents_pos,bin_points=self.bin_points,alpha_matrix=self.alpha_matrix,fixed_pa=self.fixed_pa)
-            
-            elif self.infl_type=='multi_gaussian':
-                self.sigma_inv=MV_gauss.cov_matrix(parameter_instance=parameter_instance)
-                
-                d_row=MV_gauss.d_ln_f(agent_id=agent_id,agents_pos=self.agents_pos,bin_points=self.bin_points,sigma_inv=self.sigma_inv)
-                
-
-            d_matrix=general.matrix_builder(agent_id,d_row,d_matrix)
-        
         return d_matrix 
     
-
     def shift_matrix(self,
                      parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
                      ) -> torch.Tensor:
@@ -511,40 +657,70 @@ class AdaptiveEnv:
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
         :return: Shift matrix.
         :rtype: torch.Tensor
+        :raises ValueError: If input dimensions are incompatible or invalid.
+        :raises RuntimeError: If computation fails due to numerical issues.
         """
-
-
-        infl_matrix=self.influence_matrix(parameter_instance)
-        denom=torch.sum(infl_matrix, 0)
-        shift_matrix=0
-        for agent_id in range(self.num_agents):
-            shift_row=[]
-            if agent_id==0:
-                for bin_point in self.bin_points:
-                    shift_instance=1
-                    for pos in self.agents_pos[1:]:
-                        shift_instance=shift_instance*(bin_point-pos)**2
-                    shift_instance=-2*self.Q*shift_instance*(bin_point-self.agents_pos[agent_id])
-                    shift_row.append(shift_instance)
-            elif agent_id==self.num_agents-1:
-                for bin_point in self.bin_points:
-                    shift_instance=1
-                    for pos in self.agents_pos[:-1]:
-                        shift_instance=shift_instance*(bin_point-pos)**2
-                    shift_instance=-2*self.Q*shift_instance*(bin_point-self.agents_pos[agent_id])
-                    shift_row.append(shift_instance)  
+        
+        try:
+            # Get influence matrix and compute denominator
+            infl_matrix = self.influence_matrix(parameter_instance)
+            denom = torch.sum(infl_matrix, dim=0)
+            
+            # Check for zero denominator
+            if torch.any(denom == 0):
+                raise RuntimeError("Zero denominator detected in influence matrix normalization")
+            
+            # Vectorized computation of shift matrix
+            # Shape: agents_pos_tensor (N,), bin_points_tensor (K,)
+            # We want to compute for each agent i and bin k:
+            # s_{i,k} = -2Q * (product of (b_k - x_j)^2 for all j != i) * (b_k - x_i)
+            
+            num_bins = len(self.bin_points)
+            
+            # Expand dimensions for broadcasting
+            # agents_pos: (N, 1), bin_points: (1, K)
+            agents_expanded = self.agents_pos.unsqueeze(1)  # Shape: (N, 1)
+            bins_expanded = self.bin_points.unsqueeze(0)    # Shape: (1, K)
+            
+            # Compute (b_k - x_j)^2 for all agents and bins
+            # Shape: (N, K) where element [i, k] = (b_k - x_i)^2
+            diff_squared = (bins_expanded - agents_expanded) ** 2
+            
+            # Fully vectorized approach using advanced indexing
+            # Create identity matrix to mask out diagonal elements
+            eye_mask = torch.eye(self.num_agents, dtype=torch.bool)
+            
+            # For each agent, we need the product of all other agents' squared differences
+            # We'll use log-sum-exp trick for numerical stability with products
+            log_diff_squared = torch.log(diff_squared + 1e-10)  # Add small epsilon to avoid log(0)
+            
+            # Create a mask matrix: (N, N, K) where mask[i, j, k] = True if i != j
+            mask_3d = (~eye_mask).unsqueeze(2).expand(-1, -1, num_bins)
+            
+            # Expand log_diff_squared to (N, N, K) for broadcasting
+            log_diff_expanded = log_diff_squared.unsqueeze(0).expand(self.num_agents, -1, -1)
+            
+            # Apply mask and sum over the j dimension (excluding i=j)
+            masked_log_diff = torch.where(mask_3d, log_diff_expanded, torch.zeros_like(log_diff_expanded))
+            log_product_sum = torch.sum(masked_log_diff, dim=1)  # Shape: (N, K)
+            
+            # Convert back from log space
+            product_terms = torch.exp(log_product_sum)  # Shape: (N, K)
+            
+            # Compute the final shift matrix
+            agent_diff = bins_expanded - agents_expanded  # Shape: (N, K)
+            shift_matrix = -2 * self.Q * product_terms * agent_diff
+            
+            # Normalize by denominator
+            shift_matrix = shift_matrix / denom.unsqueeze(0)
+            
+            return shift_matrix
+            
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError)):
+                raise
             else:
-                for bin_point in self.bin_points: 
-                    shift_instance=1
-                    for pos in np.concatenate((self.agents_pos[:agent_id],self.agents_pos[agent_id+1:]), axis=0):
-                        shift_instance=shift_instance*(bin_point-pos)**2
-                    shift_instance=-2*self.Q*shift_instance*(bin_point-self.agents_pos[agent_id])
-                    shift_row.append(shift_instance)
-            shift_row=torch.tensor(shift_row)
-            shift_matrix=general.matrix_builder(row_id=agent_id,row=shift_row,matrix=shift_matrix)
-
-        shift_matrix=shift_matrix/denom
-        return shift_matrix
+                raise RuntimeError(f"Unexpected error in shift_matrix computation: {str(e)}") from e
     
     def d_torch(self,
                 parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
@@ -576,35 +752,144 @@ class AdaptiveEnv:
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
         :return: derivative matrix.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
+        :raises NotImplementedError: If custom influence function is not properly configured.
         """
-        d_matrix=0
-        if self.domain_type=='1d':
-            for agent_id in range(self.num_agents):
-                x_torch=torch.tensor([self.agents_pos[agent_id]]*len(self.bin_points),requires_grad=True)
-                external_grad = torch.tensor([1.]*len(self.bin_points))
-                custom_influence=self.infl_configs['custom_influence']
-                infl_row=torch.log(custom_influence(x_torch,self.bin_points,parameter_instance[agent_id]))
-                infl_row.backward(gradient=external_grad)
-                d_row=x_torch.grad
-                d_matrix=general.matrix_builder(row_id=agent_id,row=d_row,matrix=d_matrix)
-        else:
-            for agent_id in range(self.num_agents):
-                x_torch=torch.tensor(self.agents_pos[agent_id])
-                x=x_torch.repeat(len(self.bin_points),1)
-                x.requires_grad=True
-                external_grad=torch.tensor([1.]*len(self.bin_points))
-                custom_influence=self.infl_configs['custom_influence']
-                infl_row=torch.log(custom_influence(x,self.bin_points,parameter_instance[agent_id]))
-                infl_row.backward(gradient=external_grad)
-                d_row=[]
-                for dim in range(len(x_torch)):
-                    d_row.append(x.grad[:,dim])
-                d_row=torch.stack(d_row)
-                d_matrix=general.matrix_builder(row_id=agent_id,row=d_row,matrix=d_matrix)
+        
+        try:
+            
+            custom_influence = self.infl_configs['custom_influence']
+
+            # Convert to tensors for efficient computation
+            agents_pos_tensor = self.agents_pos.clone().detach().requires_grad_(True)
+            bin_points_tensor = self.bin_points.clone().detach().requires_grad_(True)
+
+            # Determine dimensionality and validate domain type
+            if self.domain_type == '1d':
+                agent_dims = 1
+            else:
+                agent_dims = agents_pos_tensor.shape[1] if agents_pos_tensor.dim() > 1 else agents_pos_tensor.shape[0]
+            
+            # Pre-allocate result matrix for efficiency
+            num_bins = len(self.bin_points)
+            if self.domain_type == '1d':
+                d_matrix = torch.zeros((self.num_agents, num_bins), dtype=torch.float32)
+            else:
+                d_matrix = torch.zeros((self.num_agents, agent_dims, num_bins), dtype=torch.float32)
+            
+            # Vectorized gradient computation
+            try:
+                if self.domain_type == '1d':
+                    # Optimized 1D case with vectorized operations
+                    for agent_id in range(self.num_agents):
+                        # Create position tensor for this agent across all bin points
+                        agent_pos = agents_pos_tensor[agent_id].item()
+                        x_torch = torch.full((num_bins,), agent_pos, requires_grad=True, dtype=torch.float32)
+                        try:
+                            # Compute influence for all bin points at once
+                            infl_values = custom_influence(x_torch, bin_points_tensor, parameter_instance[agent_id])
+                            
+                            # Validate influence values
+                            if torch.any(infl_values <= 0):
+                                raise RuntimeError(f"Non-positive influence values detected for agent {agent_id}. "
+                                                 f"Log gradient computation requires positive influence values.")
+                            
+                            # Compute log and sum for backward pass
+                            log_infl = torch.log(infl_values)
+                            total_log_infl = torch.sum(log_infl)
+                            
+                            # Backward pass to get gradients
+                            total_log_infl.backward()
+                            
+                            if x_torch.grad is None:
+                                raise RuntimeError(f"Gradient computation failed for agent {agent_id}. "
+                                                 f"Ensure custom influence function is differentiable.")
+                            
+                            # Store gradients
+                            d_matrix[agent_id] = x_torch.grad.clone()
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Custom influence computation failed for agent {agent_id}: {str(e)}") from e
                 
-        return d_matrix
-
-
+                else:
+                    # Multi-dimensional case with individual bin point gradient computation
+                    for agent_id in range(self.num_agents):
+                        try:
+                            # Get agent position as a single point
+                            agent_pos = agents_pos_tensor[agent_id].unsqueeze(0)  # Shape: (1, dims)
+                            
+                            # Initialize gradient matrix for this agent
+                            agent_gradients = torch.zeros((agent_dims, num_bins), dtype=torch.float32)
+                            
+                            # Compute gradient for each bin point individually
+                            for bin_idx in range(num_bins):
+                                # Create agent position tensor with gradient tracking
+                                x_torch = agent_pos.clone().detach().requires_grad_(True)
+                                
+                                # Get single bin point
+                                single_bin = bin_points_tensor[bin_idx:bin_idx+1]  # Shape: (1, dims)
+                                
+                                # Compute influence for this single bin point
+                                infl_value = custom_influence(x_torch, single_bin, parameter_instance[agent_id])
+                                
+                                # Ensure scalar output
+                                if infl_value.dim() > 0:
+                                    infl_value = infl_value.squeeze()
+                                if infl_value.dim() > 0:
+                                    infl_value = infl_value[0]  # Take first element if still not scalar
+                                
+                                # Validate influence value
+                                if infl_value <= 0:
+                                    raise RuntimeError(f"Non-positive influence value detected for agent {agent_id}, bin {bin_idx}. "
+                                                     f"Log gradient computation requires positive influence values.")
+                                
+                                # Compute log influence
+                                log_infl = torch.log(infl_value)
+                                
+                                # Backward pass
+                                log_infl.backward()
+                                
+                                if x_torch.grad is None:
+                                    raise RuntimeError(f"Gradient computation failed for agent {agent_id}, bin {bin_idx}. "
+                                                     f"Ensure custom influence function is differentiable.")
+                                
+                                # Store gradients for each dimension
+                                for dim in range(agent_dims):
+                                    agent_gradients[dim, bin_idx] = x_torch.grad[0, dim].clone()
+                            
+                            # Store in d_matrix
+                            for dim in range(agent_dims):
+                                d_matrix[agent_id, dim] = agent_gradients[dim, :]
+                                
+                        except Exception as e:
+                            raise RuntimeError(f"Custom influence computation failed for agent {agent_id}: {str(e)}") from e
+            
+            except Exception as e:
+                if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                    raise
+                else:
+                    raise RuntimeError(f"Unexpected error in gradient computation: {str(e)}") from e
+            
+            # Final validation of output
+            if torch.any(torch.isnan(d_matrix)):
+                raise RuntimeError("NaN values detected in computed derivative matrix")
+            
+            if torch.any(torch.isinf(d_matrix)):
+                raise RuntimeError("Infinite values detected in computed derivative matrix")
+            
+            # Reshape for 1D case to match expected output format
+            if self.domain_type == '1d':
+                return d_matrix  # Shape: (N, K)
+            else:
+                return d_matrix  # Shape: (N, dims, K) - already in correct format
+                
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError, NotImplementedError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in d_torch computation: {str(e)}") from e
 
     def gradient(self,
                  parameter_instance: Union[List[float], np.ndarray, torch.Tensor],
@@ -651,34 +936,142 @@ class AdaptiveEnv:
         :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
         :return: Gradient values.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
-
-
-        grad=0
-        pr_matrix=self.prob_matrix(parameter_instance)
-        if self.infl_type=='custom':
-            d_matrix=self.d_torch(parameter_instance)
-        elif self.infl_type in ['multi_gaussian','gaussian','Jones_M','dirichlet']:
-            d_matrix=self.d_lnf_matrix(parameter_instance)
-        pr_matrix_c=1-pr_matrix
-        pr_prod=pr_matrix*pr_matrix_c
-        if self.domain_type=='1d':
-            if self.infl_fshift==True:
-                shift_matrix=self.shift_matrix(parameter_instance)
-            for a_id in range(self.num_agents):
-                agent_grad=d_matrix[a_id]*pr_matrix[a_id]*pr_matrix_c[a_id]*torch.tensor(self.resource_distribution)
-                if self.infl_fshift==True:
-                    agent_grad=agent_grad-shift_matrix[a_id]*pr_matrix[a_id]*torch.tensor(self.resource_distribution)
-                agent_grad=torch.sum(agent_grad)
-                grad=general.matrix_builder(row_id=a_id,row=agent_grad,matrix=grad)
-        else:
-            for a_id in range(self.num_agents):
-                agent_grad=d_matrix[a_id]*pr_prod[a_id]*torch.tensor(self.resource_distribution)
-                agent_grad=torch.sum(agent_grad,1)
-                grad=general.matrix_builder(row_id=a_id,row=agent_grad,matrix=grad)
+        
+        try:
+            # Convert and validate parameter_instance
+            if isinstance(parameter_instance, (list, np.ndarray)):
+                if len(parameter_instance) != self.num_agents:
+                    raise ValueError(f"parameter_instance length ({len(parameter_instance)}) must match number of agents ({self.num_agents})")
+                parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)
+            elif isinstance(parameter_instance, torch.Tensor):
+                parameter_instance = parameter_instance.to(torch.float32)
+                if len(parameter_instance) != self.num_agents:
+                    raise ValueError(f"parameter_instance length ({len(parameter_instance)}) must match number of agents ({self.num_agents})")
+            else:
+                raise TypeError(f"parameter_instance must be list, np.ndarray, or torch.Tensor, got {type(parameter_instance)}")
             
-    
-        return grad
+            try:
+                pr_matrix = self.prob_matrix(parameter_instance)
+            except Exception as e:
+                raise RuntimeError(f"Failed to compute probability matrix: {str(e)}") from e
+            
+            if pr_matrix is None:
+                raise RuntimeError("Probability matrix computation returned None")
+            
+            # Get derivative matrix based on influence type
+            try:
+                if self.infl_type == 'custom':
+                    d_matrix = self.d_torch(parameter_instance)
+                elif self.infl_type in ['multi_gaussian', 'gaussian', 'Jones_M', 'dirichlet']:
+                    d_matrix = self.d_lnf_matrix(parameter_instance)
+                    
+            except Exception as e:
+                raise RuntimeError(f"Failed to compute derivative matrix: {str(e)}") from e
+            
+            if d_matrix is None:
+                raise RuntimeError("Derivative matrix computation returned None")
+            
+            # Validate matrix dimensions
+            if self.infl_fshift + self.infl_cshift == 1:
+                if pr_matrix.shape[0] != self.num_agents+1:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents+1}) when one shift is applied")
+                # If one of the shifts are applied, the last row is a shift
+                pr_matrix = pr_matrix[:-1, :]  # Remove the last row if one shift is applied
+                pr_matrix_c = 1 - pr_matrix  # Shape: (N, K)
+            elif self.infl_fshift + self.infl_cshift == 2:
+                if pr_matrix.shape[0] != self.num_agents+2:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents+2}) when both shifts are applied")
+                # pr matrix has two extra rows for the constant and functional shift
+                pr_matrix = pr_matrix[:-2, :]
+                # Compute complementary probability matrix
+                pr_matrix_c = 1 - pr_matrix  # Shape: (N, K)
+            elif self.infl_fshift + self.infl_cshift == 0:
+                # If no shifts are applied, the rows should match the number of agents
+                if pr_matrix.shape[0] != self.num_agents:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents})")
+                pr_matrix_c = 1 - pr_matrix # Shape: (N, K) 
+
+
+            if pr_matrix.shape[1] != len(self.bin_points):
+                raise ValueError(f"Probability matrix columns ({pr_matrix.shape[1]}) must match number of bin points ({len(self.bin_points)})")
+            resource_tensor = self.resource_distribution.clone().detach()
+            # Vectorized gradient computation based on domain type
+            if self.domain_type == '1d':
+                # Optimized 1D vectorized computation
+                try: 
+                    # Element-wise product: d_matrix * pr_matrix * pr_matrix_c * resource_tensor
+                    gradient_terms = d_matrix * pr_matrix * pr_matrix_c * resource_tensor.unsqueeze(0)  # Shape: (N, K)
+                    
+                    # Handle functional shift if enabled
+                    if self.infl_fshift ==1:
+                        
+                        try:
+                            shift_matrix = self.shift_matrix(parameter_instance)
+                            if shift_matrix.shape != (self.num_agents, len(self.bin_points)):
+                                raise ValueError(f"Shift matrix shape {shift_matrix.shape} doesn't match expected ({self.num_agents}, {len(self.bin_points)})")
+                            
+                            # Subtract shift contribution (vectorized)
+                            shift_terms = shift_matrix * pr_matrix * resource_tensor.unsqueeze(0)  # Shape: (N, K)
+                            gradient_terms = gradient_terms - shift_terms
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Failed to compute functional shift: {str(e)}") from e
+                    
+                    # Sum across bin points for each agent (vectorized)
+                    grad = torch.sum(gradient_terms, dim=1)  # Shape: (N,)
+                    
+                except Exception as e:
+                    raise RuntimeError(f"Failed in 1D gradient computation: {str(e)}") from e
+            
+            else:
+                # Multi-dimensional vectorized computation
+                try:
+                    # Determine number of dimensions
+                    if d_matrix.dim() == 3:  # Shape: (N, dims, K)
+                        num_dims = d_matrix.shape[1]
+                    elif d_matrix.dim() == 2:  # Shape: (N, K) - treat as 1D
+                        num_dims = 1
+                        d_matrix = d_matrix.unsqueeze(1)  # Shape: (N, 1, K)
+                    else:
+                        raise ValueError(f"Unexpected derivative matrix dimensions: {d_matrix.shape}")
+                    
+                    # Compute complementary probability and product terms
+                    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
+                    
+                    # Expand probability product for broadcasting with multi-dimensional derivative
+                    pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
+                    
+                    # Expand resource tensor for broadcasting
+                    resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(self.num_agents, num_dims, -1)  # Shape: (N, dims, K)
+                    # Vectorized element-wise multiplication
+                    gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
+                    
+                    
+                    # Sum across bin points for each agent and dimension
+                    grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
+                    
+                    # If single dimension, flatten to (N,)
+                    if num_dims == 1:
+                        grad = grad.squeeze(1)  # Shape: (N,)
+                        
+                except Exception as e:
+                    raise RuntimeError(f"Failed in multi-dimensional gradient computation: {str(e)}") from e
+            
+            # Ensure consistent data type
+            if grad.dtype != torch.float32:
+                grad = grad.to(torch.float32)
+            
+            return grad
+            
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in gradient computation: {str(e)}") from e
     
     def mv_gradient_ascent(self,
                            show_out: bool = False,
@@ -742,54 +1135,184 @@ class AdaptiveEnv:
         :type reward: bool
         :return: Gradient ascent results.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
-
-        self.grad_modify=grad_modify
-        reward_vec=0
-        pos_vec=0
-        grad_vec=0
-        agents_og=self.agents_pos
         
-        self.agents_pos=agents_og.copy()
-        reward_vec=0
-        pos_vec=0
-        grad_vec=0
-        for time in range(self.time_steps):
-            grad_vec_row=self.gradient(self.parameters)
-            if self.domain_type=='simplex':
-                grad=torch.nn.functional.normalize(grad_vec_row,dim=1)
-            else:
-                grad=grad_vec_row
-            temp=torch.tensor(np.array(self.agents_pos))+general.learning_rate(iter=time,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate)*grad
-            for t_row in range(temp.size()[0]):
-                if self.domain_type=='simplex':
-                    temp_row=simplex_utils.projection_onto_simplex(temp[t_row])
-                    if torch.all(temp_row>0):
-                        self.agents_pos[t_row]=temp_row.detach().numpy()
-                    else:
-                        pass
-                else:
-                    temp_row=temp[t_row]
-                    self.agents_pos[t_row]=temp_row.detach().numpy()
-            pos_vec_row=torch.tensor(np.array(self.agents_pos))
-            pos_vec=general.matrix_builder(row_id=time,row=pos_vec_row,matrix=pos_vec)
-            grad_vec=general.matrix_builder(row_id=time,row=grad_vec_row,matrix=grad_vec)
+        try:
+            # Initialize gradient modification flag
+            self.grad_modify = grad_modify
             
-            if reward==True:
-                reward_vec_row=self.reward_F(self.parameters)
-                reward_vec=general.matrix_builder(row_id=time,row=reward_vec_row,matrix=reward_vec)
-            if time>5:
-                if self.domain_type=='simplex':
-                    abs_difference=torch.linalg.norm(pos_vec_row-pos_vec[-5],axis=1)
+            # Store original agent positions for restoration
+            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else torch.tensor(self.agents_pos, dtype=torch.float32)
+            current_positions = agents_og.clone().detach()
+            # Pre-allocate storage tensors for efficiency
+            pos_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32)
+            grad_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32)
+            reward_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32) if reward else None
+            
+            # Main gradient ascent loop with vectorized operations
+            converged_at_step = None
+            
+            try:
+                for time_step in range(self.time_steps):
+                    # Update agent positions in environment for gradient computation
+                    if isinstance(self.agents_pos, torch.Tensor):
+                        self.agents_pos = current_positions.clone().detach()
+                    
+                    # Compute gradient with error handling
+                    try:
+                        grad_vec_row = self.gradient(self.parameters)
+                    except Exception as e:
+                        raise RuntimeError(f"Gradient computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Validate gradient
+                    if grad_vec_row is None:
+                        raise RuntimeError(f"Gradient computation returned None at step {time_step}")
+                    
+                    if torch.any(torch.isnan(grad_vec_row)):
+                        raise RuntimeError(f"NaN values detected in gradient at step {time_step}")
+                    
+                    if torch.any(torch.isinf(grad_vec_row)):
+                        raise RuntimeError(f"Infinite values detected in gradient at step {time_step}")
+                    
+                    # Process gradient based on domain type
+                    if self.domain_type == 'simplex':
+                        if grad_vec_row.dim() == 1:
+                            # If gradient is 1D, expand for normalization
+                            grad_expanded = grad_vec_row.unsqueeze(0) if grad_vec_row.shape[0] == current_positions.shape[1] else grad_vec_row.unsqueeze(1)
+                            processed_grad = torch.nn.functional.normalize(grad_expanded, dim=-1)
+                            if grad_vec_row.shape[0] == current_positions.shape[1]:
+                                processed_grad = processed_grad.squeeze(0)
+                            else:
+                                processed_grad = processed_grad.squeeze(1)
+                        else:
+                            processed_grad = torch.nn.functional.normalize(grad_vec_row, dim=-1)
+                    else:
+                        processed_grad = grad_vec_row
+                    
+                    # Compute learning rate
+                    try:
+                        lr = general.learning_rate(
+                            iter=time_step,
+                            learning_rate_type=self.learning_rate_type,
+                            learning_rate=self.learning_rate
+                        )
+                    except Exception as e:
+                        raise RuntimeError(f"Learning rate computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Vectorized position update
+                    updated_positions = current_positions + lr * processed_grad
+                    
+                    # Handle domain constraints vectorized
+                    if self.domain_type == 'simplex':
+                        # Vectorized simplex projection
+                        try:
+                            # Apply projection to each agent
+                            valid_mask = torch.ones(self.num_agents, dtype=torch.bool)
+                            for agent_idx in range(self.num_agents):
+                                projected_pos = simplex_utils.projection_onto_simplex(updated_positions[agent_idx])
+                                
+                                # Check if projection is valid (all positive)
+                                if torch.all(projected_pos > 0):
+                                    updated_positions[agent_idx] = projected_pos
+                                else:
+                                    valid_mask[agent_idx] = False
+                            
+                            # Only update positions for valid projections
+                            current_positions = torch.where(
+                                valid_mask.unsqueeze(-1).expand_as(current_positions),
+                                updated_positions,
+                                current_positions
+                            )
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Simplex projection failed at step {time_step}: {str(e)}") from e
+                    else:
+                        # Direct update for non-simplex domains
+                        current_positions = updated_positions
+                    
+                    # Store history (vectorized)
+                    pos_history[time_step] = current_positions.clone()
+                    grad_history[time_step] = grad_vec_row.clone()
+                    
+                    # Compute rewards if requested
+                    if reward:
+                        try:
+                            # Update environment positions for reward computation
+                            if isinstance(self.agents_pos, torch.Tensor):
+                                self.agents_pos = current_positions.clone().detach()
+                            else:
+                                self.agents_pos = current_positions.clone().detach().numpy()
+                            
+                            reward_vec_row = self.reward_F(self.parameters)
+                            reward_history[time_step] = reward_vec_row.clone()
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Reward computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Vectorized convergence check
+                    if time_step > 5:
+                        try:
+                            if self.domain_type == 'simplex':
+                                # Compare with position 5 steps ago
+                                comparison_step = max(0, time_step - 5)
+                                position_diff = current_positions - pos_history[comparison_step]
+                            else:
+                                # Compare with position 2 steps ago
+                                comparison_step = max(0, time_step - 2)
+                                position_diff = current_positions - pos_history[comparison_step]
+                            
+                            # Compute L1 norm differences for each agent (vectorized)
+                            abs_differences = torch.linalg.norm(position_diff, ord=1, dim=-1)
+                            
+                            # Count agents that have converged
+                            converged_agents = torch.sum(abs_differences <= self.tolerance).item()
+                            
+                            if converged_agents >= self.tolerated_agents:
+                                converged_at_step = time_step
+                                break
+                                
+                        except Exception as e:
+                            raise RuntimeError(f"Convergence check failed at step {time_step}: {str(e)}") from e
+                
+                # Trim history to actual used steps
+                actual_steps = converged_at_step + 1 if converged_at_step is not None else self.time_steps
+                
+                # Store results efficiently
+                self.grad_matrix = grad_history[:actual_steps].clone()
+                self.pos_matrix = pos_history[:actual_steps].clone()
+                
+                if reward:
+                    self.reward_matrix = reward_history[:actual_steps].clone()
+                
+                # Restore original agent positions
+                self.agents_pos = agents_og
+                
+                # Final validation
+                if torch.any(torch.isnan(self.pos_matrix)):
+                    raise RuntimeError("NaN values detected in final position matrix")
+                
+                if torch.any(torch.isnan(self.grad_matrix)):
+                    raise RuntimeError("NaN values detected in final gradient matrix")
+                
+                if reward and torch.any(torch.isnan(self.reward_matrix)):
+                    raise RuntimeError("NaN values detected in final reward matrix")
+                
+            except Exception as e:
+                # Restore original positions on any error
+                self.agents_pos = agents_og
+                if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                    raise
                 else:
-                    abs_difference=torch.linalg.norm(pos_vec_row-pos_vec[-2],axis=1)
-                abs_difference_value=torch.sum(abs_difference<=self.tolerance).item()
-                if abs_difference_value>=self.tolerated_agents:
-                    break
-        self.grad_matrix=grad_vec.clone()
-        self.pos_matrix=pos_vec.clone()
-        if reward==True:
-            self.reward_matrix=reward_vec
+                    raise RuntimeError(f"Unexpected error in gradient ascent loop: {str(e)}") from e
+                    
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in mv_gradient_ascent: {str(e)}") from e
         
         
         
@@ -835,39 +1358,172 @@ class AdaptiveEnv:
         :type reward: bool
         :return: Gradient ascent results.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
-
-        self.grad_modify=grad_modify
-        reward_vec=0
-        pos_vec=0
-        grad_vec=0
-        agents_og=self.agents_pos
-        self.agents_pos=agents_og
-        for time in range(self.time_steps):
-            grad_vec_row=self.gradient(self.parameters)
-            temp=torch.tensor(self.agents_pos)+general.learning_rate(iter=time,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate)*grad_vec_row
-            
-            for t_row in range(temp.size()[0]):
-                temp_row=temp[t_row]
-                if torch.all(temp_row>=self.domain_bounds[0]) and torch.all(temp_row<=self.domain_bounds[1]):
-                    self.agents_pos[t_row]=temp_row.detach().numpy()
-                else:
-                    print("passed!")
-                    pass
         
-            pos_vec_row=torch.tensor(self.agents_pos)       
-            pos_vec=general.matrix_builder(row_id=time,row=pos_vec_row,matrix=pos_vec)
-            grad_vec=general.matrix_builder(row_id=time,row=grad_vec_row,matrix=grad_vec)
-            if reward==True:
-                reward_vec_row=self.reward_F(self.parameters)
-                reward_vec=general.matrix_builder(row_id=time,row=reward_vec_row,matrix=reward_vec)
-            if time>5:
-                abs_difference=torch.abs(pos_vec_row-pos_vec[-2])
-                abs_difference_value=torch.sum(abs_difference<=self.tolerance).item()
-                if abs_difference_value>=self.tolerated_agents:
-                    break
-        self.grad_matrix=grad_vec
-        self.pos_matrix=pos_vec
+        try:
+            self.grad_modify = grad_modify
+            
+            # Store original agent positions for restoration
+            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else torch.tensor(self.agents_pos, dtype=torch.float32)
+            
+            # Pre-allocate storage tensors for efficiency (eliminates general.matrix_builder)
+            pos_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32)
+            grad_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32)
+            reward_history = torch.zeros((self.time_steps, self.num_agents+self.infl_cshift+self.infl_fshift), dtype=torch.float32) if reward else None
+            
+            # Convert domain bounds to tensors for vectorized operations
+            if not torch.is_tensor(self.domain_bounds[0]):
+                lower_bound = torch.tensor(self.domain_bounds[0].clone().detach(), dtype=torch.float32)
+            else:
+                lower_bound = self.domain_bounds[0].clone().detach()
+            if not torch.is_tensor(self.domain_bounds[1]):
+                upper_bound = torch.tensor(self.domain_bounds[1].clone().detach(), dtype=torch.float32)
+            else:
+                upper_bound = self.domain_bounds[1].clone().detach()
+
+            # Main gradient ascent loop with vectorized operations
+            converged_at_step = None
+            
+            try:
+                current_positions = self.agents_pos.clone().detach()
+                for time_step in range(self.time_steps):
+                    # Update agent positions in environment for gradient computation
+                    if isinstance(self.agents_pos, torch.Tensor):
+                        self.agents_pos = current_positions.clone().detach()
+                    else:
+                        self.agents_pos = current_positions.clone().detach().numpy()
+                    
+                    # Compute gradient with error handling
+                    try:
+                        grad_vec_row = self.gradient(self.parameters)
+                    except Exception as e:
+                        raise RuntimeError(f"Gradient computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Validate gradient
+                    if grad_vec_row is None:
+                        raise RuntimeError(f"Gradient computation returned None at step {time_step}")
+                    
+                    if torch.any(torch.isnan(grad_vec_row)):
+                        raise RuntimeError(f"NaN values detected in gradient at step {time_step}")
+                    
+                    if torch.any(torch.isinf(grad_vec_row)):
+                        raise RuntimeError(f"Infinite values detected in gradient at step {time_step}")
+                    
+                    # Compute learning rate
+                    try:
+                        lr = general.learning_rate(
+                            iter=time_step,
+                            learning_rate_type=self.learning_rate_type,
+                            learning_rate=self.learning_rate
+                        )
+                    except Exception as e:
+                        raise RuntimeError(f"Learning rate computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Vectorized position update
+                    updated_positions = current_positions + lr * grad_vec_row
+                    
+                    # Vectorized domain constraint checking and application
+                    # Check which positions are within bounds
+                    within_lower = updated_positions >= lower_bound
+                    within_upper = updated_positions <= upper_bound
+                    within_bounds = within_lower & within_upper
+                    
+                    # Count how many agents are within bounds for debugging
+                    agents_within_bounds = torch.sum(within_bounds).item()
+                    if agents_within_bounds < self.num_agents:
+                        # Optional: Log which agents are out of bounds
+                        out_of_bounds_agents = torch.where(~within_bounds)[0]
+                        
+                    
+                    # Vectorized conditional update: only update positions that are within bounds
+                    current_positions = torch.where(within_bounds, updated_positions, current_positions)
+                    
+                    # Store history (vectorized)
+                    pos_history[time_step] = current_positions.clone()
+                    grad_history[time_step] = grad_vec_row.clone()
+                    
+                    # Compute rewards if requested
+                    if reward:
+                        try:
+                            # Update environment positions for reward computation
+                            if isinstance(self.agents_pos, torch.Tensor):
+                                self.agents_pos = current_positions.clone().detach()
+                            else:
+                                self.agents_pos = current_positions.clone().detach().numpy()
+                            
+                            reward_vec_row = self.reward_F(self.parameters)
+                            reward_history[time_step] = reward_vec_row.clone()
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Reward computation failed at step {time_step}: {str(e)}") from e
+                    
+                    # Vectorized convergence check
+                    if time_step > 10:
+                        try:
+                            # Compare with position 2 steps ago for 1D case
+                            comparison_step = max(0, time_step - 10)
+                            position_diff = current_positions - pos_history[comparison_step]
+                            
+                            # Compute absolute differences for each agent (vectorized)
+                            abs_differences = torch.abs(position_diff)
+                            
+                            # Count agents that have converged
+                            converged_agents = torch.sum(abs_differences <= self.tolerance).item()
+
+                            # check if gradients have gone to zero 
+                            
+                            if converged_agents >= self.tolerated_agents:
+                                converged_at_step = time_step
+                                break
+                                
+                        except Exception as e:
+                            raise RuntimeError(f"Convergence check failed at step {time_step}: {str(e)}") from e
+                
+                # Trim history to actual used steps
+                actual_steps = converged_at_step + 1 if converged_at_step is not None else self.time_steps
+                
+                # Store results efficiently (no matrix_builder needed)
+                self.grad_matrix = grad_history[:actual_steps].clone()
+                self.pos_matrix = pos_history[:actual_steps].clone()
+                
+                if reward:
+                    self.reward_matrix = reward_history[:actual_steps].clone()
+                
+                # Restore original agent positions
+                self.agents_pos = agents_og
+                
+                # Final validation
+                if torch.any(torch.isnan(self.pos_matrix)):
+                    raise RuntimeError("NaN values detected in final position matrix")
+                
+                if torch.any(torch.isnan(self.grad_matrix)):
+                    raise RuntimeError("NaN values detected in final gradient matrix")
+                
+                if reward and torch.any(torch.isnan(self.reward_matrix)):
+                    raise RuntimeError("NaN values detected in final reward matrix")
+                
+                # Additional validation for 1D positions
+                if torch.any(self.pos_matrix < self.domain_bounds[0]) or torch.any(self.pos_matrix > self.domain_bounds[1]):
+                    # This shouldn't happen with proper constraint handling, but check anyway
+                    import warnings
+                    warnings.warn("Some final positions are outside domain bounds. This may indicate numerical issues.", UserWarning)
+                
+            except Exception as e:
+                # Restore original positions on any error
+                self.agents_pos = agents_og
+                if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                    raise
+                else:
+                    raise RuntimeError(f"Unexpected error in gradient ascent loop: {str(e)}") from e
+                    
+        except Exception as e:
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in sv_gradient_ascent: {str(e)}") from e
                         
 
         
@@ -888,22 +1544,100 @@ class AdaptiveEnv:
         :type reward: bool
         :return: Gradient ascent results.
         :rtype: Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
+        :raises AttributeError: If required attributes are missing from the environment.
         """
         
-        agent_og=self.agents_pos
-        
-        if self.domain_type=='1d':
-            self.sv_gradient_ascent(show_out=show_out,grad_modify=grad_modify,reward=reward)
-        else:
-            self.mv_gradient_ascent(show_out=show_out,grad_modify=grad_modify,reward=reward)
+        try:
+            # Comprehensive input validation
+            if not isinstance(show_out, bool):
+                raise TypeError(f"show_out must be boolean, got {type(show_out)}")
             
+            if not isinstance(grad_modify, bool):
+                raise TypeError(f"grad_modify must be boolean, got {type(grad_modify)}")
             
-        self.agents_pos=agent_og
-        if show_out==True:
-            if reward==True:
-                return self.pos_matrix, self.grad_matrix,self.reward_matrix
+            if not isinstance(reward, bool):
+                raise TypeError(f"reward must be boolean, got {type(reward)}")
+            
+            # Store original agent positions with proper tensor handling
+            try:
+                if isinstance(self.agents_pos, torch.Tensor):
+                    agent_og = self.agents_pos.clone().detach()
+                else:
+                    agent_og = torch.tensor(self.agents_pos, dtype=torch.float32)
+            except Exception as e:
+                raise RuntimeError(f"Failed to store original agent positions: {str(e)}") from e
+            
+            # Execute appropriate gradient ascent method with error handling
+            try:
+                if self.domain_type == '1d':
+                    # Single-variable gradient ascent
+                    self.sv_gradient_ascent(show_out=show_out, grad_modify=grad_modify, reward=reward)
+                else:
+                    # Multi-variable gradient ascent (2d, simplex, multi_dimensional)
+                    self.mv_gradient_ascent(show_out=show_out, grad_modify=grad_modify, reward=reward)
+                    
+            except Exception as e:
+                # Restore original positions on method failure
+                self.agents_pos = agent_og
+                if isinstance(e, (ValueError, RuntimeError, TypeError, AttributeError)):
+                    raise RuntimeError(f"Gradient ascent method failed: {str(e)}") from e
+                else:
+                    raise RuntimeError(f"Unexpected error in gradient ascent method: {str(e)}") from e
+            
+            # Validate that gradient ascent produced results
+            required_results = ['pos_matrix', 'grad_matrix']
+            if reward:
+                required_results.append('reward_matrix')
+            
+            for result_attr in required_results:
+                if not hasattr(self, result_attr) or getattr(self, result_attr) is None:
+                    raise RuntimeError(f"Gradient ascent failed to produce '{result_attr}'")
+                
+                result_tensor = getattr(self, result_attr)
+                if not isinstance(result_tensor, torch.Tensor):
+                    raise RuntimeError(f"'{result_attr}' is not a tensor: {type(result_tensor)}")
+                
+                if torch.any(torch.isnan(result_tensor)):
+                    raise RuntimeError(f"NaN values detected in '{result_attr}'")
+                
+                if torch.any(torch.isinf(result_tensor)):
+                    raise RuntimeError(f"Infinite values detected in '{result_attr}'")
+            
+            # Restore original agent positions (vectorized operation)
+            self.agents_pos = agent_og
+            
+            # Return results based on show_out flag with proper error handling
+            if show_out:
+                try:
+                    if reward:
+                        return self.pos_matrix.clone(), self.grad_matrix.clone(), self.reward_matrix.clone()
+                    else:
+                        return self.pos_matrix.clone(), self.grad_matrix.clone()
+                        
+                except Exception as e:
+                    raise RuntimeError(f"Failed to return results: {str(e)}") from e
             else:
-                return self.pos_matrix, self.grad_matrix
+                # Return None when show_out is False (standard behavior)
+                return None
+                
+        except Exception as e:
+            # Comprehensive error handling with state restoration
+            try:
+                # Attempt to restore original positions if they were stored
+                if 'agent_og' in locals():
+                    self.agents_pos = agent_og
+            except Exception as restore_error:
+                # If restoration fails, log but don't override the original error
+                pass
+            
+            # Re-raise the appropriate exception type
+            if isinstance(e, (ValueError, RuntimeError, TypeError, AttributeError)):
+                raise
+            else:
+                raise RuntimeError(f"Unexpected error in gradient_ascent: {str(e)}") from e
 
     
 
@@ -966,37 +1700,220 @@ class AdaptiveEnv:
         :type two_a: bool
         :return: Gradient values.
         :rtype: torch.Tensor
+        :raises ValueError: If input parameters are invalid or incompatible.
+        :raises RuntimeError: If computation fails due to numerical issues.
+        :raises TypeError: If input types are not supported.
         """
+        
+        try:
+            # Store original values for restoration
+            og_pos = self.agents_pos
+            if self.infl_type == 'dirichlet':
+                og_alpha = self.alpha_matrix
+            
+            # Input validation and conversion
+            try:
+                # Validate and convert agents_pos
+                if isinstance(agents_pos, (list, np.ndarray)):
+                    agents_pos_tensor = torch.tensor(agents_pos, dtype=torch.float32)
+                elif isinstance(agents_pos, torch.Tensor):
+                    agents_pos_tensor = agents_pos.to(torch.float32)
+                else:
+                    raise TypeError(f"agents_pos must be list, np.ndarray, or torch.Tensor, got {type(agents_pos)}")
+                
+                # Validate and convert parameter_instance
+                if isinstance(parameter_instance, (list, np.ndarray)):
+                    parameter_tensor = torch.tensor(parameter_instance, dtype=torch.float32)
+                elif isinstance(parameter_instance, torch.Tensor):
+                    parameter_tensor = parameter_instance.to(torch.float32)
+                else:
+                    raise TypeError(f"parameter_instance must be list, np.ndarray, or torch.Tensor, got {type(parameter_instance)}")
+                
+                # Validate agent IDs
+                if not isinstance(ids, list) or not all(isinstance(id_val, int) for id_val in ids):
+                    raise TypeError("ids must be a list of integers")
+                
+                if any(id_val < 0 or id_val >= self.num_agents for id_val in ids):
+                    raise ValueError(f"All agent IDs must be between 0 and {self.num_agents-1}")
+                
+                # Validate boolean parameters
+                if not isinstance(two_a, bool):
+                    raise TypeError("two_a must be boolean")
+                
+            except Exception as e:
+                if isinstance(e, (ValueError, TypeError)):
+                    raise
+                else:
+                    raise RuntimeError(f"Input validation failed: {str(e)}") from e
+            
+            # Update environment state
+            try:
+                self.agents_pos = agents_pos_tensor
+            except Exception as e:
+                self.agents_pos = og_pos  # Restore on failure
+                raise RuntimeError(f"Failed to update agent positions: {str(e)}") from e
+            
+            # Compute probability and derivative matrices with error handling
+            try:
+                pr_matrix = self.prob_matrix(parameter_tensor)
+                if pr_matrix is None:
+                    raise RuntimeError("Probability matrix computation returned None")
+                
+                d_matrix = self.d_lnf_matrix(parameter_tensor)
+                if d_matrix is None:
+                    raise RuntimeError("Derivative matrix computation returned None")
+                
+            except Exception as e:
+                self.agents_pos = og_pos  # Restore on failure
+                self.alpha_matrix = og_alpha
+                raise RuntimeError(f"Matrix computation failed: {str(e)}") from e
+            
+            # Validate matrix dimensions
+            if self.infl_fshift + self.infl_cshift == 1:
+                if pr_matrix.shape[0] != self.num_agents+1:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents+1}) when one shift is applied")
+                # If one of the shifts are applied, the last row is a shift
+                pr_matrix = pr_matrix[:-1, :]  # Remove the last row if one shift is applied
+                pr_matrix_c = 1 - pr_matrix  # Shape: (N, K)
+            elif self.infl_fshift + self.infl_cshift == 2:
+                if pr_matrix.shape[0] != self.num_agents+2:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents+2}) when both shifts are applied")
+                # pr matrix has two extra rows for the constant and functional shift
+                pr_matrix = pr_matrix[:-2, :]
+                # Compute complementary probability matrix
+                pr_matrix_c = 1 - pr_matrix  # Shape: (N, K)
+            elif self.infl_fshift + self.infl_cshift == 0:
+                # If no shifts are applied, the rows should match the number of agents
+                if pr_matrix.shape[0] != self.num_agents:
+                    raise ValueError(f"Probability matrix rows ({pr_matrix.shape[0]}) must match number of agents ({self.num_agents})")
+                pr_matrix_c = 1 - pr_matrix # Shape: (N, K) 
+            
+            if pr_matrix.shape[1] != len(self.bin_points):
+                raise ValueError(f"Probability matrix columns ({pr_matrix.shape[1]}) must match number of bin points ({len(self.bin_points)})")
+            
+            # Convert resource distribution to tensor for vectorized operations
+            try:
+                if not isinstance(self.resource_distribution, torch.Tensor):
+                    resource_tensor = torch.tensor(self.resource_distribution, dtype=torch.float32)
+                else:
+                    resource_tensor = self.resource_distribution.clone()
+            except Exception as e:
+                self.agents_pos = og_pos
+                self.alpha_matrix = og_alpha
+                raise RuntimeError(f"Failed to convert resource distribution to tensor: {str(e)}") from e
+            
+            # Vectorized gradient computation based on domain type
+            try:
+                if self.domain_type == '1d':
+                    # 1D domain vectorized computation
+                    if self.alt_form:
+                        if self.num_agents < 3:
+                            raise RuntimeError("Alternative form requires at least 3 agents")
+                        # fixes all other agents postions to the the postion of the first agent
+                        self.agents_pos[2:] = self.agents_pos[0]
 
-        grad=0
-        og_pos=self.agents_pos
-        self.agents_pos=agents_pos
-        og_alpha=self.alpha_matrix
-        pr_matrix=self.prob_matrix(parameter_instance)
-        d_matrix=self.d_lnf_matrix(parameter_instance)
-        pr_matrix_c=1-pr_matrix
-        pr_prod=pr_matrix*pr_matrix_c
-        if self.domain_type=='1d':
-            if self.infl_fshift==True:
-                shift_matrix=self.shift_matrix(parameter_instance)
-            if two_a==False:
-                agents=ids
+                    # Determine which agents to compute gradients for (vectorized)
+                    if two_a:
+                        agent_indices = torch.arange(self.num_agents, dtype=torch.long)
+                    else:
+                        agent_indices = torch.tensor(ids, dtype=torch.long)
+                    
+                    # Vectorized gradient computation for selected agents
+                    selected_d_matrix = d_matrix[agent_indices]  # Shape: (selected_agents, K)
+                    selected_pr_matrix = pr_matrix[agent_indices]  # Shape: (selected_agents, K)
+                    selected_pr_matrix_c = pr_matrix_c[agent_indices]  # Shape: (selected_agents, K)
+                    
+                    # Compute base gradient terms (vectorized)
+                    base_grad_terms = selected_d_matrix * selected_pr_matrix * selected_pr_matrix_c * resource_tensor.unsqueeze(0)
+                    
+                    # Handle functional shift if enabled
+                    if self.infl_fshift ==1:
+                        try:
+                            shift_matrix = self.shift_matrix(parameter_tensor)
+                            if shift_matrix is None:
+                                raise RuntimeError("Shift matrix computation returned None")
+                            
+                            selected_shift_matrix = shift_matrix[agent_indices]  # Shape: (selected_agents, K)
+                            shift_terms = selected_shift_matrix * selected_pr_matrix * resource_tensor.unsqueeze(0)
+                            
+                            # Apply shift correction (vectorized)
+                            gradient_terms = base_grad_terms - shift_terms
+                            
+                        except Exception as e:
+                            raise RuntimeError(f"Functional shift computation failed: {str(e)}") from e
+                    else:
+                        gradient_terms = base_grad_terms
+                    
+                    # Sum across bin points for each agent (vectorized)
+                    agent_gradients = torch.sum(gradient_terms, dim=1)  # Shape: (selected_agents,)
+                    
+                    # Create full gradient tensor with zeros for non-selected agents
+                    if two_a:
+                        grad = agent_gradients  # All agents computed
+                    else:
+                        grad = torch.zeros(2, dtype=torch.float32)
+                        grad[agent_indices] = agent_gradients
+                
+                else:
+                    # Multi-dimensional domain vectorized computation
+                    pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
+                    
+                    # Vectorized computation for all agents
+                    # Broadcasting: d_matrix (N, K) or (N, dims, K), pr_prod (N, K), resource_tensor (K,)
+                    if d_matrix.dim() == 2:
+                        # 2D case: d_matrix is (N, K)
+                        gradient_terms = d_matrix * pr_prod * resource_tensor.unsqueeze(0)  # Shape: (N, K)
+                        grad = torch.sum(gradient_terms, dim=1)  # Shape: (N,)
+                        
+                    elif d_matrix.dim() == 3:
+                        # Multi-dimensional case: d_matrix is (N, dims, K)
+                        num_dims = d_matrix.shape[1]
+                        
+                        # Expand pr_prod and resource_tensor for broadcasting
+                        pr_prod_expanded = pr_prod.unsqueeze(1).expand(-1, num_dims, -1)  # Shape: (N, dims, K)
+                        resource_expanded = resource_tensor.unsqueeze(0).unsqueeze(0).expand(self.num_agents, num_dims, -1)  # Shape: (N, dims, K)
+                        
+                        # Vectorized element-wise multiplication
+                        gradient_terms = d_matrix * pr_prod_expanded * resource_expanded  # Shape: (N, dims, K)
+                        
+                        # Sum across bin points for each agent and dimension
+                        grad = torch.sum(gradient_terms, dim=2)  # Shape: (N, dims)
+                        
+                    else:
+                        raise ValueError(f"Unexpected derivative matrix dimensions: {d_matrix.shape}")
+                
+                # Validate output for numerical stability
+                if torch.any(torch.isnan(grad)):
+                    raise RuntimeError("NaN values detected in computed gradient")
+                
+                if torch.any(torch.isinf(grad)):
+                    raise RuntimeError("Infinite values detected in computed gradient")
+                
+            except Exception as e:
+                if isinstance(e, (ValueError, RuntimeError)):
+                    raise
+                else:
+                    raise RuntimeError(f"Gradient computation failed: {str(e)}") from e
+            
+            finally:
+                # Always restore original environment state
+                self.agents_pos = og_pos
+                if self.infl_type == 'dirichlet':
+                    self.alpha_matrix = og_alpha
+            
+            return grad
+            
+        except Exception as e:
+            # Final catch-all with state restoration
+            try:
+                self.agents_pos = og_pos
+                if self.infl_type == 'dirichlet':
+                    self.alpha_matrix = og_alpha
+            except:
+                pass  # Don't override original error if restoration fails
+            
+            if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                raise
             else:
-                agents=range(self.num_agents)
-
-            for a_id in agents:
-                agent_grad=d_matrix[a_id]*pr_matrix[a_id]*pr_matrix_c[a_id]*torch.tensor(self.resource_distribution)
-                if self.infl_fshift==True:
-                    agent_grad=agent_grad-shift_matrix[a_id]*pr_matrix[a_id]*torch.tensor(self.resource_distribution)
-                agent_grad=torch.sum(agent_grad)
-                grad=general.matrix_builder(row_id=a_id,row=agent_grad,matrix=grad)
-                self.alpha_matrix=og_alpha
-        else:
-            for a_id in range(self.num_agents):
-                agent_grad=d_matrix[a_id]*pr_prod[a_id]*torch.tensor(self.resource_distribution)
-                agent_grad=torch.sum(agent_grad,1)
-                grad=general.matrix_builder(row_id=a_id,row=agent_grad,matrix=grad)
-                self.alpha_matrix=og_alpha
-        self.agents_pos=og_pos
-        return grad
+                raise RuntimeError(f"Unexpected error in gradient_function: {str(e)}") from e
 

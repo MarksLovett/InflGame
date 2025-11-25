@@ -110,7 +110,8 @@ def matrix_builder(row_id: int,
 
 def learning_rate(iter: int,
                   learning_rate_type: str,
-                  learning_rate: list | np.ndarray | float) -> float:
+                  learning_rate: list | np.ndarray | float,
+                  gradient: torch.Tensor = None) -> float:
     r"""
     .. list-table:: Learning Rate Types
         :header-rows: 1
@@ -124,6 +125,9 @@ def learning_rate(iter: int,
         * - Fixed
           - ``'fixed'``
           - Keeps the learning rate constant throughout.
+        * - Trust Region
+          - ``'trust_region'``
+          - Adapts learning rate based on trust region radius with exponential decay.
 
     The learning rate is computed based on the specified type:
 
@@ -144,12 +148,23 @@ def learning_rate(iter: int,
       .. math::
          \eta_t = \eta_{\text{fixed}}
 
+    - **Trust Region**:
+      The learning rate adapts based on trust region radius:
+      .. math::
+         \eta_t = \eta_{\text{initial}} \cdot \max\left(\eta_{\text{min\_factor}}, \exp\left(-\frac{t}{\tau}\right)\right)
+
+      where:
+        - :math:`\eta_{\text{initial}}` is the initial learning rate.
+        - :math:`\eta_{\text{min\_factor}}` is the minimum learning rate factor.
+        - :math:`\tau` is the decay time constant.
+        - :math:`t` is the current iteration.
+
 
     :param iter: The current iteration.
     :type iter: int
-    :param learning_rate_type: The type of learning rate ('cosine' or 'static').
+    :param learning_rate_type: The type of learning rate ('cosine_annealing', 'fixed', or 'trust_region').
     :type learning_rate_type: str
-    :param learning_rate: Learning rate parameters.
+    :param learning_rate: Learning rate parameters. For trust_region: [initial_lr, min_factor, decay_constant]
     :type learning_rate: list, np.ndarray, or float
     :return: The computed learning rate.
     :rtype: float
@@ -157,8 +172,64 @@ def learning_rate(iter: int,
     if learning_rate_type=='cosine_annealing':
         lra=learning_rate[0]+1/2*(learning_rate[1]-learning_rate[0])*(1+np.cos(iter/learning_rate[2]*np.pi))
     elif learning_rate_type=='fixed':
-        lra=learning_rate 
+        lra=learning_rate
+    elif learning_rate_type=='trust_region':
+        # Trust region learning rate: [initial_lr, min_factor, decay_constant]
+        lra = trust_region_learning_rate(
+            iter=iter,
+            initial_lr=learning_rate[0],
+            min_factor=learning_rate[1],
+            decay_constant=learning_rate[2]
+        )
+    elif learning_rate_type=='gradient_magnitude':
+        gradient_magnitude = torch.max(torch.abs(gradient)).item()
+        if gradient_magnitude == 0:
+            lra = 1.0  # Default learning rate when gradient is zero
+        else:
+            if iter <= learning_rate[2]:
+                lra = 1.0 / (gradient_magnitude)* learning_rate[0]
+            else:
+                lra = learning_rate[1]
     return lra
+
+def trust_region_learning_rate(iter: int,
+                              initial_lr: float,
+                              min_factor: float,
+                              decay_constant: float) -> float:
+    """
+    Compute trust region learning rate with exponential decay.
+    
+    This function implements a trust region-style learning rate that starts at
+    an initial value and decays exponentially over time, with a minimum bound
+    to prevent the learning rate from becoming too small.
+    
+    The learning rate is computed as:
+    η_t = η_initial × max(η_min_factor, exp(-t/τ))
+    
+    :param iter: The current iteration.
+    :type iter: int
+    :param initial_lr: Initial learning rate.
+    :type initial_lr: float
+    :param min_factor: Minimum learning rate factor (prevents learning rate from going too small).
+    :type min_factor: float
+    :param decay_constant: Decay time constant (controls how fast the learning rate decays).
+    :type decay_constant: float
+    :return: The computed trust region learning rate.
+    :rtype: float
+    :raises ValueError: If parameters are invalid (negative values, etc.).
+    """
+    if initial_lr <= 0:
+        raise ValueError(f"initial_lr must be positive, got {initial_lr}")
+    if min_factor < 0 or min_factor > 1:
+        raise ValueError(f"min_factor must be between 0 and 1, got {min_factor}")
+    if decay_constant <= 0:
+        raise ValueError(f"decay_constant must be positive, got {decay_constant}")
+    if iter < 0:
+        raise ValueError(f"iter must be non-negative, got {iter}")
+    
+    # Exponential decay with minimum bound
+    decay_factor = max(min_factor, np.exp(-iter / decay_constant))
+    return initial_lr * decay_factor
 
 def resource_parameter_setup(resource_distribution_type: str = 'multi_modal_gaussian_distribution_1D',
                              varying_parameter_type: str = 'mean',
@@ -185,7 +256,7 @@ def resource_parameter_setup(resource_distribution_type: str = 'multi_modal_gaus
     :rtype: tuple
     """
     param_list=[]
-    alpha_values=np.linspace(alpha_end,alpha_st,alpha_num_points)
+    alpha_values=np.linspace(alpha_st,alpha_end,alpha_num_points)
     if resource_distribution_type=='multi_modal_gaussian_distribution_1D':
         if varying_parameter_type=='mean':
             stds=fixed_parameters_lst[0]
@@ -253,16 +324,15 @@ def agent_parameter_setup(num_agents: int,
     :return: agent parameters.
     :rtype: np.ndarray or torch.Tensor
     """
-    
     if setup_type=="initial_symmetric_setup":
-        if infl_type in ["gaussian","dirichlet"]:
+        if infl_type in ["gaussian","dirichlet","beta"]:
             agent_parameters=[reach]*num_agents
             agent_parameters=np.array(agent_parameters)
         elif infl_type=='multi_gaussian':
             agent_parameters=[reach]*num_agents
             agent_parameters=torch.tensor(agent_parameters)
     elif setup_type=='parameter_space':
-        if infl_type in ["gaussian","dirichlet"]:
+        if infl_type in ["gaussian","dirichlet","beta"]:
             start=[reach_start]*num_agents
             end=[reach_end]*num_agents
             agent_parameters=np.linspace(start,end,reach_num_points)
@@ -806,3 +876,211 @@ def generate_color_palette(num_colors: int, color_scheme: str = 'default') -> li
         raise ValueError(f"num_colors must be a positive integer, got {num_colors}")
     
     return [get_color_by_index(i, color_scheme) for i in range(num_colors)]
+
+
+def smoothing_zeros(tensor, fill_value=None, inplace=False):
+    """
+    Optimized function to smooth zeros at the beginning and end of a 1D tensor.
+    
+    Fills leading zeros with the first non-zero value and trailing zeros 
+    with the last non-zero value. Handles various edge cases efficiently.
+    
+    Args:
+        tensor (torch.Tensor): Input 1D tensor to smooth
+        fill_value (float, optional): Value to use if tensor is all zeros. 
+                                    If None, returns original tensor unchanged.
+        inplace (bool): If True, modifies the tensor in place. Default False.
+    
+    Returns:
+        torch.Tensor: Smoothed tensor
+        
+    Edge cases handled:
+        - Empty tensor: returns empty tensor
+        - All-zero tensor: fills with fill_value or returns unchanged
+        - Single non-zero element: fills entire tensor with that value
+        - No leading/trailing zeros: returns original tensor
+        - Single element tensor: returns unchanged
+    
+    Examples:
+        >>> smoothing_zeros(torch.tensor([0, 3, 2, 0]))
+        tensor([3, 3, 2, 2])
+        
+        >>> smoothing_zeros(torch.tensor([0, 0, 0, 0]), fill_value=1.0)
+        tensor([1., 1., 1., 1.])
+    """
+    
+    # Input validation
+    if not isinstance(tensor, torch.Tensor):
+        raise TypeError(f"Expected torch.Tensor, got {type(tensor)}")
+    
+    if tensor.dim() != 1:
+        raise ValueError(f"Expected 1D tensor, got {tensor.dim()}D tensor with shape {tensor.shape}")
+    
+    # Handle empty tensor
+    if tensor.numel() == 0:
+        return tensor.clone() if not inplace else tensor
+    
+    # Handle single element tensor
+    if tensor.numel() == 1:
+        return tensor.clone() if not inplace else tensor
+    
+    # Create result tensor (clone if not inplace)
+    result = tensor if inplace else tensor.clone()
+    
+    # Find non-zero elements efficiently
+    non_zero_mask = tensor != 0
+    
+    # Handle all-zero tensor
+    if not non_zero_mask.any():
+        if fill_value is not None:
+            result.fill_(fill_value)
+        return result
+    
+    # Find first and last non-zero indices using efficient methods
+    non_zero_indices = torch.nonzero(non_zero_mask, as_tuple=True)[0]
+    min_idx = non_zero_indices[0].item()  # First non-zero index
+    max_idx = non_zero_indices[-1].item()  # Last non-zero index
+    
+    
+    # Early return if no smoothing needed
+    if min_idx == 0 and max_idx == len(tensor) - 1:
+        return result
+    
+    # Get the boundary values
+    first_non_zero_value = tensor[min_idx]
+    last_non_zero_value = tensor[max_idx]
+    
+    # Fill leading zeros (more efficient than slicing when possible)
+    if min_idx > 0:
+        result[:min_idx] = first_non_zero_value
+    
+    # Fill trailing zeros
+    if max_idx < len(tensor) - 1:
+        result[max_idx + 1:] = last_non_zero_value
+    
+    return result
+
+def smoothing_zeros_batch(tensor_batch, fill_value=None, inplace=False):
+    """
+    Batch version of smoothing_zeros for processing multiple 1D tensors efficiently.
+    
+    Args:
+        tensor_batch (torch.Tensor): 2D tensor where each row is a 1D tensor to smooth
+        fill_value (float, optional): Value to use for all-zero tensors
+        inplace (bool): If True, modifies tensors in place
+    
+    Returns:
+        torch.Tensor: Batch of smoothed tensors
+    """
+    
+    if not isinstance(tensor_batch, torch.Tensor):
+        raise TypeError(f"Expected torch.Tensor, got {type(tensor_batch)}")
+    
+    if tensor_batch.dim() ==1:
+        return smoothing_zeros(tensor_batch, fill_value=fill_value, inplace=inplace)
+    
+    if tensor_batch.numel() == 0:
+        return tensor_batch.clone() if not inplace else tensor_batch
+    
+    result = tensor_batch if inplace else tensor_batch.clone()
+    
+    # Step 1: Find the global minimum and maximum indices where non-zero values start/end across all batches
+    global_min_nonzero_idx = tensor_batch.size(1)  # Initialize to sequence length
+    global_max_nonzero_idx = -1  # Initialize to -1
+    
+    # Find the minimum starting index and maximum ending index of non-zero values across all batches
+    for i in range(tensor_batch.size(0)):
+        row = tensor_batch[i]
+        non_zero_mask = row != 0
+        
+        if non_zero_mask.any():
+            # Find first and last non-zero indices for this row
+            non_zero_indices = torch.nonzero(non_zero_mask, as_tuple=True)[0]
+            first_nonzero_idx = non_zero_indices[0].item()
+            last_nonzero_idx = non_zero_indices[-1].item()
+            
+            # Update global minimum and maximum
+            global_min_nonzero_idx = min(global_min_nonzero_idx, first_nonzero_idx)
+            global_max_nonzero_idx = max(global_max_nonzero_idx, last_nonzero_idx)
+
+    # Step 2: For each batch, fill indices before global_min_nonzero_idx and after global_max_nonzero_idx
+    for i in range(tensor_batch.size(0)):
+        row = result[i]
+        non_zero_mask = row != 0
+        
+        if non_zero_mask.any():
+            # Get the values at the global boundary positions for this row
+            first_value = row[global_min_nonzero_idx]
+            last_value = row[global_max_nonzero_idx]
+            
+            # Fill all positions before global_min_nonzero_idx with first value
+            if global_min_nonzero_idx > 0:
+                result[i, :global_min_nonzero_idx] = first_value
+            
+            # Fill all positions after global_max_nonzero_idx with last value
+            if global_max_nonzero_idx < tensor_batch.size(1) - 1:
+                result[i, global_max_nonzero_idx + 1:] = last_value
+                
+        elif fill_value is not None:
+            # Handle all-zero rows - fill entire row with fill_value
+            result[i].fill_(fill_value)
+    
+    # Step 3: Handle global zero intervals between non-zero values
+    # Find all global non-zero positions across all rows
+    global_non_zero_positions = set()
+    for i in range(tensor_batch.size(0)):
+        row = tensor_batch[i]
+        non_zero_mask = row != 0
+        if non_zero_mask.any():
+            non_zero_indices = torch.nonzero(non_zero_mask, as_tuple=True)[0]
+            global_non_zero_positions.update(non_zero_indices.tolist())
+    
+    # Convert to sorted list to find global gaps
+    if global_non_zero_positions:
+        global_non_zero_positions = sorted(list(global_non_zero_positions))
+        
+        # Find global gaps between consecutive non-zero positions
+        for j in range(len(global_non_zero_positions) - 1):
+            left_global_idx = global_non_zero_positions[j]
+            right_global_idx = global_non_zero_positions[j + 1]
+            
+            # Check if there's a global gap
+            if right_global_idx - left_global_idx > 1:
+                gap_start = left_global_idx + 1
+                gap_end = right_global_idx - 1
+                gap_length = gap_end - gap_start + 1
+                
+                # Split the global gap
+                split_point = gap_start + gap_length // 2
+                
+                # Apply the split to each row that has this gap
+                for i in range(tensor_batch.size(0)):
+                    row = result[i]
+                    
+                    # Check if this row has zeros in the global gap region
+                    gap_region = row[gap_start:gap_end + 1]
+                    if (gap_region == 0).any():
+                        # Get left and right values for this row
+                        left_value = row[left_global_idx] if row[left_global_idx] != 0 else 0
+                        right_value = row[right_global_idx] if row[right_global_idx] != 0 else 0
+                        
+                        # Only fill if we have valid boundary values
+                        if left_value != 0 or right_value != 0:
+                            # Fill bottom half with left value (if available)
+                            if left_value != 0:
+                                result[i, gap_start:split_point] = torch.where(
+                                    result[i, gap_start:split_point] == 0, 
+                                    left_value, 
+                                    result[i, gap_start:split_point]
+                                )
+                            
+                            # Fill top half with right value (if available)
+                            if right_value != 0:
+                                result[i, split_point:gap_end + 1] = torch.where(
+                                    result[i, split_point:gap_end + 1] == 0, 
+                                    right_value, 
+                                    result[i, split_point:gap_end + 1]
+                                )
+    
+    return result
+

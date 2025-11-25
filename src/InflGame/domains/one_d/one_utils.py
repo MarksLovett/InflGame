@@ -386,3 +386,403 @@ def direction_strength_1d_OLD(gradient_function,
     else:
         grads=np.array([gradient_function(np.array([x,y]),parameter_instance,ids=ids).numpy() for x,y in zip(a1,a2)])
     return grads
+
+
+def projection_to_plane_coordinates(matrix: torch.Tensor) -> torch.Tensor:
+    """
+    Project 3D coordinates to 2D plane coordinates using optimized vectorized operations.
+    
+    Following project patterns:
+    - Use vectorized torch operations for performance
+    - Handle dtype compatibility automatically
+    - Maintain tensor device consistency
+    - Handle single vector and batch inputs
+    - Ensure consistent dtype=torch.float32 output
+    
+    Args:
+        matrix: Input tensor of shape (3,) or (N, 3) containing 3D coordinates
+        
+    Returns:
+        torch.Tensor: Projected 2D coordinates of shape (2,) or (N, 2) with dtype=torch.float32
+    """
+    # Ensure input is 2D for batch processing - following project patterns
+    if matrix.dim() == 1:
+        matrix = matrix.unsqueeze(0)
+        squeeze_output = True
+    else:
+        squeeze_output = False
+    
+    # Ensure input matrix is float32 - following project patterns
+    if matrix.dtype != torch.float32:
+        matrix = matrix.to(torch.float32)
+    
+    # Create projection matrix with float32 dtype - FIXED DIMENSIONS
+    axis_project = torch.tensor([
+        [1/np.sqrt(2), -1/np.sqrt(2), 0],
+        [0, -1/np.sqrt(2), 1/np.sqrt(2)]
+    ], dtype=torch.float32, device=matrix.device)
+    
+    # FIXED: Correct matrix multiplication order
+    # matrix: (N, 3), axis_project: (2, 3) -> result: (N, 2)
+    coordinates = torch.matmul(matrix, axis_project.T)
+    
+    # Ensure output is float32 - following project patterns
+    coordinates = coordinates.to(torch.float32)
+    
+    # Return single vector if input was single vector
+    if squeeze_output:
+        coordinates = coordinates.squeeze(0)
+    
+    return coordinates
+
+
+def projection_to_3d_auto_constrained(matrix: torch.Tensor, target_bounds: tuple = (0.0, 1.0), 
+                                     tolerance: float = 1e-8, max_iterations: int = 100) -> torch.Tensor:
+    """
+    Mathematically correct 3D projection with automatic constraint satisfaction.
+    
+    Following Influencer Games patterns:
+    - Use torch tensor operations for autograd compatibility
+    - State management with .clone() for torch tensors
+    - Adaptive optimization to find optimal c parameter
+    - Handle single vector and batch inputs
+    - Ensure consistent dtype=torch.float32 output
+    - Convergence checking with project tolerance patterns
+    
+    Args:
+        matrix: Input tensor of shape (2,) or (N, 2) containing 2D coordinates
+        target_bounds: Tuple (min_val, max_val) for coordinate constraints
+        tolerance: Convergence tolerance following project patterns (default: 1e-8)
+        max_iterations: Maximum iterations for c optimization
+        
+    Returns:
+        torch.Tensor: Projected 3D coordinates of shape (3,) or (N, 3) with dtype=torch.float32,
+                     all elements guaranteed to be within target_bounds
+    """
+    # Handle single vector input - following project patterns
+    if matrix.dim() == 1:
+        matrix = matrix.unsqueeze(0)
+        squeeze_output = True
+    else:
+        squeeze_output = False
+    
+    # Ensure input matrix is float32 - following project patterns
+    if matrix.dtype != torch.float32:
+        matrix = matrix.to(torch.float32)
+    
+    # The forward projection matrix P from 3D to 2D - ENSURE FLOAT32
+    P = torch.tensor([
+        [1/np.sqrt(2), -1/np.sqrt(2), 0],
+        [0, -1/np.sqrt(2), 1/np.sqrt(2)]
+    ], dtype=torch.float32, device=matrix.device)
+    
+    # Calculate the TRUE Moore-Penrose pseudo-inverse
+    P_pinv = torch.linalg.pinv(P)  # Shape: (3, 2)
+    
+    # Apply pseudo-inverse projection to get base 3D coordinates (without normal offset)
+    base_coordinates = torch.matmul(matrix, P_pinv.T)  # Shape: (N, 3)
+    
+    # Normalized [1,1,1] direction for offset - FLOAT32
+    normal = torch.tensor([1, 1, 1], dtype=torch.float32, device=matrix.device)
+      # Normalize
+    
+    def apply_c_offset(c_val):
+        """Apply c offset and return coordinates"""
+        return base_coordinates + c_val * normal.unsqueeze(0)
+    min_c=torch.min(base_coordinates)
+    max_c=torch.max(base_coordinates)
+    if max_c > target_bounds[1]:
+        best_c=-min_c
+    elif min_c < target_bounds[0]:
+        best_c=-min_c
+    else:
+        best_c=0.0
+
+    # Apply the best c value found
+    coordinates = apply_c_offset(best_c)
+    
+    # Final clipping as safety measure - following project robustness patterns
+    coordinates = torch.clamp(coordinates, 0, 1)
+    
+    # Ensure output is float32 - following project patterns
+    coordinates = coordinates.to(torch.float32)
+    
+    if squeeze_output:
+        coordinates = coordinates.squeeze(0)
+    
+    return coordinates
+
+def generate_constrained_2d_points(num_points=50, method='analytical_transform'):
+    """
+    Generate 2D points (x,y) such that:
+    1. x ∈ [-1/√2, 1/√2] 
+    2. y ∈ [-1/√2, 1/√2]
+    3. (x-y) ∈ [-1/√2, 1/√2]
+    
+    Following Influencer Games patterns:
+    - Use torch tensor operations for autograd compatibility
+    - State management with .clone() for torch tensors
+    - Handle domain bounds properly for 1D domain type
+    - Return torch.float32 tensors
+    - Memory management with matrix clearing
+    
+    Args:
+        num_points: Number of valid 2D points to generate
+        method: Generation method ('analytical_transform', 'rejection_sampling', 'grid_filtering')
+        
+    Returns:
+        dict: Contains 'points_2d', 'constraint_values', and metadata
+    """
+    sqrt2_inv = 1.0 / np.sqrt(2)
+    
+    if method == 'analytical_transform':
+        # Method 1: Transform from unconstrained variables using change of variables
+        # Use (u, v) coordinates where u = x+y, v = x-y
+        # Then x = (u+v)/2, y = (u-v)/2
+        
+        # Constraints become:
+        # |x| ≤ 1/√2 → |(u+v)/2| ≤ 1/√2 → |u+v| ≤ 2/√2 = √2
+        # |y| ≤ 1/√2 → |(u-v)/2| ≤ 1/√2 → |u-v| ≤ 2/√2 = √2  
+        # |v| ≤ 1/√2 (given constraint on x-y)
+        
+        # The feasible region in (u,v) space is the intersection of:
+        # |u+v| ≤ √2, |u-v| ≤ √2, |v| ≤ 1/√2
+        
+        print(f"Generating {num_points} points using analytical transformation...")
+        
+        valid_points = []
+        constraint_values = []
+        
+        # Generate points uniformly in the feasible (u,v) region
+        for _ in range(num_points * 2):  # Oversample for efficiency
+            # Sample v first (constrained to [-1/√2, 1/√2])
+            v = torch.rand(1, dtype=torch.float32).item() * (2 * sqrt2_inv) - sqrt2_inv
+            
+            # For this v, find valid u range
+            # Need: |u+v| ≤ √2 AND |u-v| ≤ √2
+            # This gives: max(-√2-v, -√2+v) ≤ u ≤ min(√2-v, √2+v)
+            
+            sqrt2 = np.sqrt(2)
+            u_min = max(-sqrt2 - v, -sqrt2 + v)
+            u_max = min(sqrt2 - v, sqrt2 + v)
+            
+            if u_min <= u_max:  # Feasible region exists
+                u = torch.rand(1, dtype=torch.float32).item() * (u_max - u_min) + u_min
+                
+                # Transform back to (x,y)
+                x = (u + v) / 2
+                y = (u - v) / 2
+                
+                # Verify constraints (safety check)
+                if (abs(x) <= sqrt2_inv + 1e-10 and 
+                    abs(y) <= sqrt2_inv + 1e-10 and 
+                    abs(x - y) <= sqrt2_inv + 1e-10):
+                    
+                    valid_points.append(torch.tensor([x, y], dtype=torch.float32))
+                    constraint_values.append(torch.tensor([x, y, x-y], dtype=torch.float32))
+                    
+                    if len(valid_points) >= num_points:
+                        break
+        
+        return {
+            'points_2d': torch.stack(valid_points[:num_points]) if valid_points else torch.empty(0, 2),
+            'constraint_values': torch.stack(constraint_values[:num_points]) if constraint_values else torch.empty(0, 3),
+            'method': method,
+            'success_rate': len(valid_points) / (num_points * 2) if num_points > 0 else 0
+        }
+    
+    elif method == 'rejection_sampling':
+        # Method 2: Simple rejection sampling
+        print(f"Generating {num_points} points using rejection sampling...")
+        
+        valid_points = []
+        constraint_values = []
+        attempts = 0
+        max_attempts = num_points * 100
+        
+        while len(valid_points) < num_points and attempts < max_attempts:
+            # Sample uniformly in the square [-1/√2, 1/√2]²
+            x = torch.rand(1, dtype=torch.float32).item() * (2 * sqrt2_inv) - sqrt2_inv
+            y = torch.rand(1, dtype=torch.float32).item() * (2 * sqrt2_inv) - sqrt2_inv
+            
+            # Check constraint: |x-y| ≤ 1/√2
+            if abs(x - y) <= sqrt2_inv:
+                valid_points.append(torch.tensor([x, y], dtype=torch.float32))
+                constraint_values.append(torch.tensor([x, y, x-y], dtype=torch.float32))
+            
+            attempts += 1
+            
+            # Progress reporting following project patterns
+            if attempts % (max_attempts // 20) == 0:
+                acceptance_rate = len(valid_points) / attempts * 100
+                print(f"Attempts: {attempts} - Found: {len(valid_points)} - Acceptance: {acceptance_rate:.2f}%")
+        
+        return {
+            'points_2d': torch.stack(valid_points) if valid_points else torch.empty(0, 2),
+            'constraint_values': torch.stack(constraint_values) if constraint_values else torch.empty(0, 3),
+            'method': method,
+            'attempts': attempts,
+            'acceptance_rate': len(valid_points) / attempts if attempts > 0 else 0
+        }
+    
+    elif method == 'grid_filtering':
+        # Method 3: Grid-based approach with filtering
+        print(f"Generating {num_points} points using grid filtering...")
+        
+        # Create dense grid in [-1/√2, 1/√2]²
+        grid_size = int(np.sqrt(num_points * 4))  # Oversample for filtering
+        x_grid = torch.linspace(-sqrt2_inv, sqrt2_inv, grid_size, dtype=torch.float32)
+        y_grid = torch.linspace(-sqrt2_inv, sqrt2_inv, grid_size, dtype=torch.float32)
+        
+        grid_x, grid_y = torch.meshgrid(x_grid, y_grid, indexing='ij')
+        grid_points = torch.stack([grid_x.flatten(), grid_y.flatten()], dim=1)
+        
+        # Filter points satisfying |x-y| ≤ 1/√2
+        x_coords = grid_points[:, 0]
+        y_coords = grid_points[:, 1]
+        diff_constraint = torch.abs(x_coords - y_coords) <= sqrt2_inv
+        
+        valid_grid_points = grid_points[diff_constraint]
+        
+        # Randomly sample from valid points
+        if len(valid_grid_points) >= num_points:
+            indices = torch.randperm(len(valid_grid_points))[:num_points]
+            selected_points = valid_grid_points[indices]
+        else:
+            selected_points = valid_grid_points
+            print(f"Warning: Only found {len(valid_grid_points)} valid points out of {num_points} requested")
+        
+        # Compute constraint values
+        constraint_vals = []
+        for point in selected_points:
+            x, y = point
+            constraint_vals.append(torch.tensor([x.item(), y.item(), (x-y).item()], dtype=torch.float32))
+        
+        return {
+            'points_2d': selected_points,
+            'constraint_values': torch.stack(constraint_vals) if constraint_vals else torch.empty(0, 3),
+            'method': method,
+            'total_grid_points': len(grid_points),
+            'valid_grid_points': len(valid_grid_points),
+            'filtering_efficiency': len(valid_grid_points) / len(grid_points) if len(grid_points) > 0 else 0
+        }
+    
+    else:
+        raise ValueError(f"Unknown method: {method}")
+
+
+
+def classify_equilibrium_type(positions, tolerance=1e-3):
+    """
+    Classify equilibrium type based on how many agents share similar positions,
+    distinguishing between different spatial arrangements.
+    
+    Args:
+        positions: Array of agent positions
+        tolerance: Tolerance for considering positions as equal
+    
+    Returns:
+        String describing equilibrium type with groups in spatial order:
+        - '(n)' : All agents together
+        - '(n-1,1)' : n-1 agents grouped at lower position, 1 isolated higher
+        - '(1,n-1)' : 1 agent isolated at lower position, n-1 grouped higher
+        - '(2,1,1,2)' : Groups listed left to right by position
+        - etc.
+    """
+    # Convert to numpy array, handling torch tensors
+    if hasattr(positions, 'numpy'):
+        positions = positions.numpy()
+    else:
+        positions = np.asarray(positions)
+    
+    n_agents = len(positions)
+    
+    # Sort positions for easier comparison
+    sorted_pos = np.sort(positions)
+    
+    # Group positions that are within tolerance
+    groups = []
+    group_positions = []  # Store mean position of each group
+    current_group = [sorted_pos[0]]
+    
+    for i in range(1, len(sorted_pos)):
+        if abs(sorted_pos[i] - current_group[-1]) <= tolerance:
+            current_group.append(sorted_pos[i])
+        else:
+            groups.append(len(current_group))
+            group_positions.append(np.mean(current_group))
+            current_group = [sorted_pos[i]]
+    
+    # Don't forget the last group
+    groups.append(len(current_group))
+    group_positions.append(np.mean(current_group))
+    
+    # Return groups in spatial order (already ordered since we sorted positions)
+    num_groups = len(groups)
+    
+    # Case 1: All agents at same position
+    if num_groups == 1:
+        return f'({n_agents})'
+    
+    # All other cases: return groups in order they appear spatially
+    else:
+        return f'({",".join(map(str, groups))})'
+
+def _type_dict_helper(matrix, reach_parameters,tolerance):
+    """
+    Handles the output from InflGame.one_utils.classify_equilibrium_type
+    """
+    classification_dict={}
+    for item_id in range(len(matrix)):
+        item_classification = classify_equilibrium_type(matrix[item_id],tolerance=tolerance)
+        classification_dict[str(item_id)] = {'classification': item_classification, 'reach_parameter': reach_parameters[item_id][0].item()}
+    return classification_dict
+
+def _find_bifurcation_split(classification_dict):
+    """
+    Here we look for bifurcations. 
+    """
+    #we find where the classification changes as reach varies
+    classification=classification_dict[str(len(classification_dict)-1)]['classification']
+    bifurcations={}
+    for item in list(classification_dict.keys())[::-1]:
+        if classification != classification_dict[item]['classification']:
+            classification_new=classification_dict[item]['classification']
+            bifurcations[item]= {'classification_old': classification, 'classification_new': classification_new, 'reach_parameter': classification_dict[item]['reach_parameter']}
+            classification=classification_new
+    return bifurcations
+
+def bifurcation_type_helper(matrix,reach_parameters,tolerance=1e-2):
+    """
+    The goal of this function is to classify the bifurcations found in find_bifurcation_split.
+    
+    There are two types of bifurcations we might be interested in:
+    1. The reach value where the local symmetric equilibrium becomes unstable and splits into asymmetric equilibria.
+    2. The reach value where the basins of attraction shift the local grouping.
+    
+    The classification_new field shows the new equilibrium structure after bifurcation.
+    """
+    bifurcations=_find_bifurcation_split(_type_dict_helper(matrix['max'],reach_parameters=reach_parameters,tolerance=tolerance))
+    # A type 1 bifurcation can only occur if there are less groups in the old classification than in the new classification. While a type 2 bifurcation occurs when the number of groups remains the same or decreases.
+    bifurcation_types = {}
+    for key, value in bifurcations.items():
+        old_nums = [int(x) for x in value['classification_old'].strip('()').split(',')]
+        new_nums = [int(x) for x in value['classification_new'].strip('()').split(',')]
+        
+        old_groups = len(old_nums)
+        new_groups = len(new_nums)
+        
+        # Count groups of size 2 in old and new classifications
+        old_groups_of_2 = old_nums.count(2)
+        new_groups_of_2 = new_nums.count(2)
+        
+        # Check if there was a group of 2 in old but fewer groups of 2 in new
+        
+        if old_groups < new_groups:
+            if old_groups_of_2 > 0 and new_groups_of_2 < old_groups_of_2:
+                bifurcation_types[key] = {'reach_parameter': value['reach_parameter'], 'type': '2', 'classification_new': value['classification_new']}
+            else:
+                bifurcation_types[key] = {'reach_parameter': value['reach_parameter'], 'type': '1', 'classification_new': value['classification_new']}
+        else:
+            bifurcation_types[key] = {'reach_parameter': value['reach_parameter'], 'type': '2', 'classification_new': value['classification_new']}
+    return bifurcation_types

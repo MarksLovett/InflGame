@@ -1,5 +1,5 @@
 """
-.. module:: visualization
+.. module:: Visualization
    :synopsis: Provides visualization tools for analyzing and understanding the dynamics of adaptive environments and agent interactions for influencer games.
 
 
@@ -9,10 +9,10 @@ Visualization Module
 
 
 This module provides visualization tools for analyzing and understanding the dynamics of adaptive environments and agent interactions for influencer games.
-It includes plotting utilities for various domains (1D, 2D, and simplex) and supports visualizing agent positions, gradients, 
+It includes plotting utilities for various domains (1D, 2D, and simplex) and supports visualizing agent positions, gradients,
 influence distributions, and bifurcation dynamics.
 
-The module is designed to work with the `AdaptiveEnv` class and provides a framework for creating visual representations of agent behaviors 
+The module is designed to work with the `AdaptiveEnv` class and provides a framework for creating visual representations of agent behaviors
 in influencer game environments.
 
 Dependencies:
@@ -57,6 +57,7 @@ Example:
     fig.show()
 """
 
+from tabnanny import verbose
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -84,16 +85,16 @@ import traceback
 import io
 from contextlib import redirect_stdout, redirect_stderr
 from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-import time
 from multiprocessing import Pool, cpu_count
 import traceback
-import copy
+import plotly.graph_objects as go
 
 import matplotlib.figure
 from typing import Union, List, Dict, Optional, Tuple
 
 import InflGame.adaptive.grad_func_env as grad_func_env
+from InflGame.adaptive.grad_func_env import AdaptiveEnv
+from InflGame.adaptive.bifurcation_analysis import BifurcationEnv
 #import InflGame.adaptive_dynamics.jacobian as jacobian
 
 import InflGame.utils.general as general
@@ -149,7 +150,11 @@ class Shell:
                  cshift: Optional[torch.Tensor] = None,
                  infl_fshift: bool = False,
                  Q: Optional[int] = None,
-                 domain_type: str = '1d',
+                 domain_type: List[float] = None,
+                 rect_X: List[float] = None,
+                 rect_Y: List[float] = None,
+                 rect_positions: Optional[torch.Tensor] = None,
+                 resource_grid: Optional[torch.Tensor] = None,
                  domain_bounds: Union[List[float], torch.Tensor] = [0, 1],
                  resource_type: float = 'na',
                  domain_refinement: int = 10,
@@ -172,7 +177,7 @@ class Shell:
         :param mean: Mean value for certain influence functions.
         :type mean: Optional[int]
         :param infl_configs: Configuration for influence kernels.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "custom").
+            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "beta", "custom").
             - ``custom_influence`` (callable): Function for a custom influence (see guides).
         :type infl_configs: Dict[str, str]
         :param learning_rate_type: Learning rate type (e.g., 'cosine_annealing').
@@ -246,13 +251,15 @@ class Shell:
         self.tolerated_agents = validated['tolerated_agents']
         self.resource_type = resource_type
         self.ignore_zero_infl=ignore_zero_infl
+        self.matrix_results_complete=None
         # Set up the domain based on the type
         if domain_type == 'simplex':
             self.r2 = domain_bounds[0]
             self.corners = domain_bounds[1]
             self.triangle = domain_bounds[2]
             self.trimesh = domain_bounds[3]
-        if domain_type == '2d':
+
+        if domain_type == '2d' and domain_bounds is not None and resource_type!='custom_2d_rect':
             self.rect_X, self.rect_Y, self.rect_positions = two_utils.two_dimensional_rectangle_setup(domain_bounds, domain_refinement=domain_refinement)
 
     def setup_adaptive_env(self) -> None:
@@ -261,6 +268,16 @@ class Shell:
         gradient function environment with the provided parameters.
         """
         self.field=grad_func_env.AdaptiveEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
+                                             resource_distribution=self.resource_distribution,bin_points=self.bin_points,
+                                             infl_configs=self.infl_configs,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate,time_steps=self.time_steps,fp=self.fp,infl_cshift=self.infl_cshift,cshift=self.cshift,
+                                             infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl)
+    
+    def setup_bifurcation_env(self) -> None:
+        """
+        Set up the bifurcation environment for the simulation. This initializes the
+        bifurcation analysis environment with the provided parameters.
+        """
+        self.bif_field=BifurcationEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
                                              infl_configs=self.infl_configs,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate,time_steps=self.time_steps,fp=self.fp,infl_cshift=self.infl_cshift,cshift=self.cshift,
                                              infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl)
@@ -605,6 +622,8 @@ class Shell:
                       title_ads: List[str] = [],
                       save: bool = False,
                       name_ads: List[str] = [],
+                      x_min: float = None,
+                      y_min: float = None,
                       save_types: List[str] = ['.png', '.svg'],
                       paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'dist_pos_plot'},
                       font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
@@ -658,7 +677,7 @@ class Shell:
         
         elif self.domain_type=='2d':
             self.calc_infl_dist(parameter_instance=parameter_instance,pos=self.agents_pos)
-            fig=two_plots.dist_and_pos_plot_2d_simple(num_agents=self.num_agents,bin_points=self.bin_points,rect_X=self.rect_X,rect_Y=self.rect_Y,cmap1=cmap1,cmap2=cmap2,pos_matrix=self.field.pos_matrix,infl_dist=self.infl_dist,resource_type=self.resource_type,resources=self.resource_distribution,font=font)
+            fig=two_plots.dist_and_pos_plot_2d_simple(num_agents=self.num_agents,bin_points=self.bin_points,cmap1=cmap1,cmap2=cmap2,pos_matrix=self.field.pos_matrix,infl_dist=self.infl_dist,resource_type=self.resource_type,x_min=x_min,y_min=y_min,resources=self.resource_distribution,font=font,domain_bounds=self.domain_bounds)
         
         elif self.domain_type=='simplex':
             self.calc_infl_dist(parameter_instance=parameter_instance,pos=self.agents_pos)
@@ -672,6 +691,8 @@ class Shell:
         
     def dist_pos_gif(self,
                      max_frames: int,
+                     x_min: float = None,
+                     y_min: float = None,
                      output_filename: str = 'timelapse_test.gif',
                      optimize_memory: bool = True,
                      dpi: int = 100,
@@ -727,7 +748,7 @@ class Shell:
             
             self.field.pos_matrix = self.field.pos_matrix[0:]
             self.agents_pos = self.field.pos_matrix[-1]
-            f = self.dist_pos_plot(self.parameters, typelabels=["A","B","C"])
+            f = self.dist_pos_plot(self.parameters,x_min=x_min, y_min=y_min, typelabels=["A","B","C"])
             
             # Restore original state
             self.agents_pos = og_pos
@@ -774,11 +795,11 @@ class Shell:
                         
                         # Suppress matplotlib output when not in verbose mode
                         if verbose:
-                            fig = self.dist_pos_plot(self.parameters, typelabels=["A","B","C"])
+                            fig = self.dist_pos_plot(self.parameters,x_min=x_min, y_min=y_min, typelabels=["A","B","C"])
                         else:
                             # Redirect stdout/stderr to suppress matplotlib figure output
                             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                                fig = self.dist_pos_plot(self.parameters, typelabels=["A","B","C"])
+                                fig = self.dist_pos_plot(self.parameters,x_min=x_min, y_min=y_min, typelabels=["A","B","C"])
                         
                         fig.set_dpi(dpi)
                         
@@ -825,7 +846,7 @@ class Shell:
                     self.agents_pos = og_pos_matrix[time_step - 1]
                     
                     # Create plot
-                    f = self.dist_pos_plot(self.parameters, typelabels=["A","B","C"])
+                    f = self.dist_pos_plot(self.parameters,x_min=x_min,y_min=y_min, typelabels=["A","B","C"])
                     
                     # Save to temporary file
                     filename = os.path.join(temp_dir, f'frame_{i:04d}.png')
@@ -856,7 +877,7 @@ class Shell:
         
         # Return the final frame for display
         self.agents_pos = og_pos_matrix[-1]
-        final_fig = self.dist_pos_plot(self.parameters, typelabels=["A","B","C"])
+        final_fig = self.dist_pos_plot(self.parameters, x_min=x_min, y_min=y_min, typelabels=["A","B","C"])
         self.agents_pos = og_pos
         
         return final_fig
@@ -886,16 +907,17 @@ class Shell:
             return fig
 
     def equilibrium_bifurcation_plot(self,
+                                     matrix: Dict = None,
                                      reach_start: float = .03,
                                      reach_end: float = .3,
                                      reach_num_points: int = 30,
                                      time_steps: int = 100,
-                                     initial_pos: Union[List[float], np.ndarray] = 0,
+                                     initial_pos: Union[List[float], np.ndarray] = None,
                                      current_alpha: float = .5,
                                      tolerance: Optional[float] = None,
                                      tolerated_agents: Optional[int] = None,
                                      refinements: int = 2,
-                                     plot_type: str = "normal",
+                                     plot_type: str = "heat",
                                      title_ads: List[str] = [],
                                      name_ads: List[str] = [],
                                      save: bool = False,
@@ -907,7 +929,12 @@ class Shell:
                                      cbar_config: dict = {'center_labels': True, 'label_alignment': 'center', 'shrink': 0.8},
                                      paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'equilibrium_bifurcation_plot'},
                                      show_pred: bool = False,
-                                     optional_vline: float = None) -> Union[torch.Tensor, matplotlib.figure.Figure]:
+                                     envelope: bool = False,
+                                     optional_vline: List[float] = None,
+                                     verbose: bool = True,
+                                     complete: bool = False,
+                                     learning_rate: Optional[List] = None,
+                                     percentage: float = None) -> Union[torch.Tensor, matplotlib.figure.Figure]:
         r"""
         Plots the equilibrium bifurcation for agents over a range of reach parameters. As :math:`\sigma` or as variance goes to zero for players' influence kernels, 
         the players begin to bifuricate. This plotting function computes the gradient ascent alogorithm repetively for varying parameter values util the players reach an equalbiirum.
@@ -981,7 +1008,11 @@ class Shell:
         og_iterations=self.time_steps
         og_pos=self.agents_pos.clone()
         self.field.time_steps=time_steps
-        self.agents_pos=initial_pos.clone()
+        if initial_pos !=None:
+            self.matrix_results_complete=None
+            self.final_pos_matrix=None
+            self.agents_pos=initial_pos.clone()
+
 
         if parallel_configs is None:
             parallel_configs = {'parallel': False, 'max_workers': 4, 'batch_size': 2}
@@ -994,19 +1025,117 @@ class Shell:
         if tolerance==None:
             tolerance=self.tolerance
 
+        self.setup_bifurcation_env()
+        self.bif_field.setup_adaptive_env()
+
         if self.domain_type=="1d":
             reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            final_pos_matrix=self.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
-            fig=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,bin_points=self.bin_points,resource_distribution=self.resource_distribution,infl_type=self.infl_type,infl_cshift=self.infl_cshift,reach_parameters=reach_parameters,final_pos_matrix=final_pos_matrix,reach_start=reach_start,reach_end=reach_end,refinements=refinements,plot_type=plot_type,title_ads=title_ads,font=font,cmaps=cmaps,cbar_config=cbar_config,show_pred=show_pred,optional_vline=optional_vline)
+            if complete==True:
+                if matrix == None:
+                    if self.matrix_results_complete==None:
+                        self.matrix_results_complete = self.bif_field.equilibrium_bifurcation_complete(reach_start = reach_start,
+                                                                        reach_end = reach_end,
+                                                                        reach_num_points = reach_num_points,
+                                                                        time_steps = time_steps,
+                                                                        initial_pos = initial_pos,
+                                                                        tolerance = tolerance,
+                                                                        tolerated_agents = tolerated_agents,
+                                                                        parallel_configs = parallel_configs,
+                                                                        envelope = envelope,
+                                                                        verbose = verbose)
+                    else:
+                        self.matrix_results_complete=matrix
+                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d_COMPLETE(num_agents=self.num_agents,
+                                                                            bin_points=self.bin_points,
+                                                                            resource_distribution=self.resource_distribution,
+                                                                            infl_type=self.infl_type,
+                                                                            reach_parameters=reach_parameters,
+                                                                            matrix_list=self.matrix_results_complete,
+                                                                            reach_start=reach_start,
+                                                                            reach_end=reach_end,
+                                                                            refinements=refinements,
+                                                                            plot_type=plot_type,
+                                                                            title_ads=title_ads,
+                                                                            short_title=False,
+                                                                            cmaps=cmaps,
+                                                                            font=font,
+                                                                            cbar_config=cbar_config,
+                                                                            show_pred=show_pred,
+                                                                            optional_vline=optional_vline,
+                                                                            envelope_alpha=0.3)
+                final_pos_matrix=self.matrix_results_complete
+            elif envelope==True:
+                if matrix== None:
+                    if percentage == None:
+                        percentage=0.5
+                    extreme_positions=self.bif_field.final_pos_over_reach_envelope(reach_parameters,
+                                                                        tolerance=tolerance,
+                                                                        tolerated_agents=tolerated_agents,
+                                                                        parallel=parallel,
+                                                                        max_workers=max_workers,
+                                                                        batch_size=batch_size,
+                                                                        time_steps=time_steps,
+                                                                        percentage=percentage,
+                                                                        learning_rate=learning_rate)
+                else:
+                    extreme_positions=matrix
+                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d(num_agents=self.num_agents,
+                                                                       bin_points=self.bin_points,
+                                                                       resource_distribution=self.resource_distribution,
+                                                                       infl_type=self.infl_type,
+                                                                       infl_cshift=self.infl_cshift,
+                                                                       reach_parameters=reach_parameters,
+                                                                       extreme_positions=extreme_positions,
+                                                                       reach_start=reach_start,
+                                                                       reach_end=reach_end,
+                                                                       refinements=refinements,
+                                                                       plot_type=plot_type,
+                                                                       title_ads=title_ads,
+                                                                       font=font,
+                                                                       cmaps=cmaps,
+                                                                       cbar_config=cbar_config,
+                                                                       show_pred=show_pred,
+                                                                       optional_vline=optional_vline)
+                final_pos_matrix=extreme_positions
+            else:
+                if matrix == None:
+                    if  not hasattr(self, 'final_pos_matrix') or self.final_pos_matrix is None:
+                        self.final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters,
+                                                                tolerance=tolerance,
+                                                                tolerated_agents=tolerated_agents,
+                                                                parallel=parallel,
+                                                            max_workers=max_workers,
+                                                            batch_size=batch_size,
+                                                            time_steps=time_steps)
+                else:
+                    self.final_pos_matrix == matrix
+                final_pos_matrix=self.final_pos_matrix
+                fig=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,
+                                                              bin_points=self.bin_points,
+                                                              resource_distribution=self.resource_distribution,
+                                                              infl_type=self.infl_type,
+                                                              infl_cshift=self.infl_cshift,
+                                                              reach_parameters=reach_parameters,
+                                                              final_pos_matrix=final_pos_matrix,
+                                                              reach_start=reach_start,
+                                                              reach_end=reach_end,
+                                                              refinements=refinements,
+                                                              plot_type=plot_type,
+                                                              title_ads=title_ads,
+                                                              font=font,
+                                                              cmaps=cmaps,
+                                                              cbar_config=cbar_config,
+                                                              show_pred=show_pred,
+                                                              optional_vline=optional_vline)
 
         elif self.domain_type=='2d':
             reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            final_pos_matrix=self.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
+            final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
             fig=two_plots.equilibrium_bifurcation_plot_2d_simple(num_agents=self.num_agents,domain_bounds=self.domain_bounds,reach_num_points=reach_num_points,final_pos_matrix=final_pos_matrix,title_ads=title_ads,font=font)
             
         elif self.domain_type=='simplex':
             reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            final_pos_matrix=self.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
+            final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
             fig=simplex_plots.equalibirium_bifurication_plot_simplex(num_agents=self.num_agents,r2=self.r2,corners=self.corners,triangle=self.triangle,final_pos_matrix=final_pos_matrix,reach_num_points=reach_num_points,type_labels=None,title_ads=title_ads)
         
         self.field.time_steps=og_iterations
@@ -1029,7 +1158,7 @@ class Shell:
                                       alpha_current: float = .5,
                                       alpha_st: float = 0,
                                       alpha_end: float = 1,
-                                      varying_paramter_type: str = 'mean',
+                                      varying_parameter_type: str = 'mean',
                                       fixed_parameters_lst: Optional[List[float]] = None,
                                       name_ads: List[str] = [],
                                       title_ads: List[str] = [],
@@ -1076,9 +1205,9 @@ class Shell:
         :return: The generated plot figure.
         :rtype: matplotlib.figure.Figure
         """
-        resource_parameters,alpha=general.resource_parameter_setup(resource_distribution_type=resource_distribution_type,varying_paramter_type=varying_paramter_type,alpha_st=alpha_st, alpha_end=alpha_end, fixed_parameters_lst=fixed_parameters_lst)
+        resource_parameters,alpha=general.resource_parameter_setup(resource_distribution_type=resource_distribution_type,varying_parameter_type=varying_parameter_type,alpha_st=alpha_st, alpha_end=alpha_end, fixed_parameters_lst=fixed_parameters_lst)
         y=self.jacobian_stability_fast(agent_parameter_instance=agent_parameter_instance,resource_distribution_type=resource_distribution_type,resource_parameters=resource_parameters,resource_entropy=resource_entropy,infl_entropy=infl_entropy)[0]
-        fig,ax=plt.subplots()
+        fig,ax=plt.subplots(figsize=(24, 16))
         ax.set_box_aspect(1)
         
         # Apply font settings
@@ -1187,10 +1316,10 @@ class Shell:
         if tolerance==None:
             tolerance=self.tolerance
 
-
+        self.setup_bifurcation_env()
         if self.domain_type=="1d":
             reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_parameter,reach_end = reach_parameter,reach_num_points = 1)
-            final_pos_vector=self.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=num_interations)
+            final_pos_vector=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=num_interations)
             fig=one_plots.final_position_histogram_1d(num_agents=self.num_agents,domain_bounds=self.domain_bounds,current_alpha=current_alpha,reach_parameter=reach_parameter,final_pos_vector=final_pos_vector,title_ads=title_ads,font=font)
         else:
             ValueError("Histogram is limited to 1d domains")
@@ -1221,7 +1350,7 @@ class Shell:
 
 
         import hickle as hkl  
-
+        self.setup_bifurcation_env()
 
         # AD bifurcation plot
 
@@ -1250,7 +1379,7 @@ class Shell:
 
 
         reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-        final_pos_matrix=self.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
+        final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
         ax1=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,
                                                       bin_points=self.bin_points,
                                                       resource_distribution=self.resource_distribution,
@@ -1319,17 +1448,20 @@ class Shell:
                 fig.savefig(file_name,bbox_inches='tight')
         return fig
 
-
-
-
     # 3d visualization for traces 
     def _process_point_worker(self, args):
         """Worker function for processing gradient ascent from a starting point."""
         point, color, shell_obj, time_steps = args
         try:
             # Set the starting position
-            shell_obj.agents_pos = point.clone()
-            shell_obj.field.agents_pos = point.clone()
+            if self.num_agents !=3:
+                extra_agents = self.num_agents - 3
+                point_extended = point.tolist() + [point[1].item()] * extra_agents
+                shell_obj.agents_pos = torch.tensor(point_extended)
+                shell_obj.field.agents_pos = torch.tensor(point_extended)
+            else:
+                shell_obj.agents_pos = point.clone()
+                shell_obj.field.agents_pos = point.clone()
             
             # Debug print to verify position was set
             print(f"Processing point {point} (color: {color})")
@@ -1347,7 +1479,10 @@ class Shell:
                 return None
             
             # Get the path data
-            pos_matrix = shell_obj.field.pos_matrix.numpy()
+            if self.num_agents != 3:
+                pos_matrix = shell_obj.field.pos_matrix[:, :3].numpy()
+            else:
+                pos_matrix = shell_obj.field.pos_matrix.numpy()
             converged = len(shell_obj.field.pos_matrix) < time_steps
             
             print(f"Success: Generated path with {len(pos_matrix)} points for {point}")
@@ -1404,7 +1539,9 @@ class Shell:
                              elev=10,  # Lower elevation to look down diagonal
                              azim=45,
                              num_workers=4,
-                             use_parallel=True):
+                             use_parallel=True,
+                             only_results=False,
+                             verbose=False) -> matplotlib.figure.Figure:
         """
         Creates a 3D plot with fixed view looking down the x=y=z diagonal line,
         with optional parallel processing for improved performance.
@@ -1412,7 +1549,10 @@ class Shell:
         # Set random seed for reproducibility
         torch.manual_seed(seed)
         np.random.seed(seed)
-        
+        original_time_steps = self.time_steps,
+        self.time_steps = time_steps
+        self.field.time_steps = time_steps
+
         # Sample fixed points for better reproducibility
         def get_fixed_test_points():
             """Generate fixed test points that cover all regions of interest."""
@@ -1427,11 +1567,17 @@ class Shell:
 
                 # Additional points for thorough coverage
                 torch.tensor([0.2, 0.25, 0.6]),  # x < y < z (red)
+                torch.tensor([0.2, 0.55, 0.6]),  # x < y < z (red)
                 torch.tensor([0.25, 0.6, 0.2]),  # y < z < x (green)
+                torch.tensor([0.55, 0.6, 0.2]),  # y < z < x (green)
                 torch.tensor([0.25, 0.2, 0.6]),  # z < x < y (blue)
+                torch.tensor([0.55, 0.2, 0.6]),  # z < x < y (blue)
                 torch.tensor([0.6, 0.25, 0.2]),  # y < x < z (orange)
+                torch.tensor([0.6, 0.55, 0.2]),  # y < x < z (orange)
                 torch.tensor([0.2, 0.6, 0.25]),  # x < y = z (purple)
+                torch.tensor([0.2, 0.6, 0.55]),  # x < y = z (purple)
                 torch.tensor([0.6, 0.2, 0.25]),  # z < y < x (cyan)
+                torch.tensor([0.6, 0.2, 0.55]),  # z < y < x (cyan)
 
                 # Boundary points
                 torch.tensor([0.3, 0.3, 0.7]),  # x = y < z (grey)
@@ -1483,7 +1629,8 @@ class Shell:
         point_list = get_fixed_test_points()
         colors = get_region_colors(point_list)
         
-        print(f"Processing {len(point_list)} test points...")
+        if verbose==True:
+            print(f"Processing {len(point_list)} test points...")
         
         # Start timing
         start_time = time.time()
@@ -1496,8 +1643,8 @@ class Shell:
             # Parallel processing
             if num_workers is None:
                 num_workers = min(mp.cpu_count(), len(point_list))
-            
-            print(f"Using parallel processing with {num_workers} workers...")
+            if verbose==True: 
+                print(f"Using parallel processing with {num_workers} workers...")
             
             # Create deep copies of the shell object for each worker
             def create_worker_args():
@@ -1531,10 +1678,10 @@ class Shell:
                                 arg_index = future_to_args[future]
                                 completed_results[arg_index] = result
                             completed_count += 1
-                            
-                            # Progress update
-                            if completed_count % max(1, len(point_list) // 4) == 0:
-                                print(f"Parallel progress: {completed_count}/{len(point_list)} points")
+                            if verbose==True:
+                                # Progress update
+                                if completed_count % max(1, len(point_list) // 4) == 0:
+                                    print(f"Parallel progress: {completed_count}/{len(point_list)} points")
                                 
                         except Exception as e:
                             arg_index = future_to_args[future]
@@ -1556,7 +1703,8 @@ class Shell:
             results = []
             
             for i, (point, color) in enumerate(zip(point_list, colors)):
-                print(f"\nProcessing point {i+1}/{len(point_list)}: {point}")
+                if verbose==True:
+                    print(f"\nProcessing point {i+1}/{len(point_list)}: {point}")
                 try:
                     # Set position for this run
                     self.agents_pos = point.clone()
@@ -1577,8 +1725,8 @@ class Shell:
                     # Get the path data
                     pos_matrix = self.field.pos_matrix.numpy()
                     converged = len(self.field.pos_matrix) < time_steps
-                    
-                    print(f"Success: Generated path with {len(pos_matrix)} points for {point}")
+                    if verbose==True:
+                        print(f"Success: Generated path with {len(pos_matrix)} points for {point}")
                     
                     results.append({
                         'path': pos_matrix,
@@ -1601,7 +1749,12 @@ class Shell:
         processing_time = end_time - start_time
         print(f"Processing completed in {processing_time:.2f} seconds")
         print(f"Generated {len(results)} valid paths out of {len(point_list)} points")
-        
+
+
+        if only_results:
+            self.time_steps = original_time_steps
+            self.field.time_steps = original_time_steps
+            return results
         # Create matplotlib figure
         fig = plt.figure(figsize=figsize)
         ax = fig.add_subplot(111, projection='3d')
@@ -1623,7 +1776,7 @@ class Shell:
         
         # Dictionary to track paths by color for legend
         paths_by_color = {}
-        
+    
         # Plot all paths
         if not results:
             print("WARNING: No valid paths to plot!")
@@ -1648,7 +1801,7 @@ class Shell:
                     ax.scatter(result['end'][0], result['end'][1], result['end'][2],
                             color='green', s=100, alpha=1.0, zorder=10)
         
-        # Add diagonal line x=y=z (make it thicker and more visible)
+        # Add diagonal line x=y=z (make it thicker and more selfible)
         diag = np.linspace(0, 1, 100)
         ax.plot(diag, diag, diag, 'k--', linewidth=4, alpha=1.0, label='x=y=z')
         
@@ -1739,9 +1892,10 @@ class Shell:
         
         # Add padding to right side for legend
         plt.subplots_adjust(right=0.8)
-        
-        return fig
-
+        plt.close(fig)
+        self.time_steps = original_time_steps
+        self.field.time_steps = original_time_steps
+        return fig, results
 
     # 3d visualization for traces gif
     def plot_3d_fixed_diagonal_view_gif(self,
@@ -1988,6 +2142,258 @@ class Shell:
         
         return final_fig
         
+    def plot_3d_gradient_ascent_paths_interactive(self, 
+                                        resolution=5, 
+                                        time_steps=10000,
+                                        start_color='red',
+                                        end_color='green',
+                                        title='3D Path of Gradient Ascent (Interactive)',
+                                        show_planes=False):  # New parameter
+        """
+        Creates an interactive 3D plot of gradient ascent paths from multiple starting points,
+        with paths color-coded based on the initial position's quadrant.
+        
+        Args:
+            self_field: The visualization field object
+            resolution (int): Resolution of the cube grid (points per dimension)
+            time_steps (int): Maximum number of steps for gradient ascent
+            start_color (str): Color of the starting points
+            end_color (str): Color of the ending points (for converged paths)
+            title (str): Plot title
+            show_planes (bool): Whether to show the equality planes (x=y, y=z, z=x)
+            
+        Returns:
+            plotly.graph_objects.Figure: Interactive 3D plot
+        """
+        # Function to generate a 3D unit cube grid
+        def unit_cube_3d(resolution=10):
+            """Generates a 3D unit cube as a torch tensor grid of points."""
+            lin = torch.linspace(0, 1, resolution + 2)[1:-1]
+            grid_x, grid_y, grid_z = torch.meshgrid(lin, lin, lin, indexing='ij')
+            
+            # Stack the coordinates to create 3D points
+            points = torch.stack([grid_x, grid_y, grid_z], dim=-1).reshape(-1, 3)
+            
+            # Return all points without filtering
+            return points
+        
+        # Function to determine quadrant/region of a point and assign color
+        def get_region_color(point):
+                """
+                Determine the region of a 3D point based on the relative ordering of coordinates,
+                and return an appropriate color.
+                """
+                x, y, z = point
+                
+                # Determine the ordering of the coordinates
+                if x < y < z:
+                    return 'red'
+                elif y < z < x:
+                    return 'green'
+                elif z < x < y:
+                    return 'blue'
+                elif y < x < z:
+                    return 'orange'
+                elif x < z < y:
+                    return 'purple'
+                elif z < y < x:
+                    return 'cyan'
+                elif x == y:
+                    return 'grey'
+                elif z == y:
+                    return 'black'
+                elif x == z:
+                    return 'brown' 
+                
+        # Generate the cube points
+        cube_points = unit_cube_3d(resolution=resolution)
+        print(f"Processing {len(cube_points)} starting points...")
+        
+        # Create plotly figure
+        fig = go.Figure()
+        
+        # Add the equality planes if requested
+        if show_planes:
+            # Create a grid for the planes
+            grid_points = np.linspace(0, 1, 20)
+            X, Y = np.meshgrid(grid_points, grid_points)
+            
+            # x=y plane (grey) - z varies independently
+            fig.add_trace(go.Surface(
+                x=X, y=X, z=Y,  # Fixed: z=Y instead of z=np.stack([Y])
+                colorscale=[[0, 'grey'], [1, 'grey']],
+                opacity=0.3,
+                showscale=False,
+                name='x=y plane'
+            ))
+            
+            # y=z plane (black)
+            fig.add_trace(go.Surface(
+                x=X, y=Y, z=Y,
+                colorscale=[[0, 'black'], [1, 'black']],
+                opacity=0.3,
+                showscale=False,
+                name='y=z plane'
+            ))
+            
+            # x=z plane (brown)
+            fig.add_trace(go.Surface(
+                x=X, y=Y, z=X,
+                colorscale=[[0, 'brown'], [1, 'brown']],
+                opacity=0.3,
+                showscale=False,
+                name='x=z plane'
+            ))
+        
+        # Start timing
+        start_time = time.time()
+        
+        # Track paths by region for legend
+        region_colors = set()
+        
+        # Process points sequentially (faster than parallelization due to deep copy overhead)
+        for i, point in enumerate(cube_points):
+            try: 
+                # Reset the field's agents positions for this run
+                if self.num_agents != 3:
+                    # we need to add number of players -3 values equal to player 2 position
+                    extra_agents = self.num_agents - 3
+                    point_extended = point.tolist() + [point[1].item()] * extra_agents
+                    self.field.agents_pos = torch.tensor(point_extended)
+                else:
+                    self.field.agents_pos = point.clone()
+                self.field.gradient_ascent()
+                
+                # Get the path data
+                if self.num_agents != 3:
+                    pos_matrix= self.field.pos_matrix[:, :3].numpy()  # Only take first 3 dimensions for plotting
+                else:
+                    pos_matrix = self.field.pos_matrix.numpy()  # Convert to numpy for plotly
+                converged = len(self.field.pos_matrix) < time_steps
+                path_color = get_region_color(point)
+                
+                # Track the color for legend
+                region_colors.add(path_color)
+                
+                # Add the path trace
+                path_trace = go.Scatter3d(
+                    x=pos_matrix[:, 0], 
+                    y=pos_matrix[:, 1], 
+                    z=pos_matrix[:, 2],
+                    mode='lines+markers',
+                    line=dict(color=path_color, width=2),
+                    marker=dict(size=2, color=path_color),
+                    name=f'Path ({path_color} region)',
+                    hoverinfo='text',
+                    hovertext=[f'Step {i}<br>Agent 1: {pos[0]:.3f}<br>Agent 2: {pos[1]:.3f}<br>Agent 3: {pos[2]:.3f}' 
+                            for i, pos in enumerate(pos_matrix)],
+                    showlegend=False
+                )
+                fig.add_trace(path_trace)
+                
+                # Add starting point marker
+                start_trace = go.Scatter3d(
+                    x=[pos_matrix[0, 0]], 
+                    y=[pos_matrix[0, 1]], 
+                    z=[pos_matrix[0, 2]],
+                    mode='markers',
+                    marker=dict(size=5, color=start_color),
+                    name='Starting Points',
+                    hoverinfo='text',
+                    hovertext=f'Start<br>Agent 1: {pos_matrix[0, 0]:.3f}<br>Agent 2: {pos_matrix[0, 1]:.3f}<br>Agent 3: {pos_matrix[0, 2]:.3f}',
+                    showlegend=False
+                )
+                fig.add_trace(start_trace)
+                
+                # If converged, add endpoint marker
+                if converged:
+                    end_trace = go.Scatter3d(
+                        x=[pos_matrix[-1, 0]], 
+                        y=[pos_matrix[-1, 1]], 
+                        z=[pos_matrix[-1, 2]],
+                        mode='markers',
+                        marker=dict(size=8, color=end_color),
+                        name='Convergence Points',
+                        hoverinfo='text',
+                        hovertext=f'Converged<br>Agent 1: {pos_matrix[-1, 0]:.3f}<br>Agent 2: {pos_matrix[-1, 1]:.3f}<br>Agent 3: {pos_matrix[-1, 2]:.3f}',
+                        showlegend=False
+                    )
+                    fig.add_trace(end_trace)
+                
+                # Update progress periodically
+                if (i + 1) % 5 == 0 or (i + 1) == len(cube_points):
+                    print(f"Processed {i+1}/{len(cube_points)} points ({(i+1)/len(cube_points)*100:.1f}%)")
+                    
+            except Exception as e:
+                print(f"Error processing point {i}: {str(e)}")
+        
+        # End timing and report
+        end_time = time.time()
+        processing_time = end_time - start_time
+        print(f"Processing completed in {processing_time:.2f} seconds")
+        
+        # Add legend traces
+        # First the special markers
+        fig.add_trace(go.Scatter3d(
+            x=[None], y=[None], z=[None],
+            mode='markers',
+            marker=dict(size=8, color=start_color),
+            name='Initial Position'
+        ))
+        
+        fig.add_trace(go.Scatter3d(
+            x=[None], y=[None], z=[None],
+            mode='markers',
+            marker=dict(size=10, color=end_color),
+            name='Final Position (Converged)'
+        ))
+        
+        # Then add each region color to the legend
+        region_descriptions = {
+        'red': 'Agent 1 < Agent 2 < Agent 3',
+        'green': 'Agent 2 < Agent 3 < Agent 1',
+        'blue': 'Agent 3 < Agent 1 < Agent 2',
+        'orange': 'Agent 2 < Agent 1 < Agent 3',
+        'purple': 'Agent 1 < Agent 3 < Agent 2',
+        'cyan': 'Agent 3 < Agent 2 < Agent 1',
+        'grey': 'Agent 1 = Agent 2',
+        'black': 'Agent 2 = Agent 3',
+        'brown': 'Agent 1 = Agent 3'
+        }
+        
+        for color in sorted(region_colors):
+            fig.add_trace(go.Scatter3d(
+                x=[None], y=[None], z=[None],
+                mode='lines',
+                line=dict(color=color, width=4),
+                name=region_descriptions.get(color, f'{color} region')
+            ))
+        
+        # Configure the layout
+        fig.update_layout(
+            title=title,
+            scene=dict(
+                xaxis_title='Agent 1 Position',
+                yaxis_title='Agent 2 Position',
+                zaxis_title='Agent 3 Position',
+                xaxis=dict(range=[0, 1]),
+                yaxis=dict(range=[0, 1]),
+                zaxis=dict(range=[0, 1])
+            ),
+            legend=dict(
+                x=0.01,
+                y=0.99,
+                traceorder="normal",
+                font=dict(family="sans-serif", size=12),
+                bgcolor="rgba(255, 255, 255, 0.7)",
+                bordercolor="rgba(0, 0, 0, 0.3)",
+                borderwidth=1
+            ),
+            margin=dict(l=0, r=0, b=0, t=40),
+            hovermode='closest',
+        )
+        
+        return fig
 
     #Utils integrated into the class for simplicity
     def calc_infl_dist(self,
@@ -2020,7 +2426,7 @@ class Shell:
             self.field.bin_points=np.array([simplex_utils.xy2ba(x,y,corners=self.corners)  for x,y in zip(self.trimesh.x, self.trimesh.y)])
             infl_dist=self.field.influence_matrix(parameter_instance=parameter_instance)
         elif self.domain_type=='2d':
-            self.field.bin_points=self.rect_positions
+            
             infl_dist=self.field.influence_matrix(parameter_instance=parameter_instance)
         else:
             infl_dist=self.field.influence_matrix(parameter_instance=parameter_instance)
@@ -2080,334 +2486,6 @@ class Shell:
             two_a=True
             return grads
     
-    def _compute_single_parameter(self, parameter_data: Dict) -> Tuple[int, torch.Tensor]:
-        """
-        Helper function to compute final position for a single parameter.
-        Designed to be used with multiprocessing.
-        
-        :param parameter_data: Dictionary containing parameter data and configuration
-        :type parameter_data: Dict
-        
-        :return: Tuple of parameter_id and final position row
-        :rtype: Tuple[int, torch.Tensor]
-        """
-        try:
-            parameter_id = parameter_data['parameter_id']
-            reach_param = parameter_data['reach_param']
-            og_pos = parameter_data['og_pos']
-            tolerance = parameter_data['tolerance']
-            tolerated_agents = parameter_data['tolerated_agents']
-            domain_type = parameter_data['domain_type']
-            total_params = parameter_data['total_params']
-            time_steps = parameter_data['time_steps']
-            
-            
-            # Create a temporary field environment for this computation
-            if domain_type == 'simplex':
-                temp_field = grad_func_env.AdaptiveEnv(
-                    num_agents=self.num_agents,
-                    agents_pos=og_pos.clone(),
-                    parameters=self.parameters,
-                    resource_distribution=self.resource_distribution,
-                    bin_points=self.bin_points,
-                    infl_configs=self.infl_configs,
-                    learning_rate_type=self.learning_rate_type,
-                    learning_rate=self.learning_rate,
-                    time_steps=time_steps,
-                    fp=self.fp,
-                    infl_cshift=self.infl_cshift,
-                    cshift=self.cshift,
-                    infl_fshift=self.infl_fshift,
-                    Q=self.Q,
-                    domain_type=domain_type,
-                    tolerance=tolerance,
-                    tolerated_agents=tolerated_agents,
-                    ignore_zero_infl=self.ignore_zero_infl
-                )
-            else:
-                temp_field = grad_func_env.AdaptiveEnv(
-                    num_agents=self.num_agents,
-                    agents_pos=og_pos.clone(),
-                    parameters=self.parameters,
-                    resource_distribution=self.resource_distribution,
-                    bin_points=self.bin_points,
-                    infl_configs=self.infl_configs,
-                    learning_rate_type=self.learning_rate_type,
-                    learning_rate=self.learning_rate,
-                    time_steps=time_steps,
-                    fp=self.fp,
-                    infl_cshift=self.infl_cshift,
-                    cshift=self.cshift,
-                    infl_fshift=self.infl_fshift,
-                    Q=self.Q,
-                    domain_type=domain_type,
-                    domain_bounds=self.domain_bounds,
-                    tolerance=tolerance,
-                    tolerated_agents=tolerated_agents,
-                    ignore_zero_infl=self.ignore_zero_infl
-                )
-            
-            # Set parameters based on domain type
-            if domain_type in ['1d']:
-                temp_field.learning_rate = [10**(-1*(max(3,5*(total_params-parameter_id)/total_params))), 1/10000, 500]
-                temp_field.parameters = np.array(reach_param)
-            elif domain_type in ['2d', 'simplex']:
-                temp_field.parameters = torch.tensor(reach_param).clone()
-            
-            # Run gradient ascent
-            temp_field.gradient_ascent(show_out=False)
-            
-           
-            final_pos_row = temp_field.pos_matrix[-1].clone()
-                
-            return parameter_id, final_pos_row
-            
-        except Exception as e:
-            logging.error(f"Error computing parameter {parameter_id}: {str(e)}")
-            raise RuntimeError(f"Failed to compute parameter {parameter_id}: {str(e)}")
-
-    def final_pos_over_reach(self, 
-                           reach_parameters: Union[List[float], np.ndarray], 
-                           tolerance: float, 
-                           tolerated_agents: int,
-                           parallel: bool = True,
-                           max_workers: Optional[int] = None,
-                           batch_size: Optional[int] = None,
-                           time_steps: Optional[int] = None) -> torch.Tensor:
-        """
-        Calculate the final positions of agents over a range of reach parameters via repeated initiations of 
-        :func:`InflGame.adaptive.grad_func_env.gradient_ascent` over a group of parameters.
-        
-        This method has been optimized with:
-        - Vectorized operations where possible
-        - Parallel processing support
-        - Comprehensive error handling
-        - Input validation
-        - Progress logging
-
-        :param reach_parameters: Reach parameters to iterate over
-        :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Tolerance for convergence
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations
-        :type tolerated_agents: int
-        :param parallel: Whether to use parallel processing
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count)
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None)
-        :type batch_size: Optional[int]
-
-        :return: The final positions of agents for each parameter
-        :rtype: torch.Tensor
-        
-        :raises ValueError: If input parameters are invalid
-        :raises RuntimeError: If computation fails
-        """
-        # Input validation
-        if not isinstance(reach_parameters, (list, np.ndarray, torch.Tensor)):
-            raise ValueError(f"reach_parameters must be list, numpy array, or torch tensor, got {type(reach_parameters)}")
-        
-        if isinstance(reach_parameters, list):
-            reach_parameters = np.array(reach_parameters)
-        elif isinstance(reach_parameters, torch.Tensor):
-            reach_parameters = reach_parameters.numpy()
-            
-        if len(reach_parameters) == 0:
-            raise ValueError("reach_parameters cannot be empty")
-            
-        if tolerance <= 0:
-            raise ValueError(f"tolerance must be positive, got {tolerance}")
-            
-        if tolerated_agents < 0:
-            raise ValueError(f"tolerated_agents must be non-negative, got {tolerated_agents}")
-        
-        # Validate domain type
-        if self.domain_type not in ['1d', '2d', 'simplex']:
-            raise ValueError(f"Unsupported domain_type: {self.domain_type}")
-            
-        logging.info(f"Computing final positions for {len(reach_parameters)} parameters using domain '{self.domain_type}'")
-        if self.domain_type == 'simplex':
-            self.field.domain_bounds=[0,1]
-            self.domain_bounds=[0,1]
-        # Store original state
-        try:
-            
-            og_parameters = self.parameters.clone()   
-            og_pos = self.agents_pos.clone()
-            og_lr = self.learning_rate.clone()
-            og_tolerance = self.tolerance
-            og_tolerated_agents = self.tolerated_agents
-            
-            # Update field tolerance settings
-            self.field.tolerance = tolerance
-            self.field.tolerated_agents = tolerated_agents
-            
-            # Determine optimal batch size and workers
-            if max_workers is None:
-                max_workers = min(mp.cpu_count(), len(reach_parameters))
-            
-            if batch_size is None:
-                batch_size = max(1, len(reach_parameters) // max_workers)
-            
-            # Prepare parameter data for parallel processing
-            parameter_data_list = []
-            for parameter_id, reach_param in enumerate(reach_parameters):
-                parameter_data = {
-                    'parameter_id': parameter_id,
-                    'reach_param': reach_param,
-                    'og_pos': og_pos,
-                    'tolerance': tolerance,
-                    'tolerated_agents': tolerated_agents,
-                    'domain_type': self.domain_type,
-                    'total_params': len(reach_parameters),
-                    'time_steps': time_steps
-                }
-                parameter_data_list.append(parameter_data)
-            
-            # Initialize result storage
-            final_pos_matrix = 0
-            
-            if parallel and len(reach_parameters) > 1:
-                # Parallel processing
-                logging.info(f"Using parallel processing with {max_workers} workers")
-                
-                try:
-                    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                        # Submit all tasks
-                        future_to_param = {
-                            executor.submit(self._compute_single_parameter, param_data): param_data['parameter_id']
-                            for param_data in parameter_data_list
-                        }
-                        
-                        # Collect results as they complete
-                        results = {}
-                        completed_count = 0
-                        
-                        for future in as_completed(future_to_param):
-                            try:
-                                parameter_id, final_pos_row = future.result()
-                                results[parameter_id] = final_pos_row
-                                completed_count += 1
-                                
-                                if completed_count % max(1, len(reach_parameters) // 10) == 0:
-                                    logging.info(f"Completed {completed_count}/{len(reach_parameters)} parameters")
-                                    
-                            except Exception as e:
-                                param_id = future_to_param[future]
-                                logging.error(f"Parameter {param_id} failed: {str(e)}")
-                                raise RuntimeError(f"Failed to compute parameter {param_id}: {str(e)}")
-                        
-                        # Build final matrix from results - vectorized approach
-                        # Ensure results are stored in original parameter order
-                        num_params = len(reach_parameters)
-                        if len(results) != num_params:
-                            raise RuntimeError(f"Expected {num_params} results, got {len(results)}")
-                        
-                        # Create a list to store results in original order
-                        ordered_results = [None] * num_params
-                        for param_id, result in results.items():
-                            if param_id >= num_params:
-                                raise RuntimeError(f"Invalid parameter ID {param_id}, expected 0-{num_params-1}")
-                            ordered_results[param_id] = result
-                        
-                        # Check that we have all results
-                        if None in ordered_results:
-                            missing_ids = [i for i, res in enumerate(ordered_results) if res is None]
-                            raise RuntimeError(f"Missing results for parameter IDs: {missing_ids}")
-                        
-                        # Vectorized matrix construction
-                        if len(ordered_results) == 1:
-                            final_pos_matrix = ordered_results[0]
-                        else:
-                            final_pos_matrix = torch.stack(ordered_results, dim=0)
-                        
-                        logging.info(f"Successfully built final position matrix with shape: {final_pos_matrix.shape}")
-                            
-                except Exception as e:
-                    logging.error(f"Parallel processing failed: {str(e)}")
-                    logging.info("Falling back to sequential processing")
-                    parallel = False
-            
-            if not parallel:
-                # Sequential processing (fallback or by choice)
-                logging.info("Using sequential processing")
-                
-                # Pre-allocate results list for vectorized construction
-                final_pos_results = []
-                
-                for parameter_id, reach_param in enumerate(reach_parameters):
-                    try:
-                        # Reset field state
-                        self.field.pos_matrix = 0
-                        self.field.agents_pos = og_pos.clone()
-                        self.agents_pos = og_pos.clone()
-                        
-                        # Set parameters based on domain type
-                        if self.domain_type in ['1d']:
-                            self.field.learning_rate = [
-                                10**(-1*(max(3, 5*(parameter_id+1)/len(reach_parameters)))), 
-                                1/10000, 
-                                500
-                            ]
-                            self.field.parameters = np.array(reach_param)
-                        elif self.domain_type in ['2d', 'simplex']:
-                            self.field.parameters = torch.tensor(reach_param).clone()
-                        
-                        # Run gradient ascent
-                        self.field.gradient_ascent(show_out=False)
-                        
-                        # Extract final position
-                        if self.domain_type == 'simplex':
-                            final_pos_row = simplex_utils.ba2xy_vectorized(
-                                barycentric_coords=self.field.pos_matrix[-1].clone(),
-                                corners=self.corners
-                            )
-                        else:
-                            final_pos_row = self.field.pos_matrix[-1].clone()
-                        
-                        # Reset agents position
-                        self.field.agents_pos = og_pos.clone()
-                        
-                        # Store result in order
-                        final_pos_results.append(final_pos_row)
-                        
-                        # Progress logging
-                        if (parameter_id + 1) % max(1, len(reach_parameters) // 10) == 0:
-                            logging.info(f"Completed {parameter_id + 1}/{len(reach_parameters)} parameters")
-                            
-                    except Exception as e:
-                        logging.error(f"Error processing parameter {parameter_id}: {str(e)}")
-                        raise RuntimeError(f"Failed to process parameter {parameter_id}: {str(e)}")
-                
-                # Vectorized matrix construction for sequential processing
-                if len(final_pos_results) == 1:
-                    final_pos_matrix = final_pos_results[0]
-                else:
-                    final_pos_matrix = torch.stack(final_pos_results, dim=0)
-                
-                logging.info(f"Successfully built final position matrix with shape: {final_pos_matrix.shape}")
-            
-            logging.info(f"Successfully computed final positions for all {len(reach_parameters)} parameters")
-            
-        except Exception as e:
-            logging.error(f"Critical error in final_pos_over_reach: {str(e)}")
-            raise
-            
-        finally:
-            # Restore original state
-            try:
-                self.field.tolerated_agents = og_tolerated_agents
-                self.field.tolerance = og_tolerance 
-                self.field.agents_pos = og_pos.clone()
-                self.field.learning_rate = og_lr.clone()
-                self.agents_pos = og_pos.clone()
-                self.field.parameters = og_parameters
-            except Exception as e:
-                logging.warning(f"Error restoring original state: {str(e)}")
-        
-        return final_pos_matrix
-    
     def jacobian_stability_fast(self,
                                 agent_parameter_instance: Union[List[float], np.ndarray],
                                 resource_distribution_type: str,
@@ -2460,6 +2538,8 @@ class Shell:
         self.agents_pos=og_pos.clone()
         return parameter_star_list,entropy_ls,ag_ent_ls
 
+    # eigen value analysis and visualization
+    
     def find_zero_crossings(self,test_eval, parameters_list, threshold=5.0):
         """
         Identify parameter values where eigenvalue real parts are close to zero.
@@ -2483,102 +2563,6 @@ class Shell:
         zero_params = parameters_list[zero_indices, 0]  # Assuming first column is reach parameter
         
         return zero_indices, zero_params, real_parts
-
-    def refine_parameter_space(self, zero_params, initial_positions=None, padding=0.01, num_points=50, time_steps=10000):
-        """
-        Create a refined parameter space around zero crossings for higher precision analysis.
-        
-        Args:
-            vis: Shell visualization object
-            zero_params: Tensor of parameter values where real parts are close to zero
-            padding: Additional parameter range to include around zero crossings
-            num_points: Number of points to sample in each refined region
-            
-        Returns:
-            Refined parameter list and corresponding test_eval values
-        """
-        from InflGame.utils.general import agent_parameter_setup
-        import InflGame.adaptive.jacobian as jc
-        
-        # Create boundaries for refined regions with padding
-        min_vals = torch.clamp(zero_params.min() - padding, min=0.03)
-        max_vals = torch.clamp(zero_params.max() + padding, max=0.3)
-        
-        # Generate refined parameter list
-        refined_parameters = agent_parameter_setup(
-            num_agents=3,
-            infl_type="gaussian",
-            setup_type="parameter_space",
-            reach_start=min_vals.item(),
-            reach_end=max_vals.item(),
-            reach_num_points=num_points
-        )
-        
-        # Preserve original state
-        original_pos = self.field.agents_pos.clone()
-        original_params = self.field.parameters.clone()
-        original_time_steps = self.field.time_steps
-        
-        # Run gradient ascent with refined parameters
-        self.field.time_steps = time_steps
-        refined_positions = []
-        
-        # Initial positions from original run
-        if initial_positions is None:
-            if torch.is_tensor(self.field.agents_pos):
-                initial_positions = self.field.agents_pos.clone()
-            else:
-                initial_positions = torch.tensor(self.field.agents_pos)
-        else:
-            if not torch.is_tensor(initial_positions):
-                initial_positions = torch.tensor(initial_positions)
-            else:
-                initial_positions = initial_positions.clone()
-
-        for parameters in refined_parameters:
-            # Reset field state for each run
-            self.field.agents_pos = initial_positions.clone()
-            self.field.parameters = parameters.clone()
-            self.field.gradient_ascent()
-            
-            # Get final position
-            final_pos = self.field.pos_matrix[-1].clone()
-            refined_positions.append(final_pos)
-        
-        # Compute eigenvalues for refined positions
-        refined_eval_list = []
-        for final_position, parameters in zip(refined_positions, refined_parameters):
-            # Set field state for jacobian computation
-            self.field.agents_pos = final_position.clone()
-            self.agents_pos = final_position.clone()
-            
-            jacobian = jc.jacobian_matrix(
-                num_agents=3,
-                parameters=parameters,
-                agents_pos=final_position,
-                bin_points=self.bin_points,
-                resource_distribution=self.resource_distribution,
-                infl_type='gaussian',
-                infl_fshift=False,
-                Q=0,
-                infl_matrix=self.field.influence_matrix(parameter_instance=parameters),
-                prob_matrix=self.field.prob_matrix(parameter_instance=parameters),
-                d_lnf_matrix=self.field.d_lnf_matrix(parameter_instance=parameters)
-            )
-            
-            eigen_values = torch.linalg.eigvals(jacobian)
-            refined_eval_list.append(eigen_values)
-        
-        # Restore original state
-        self.field.agents_pos = original_pos
-        self.agents_pos = original_pos
-        self.field.parameters = original_params
-        self.field.time_steps = original_time_steps
-        
-        # Stack results into tensors
-        refined_eval = torch.stack(refined_eval_list)
-        
-        return refined_parameters, refined_eval
 
     def analyze_zero_crossings(self,refined_parameters, refined_eval, x_star=None):
         """
@@ -2703,7 +2687,6 @@ class Shell:
         
         return results
     
-
     # Add these methods to the Shell class
     def analyze_near_critical_point(self, x_star, padding=0.01, num_points=50):
         """
@@ -2941,7 +2924,7 @@ class Shell:
         colors = ['blue', 'red', 'green']
         eigenvalue_labels = ['Eigenvalue 1', 'Eigenvalue 2', 'Eigenvalue 3']
         
-        for i in range(3):
+        for i in range(self.num_agents):
             ax = axes[i]
             ax.plot(param_indices.numpy(), real_parts[:, i].numpy(), 
                 color=colors[i], linewidth=2)
@@ -2989,7 +2972,8 @@ class Shell:
         
         return results
 
-
+    
+        
     
     ##Outdated need to remove or archive (too slow but generalizable if you know x_star)
 

@@ -1,0 +1,21 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'main.blg'
+[73] biber-MSWIN64:342> INFO - === 
+[104] Biber.pm:421> INFO - Reading 'main.bcf'
+[176] Biber.pm:1002> INFO - Found 11 citekeys in bib section 0
+[184] Biber.pm:4487> INFO - Processing section 0
+[192] Biber.pm:4678> INFO - Looking for bibtex file 'refs.bib' for section 0
+[246] bibtex.pm:1713> INFO - LaTeX decoding ...
+[280] bibtex.pm:1519> INFO - Found BibTeX data source 'refs.bib'
+[327] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[327] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[327] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'en-US'
+[327] Biber.pm:4313> INFO - No sort tailoring available for locale 'en-US'
+[332] bbl.pm:676> INFO - Writing 'main.bbl' with encoding 'UTF-8'
+[335] bbl.pm:779> INFO - Output to main.bbl
+[336] Biber.pm:132> WARN - Duplicate entry key: 'stamps2001territorial' in file 'refs.bib', skipping ...
+[336] Biber.pm:132> WARN - BibTeX subsystem: C:\Users\MARK-F~1\AppData\Local\Temp\biber_tmp_je_7\8fe4c9854184545302f21ebf0d47516c_30788.utf8, line 3, warning: 21 characters of junk seen at toplevel
+[336] Biber.pm:132> WARN - BibTeX subsystem: C:\Users\MARK-F~1\AppData\Local\Temp\biber_tmp_je_7\8fe4c9854184545302f21ebf0d47516c_30788.utf8, line 40, warning: 28 characters of junk seen at toplevel
+[336] Biber.pm:132> WARN - BibTeX subsystem: C:\Users\MARK-F~1\AppData\Local\Temp\biber_tmp_je_7\8fe4c9854184545302f21ebf0d47516c_30788.utf8, line 236, warning: 17 characters of junk seen at toplevel
+[336] Biber.pm:132> WARN - BibTeX subsystem: C:\Users\MARK-F~1\AppData\Local\Temp\biber_tmp_je_7\8fe4c9854184545302f21ebf0d47516c_30788.utf8, line 324, warning: 15 characters of junk seen at toplevel
+[336] Biber.pm:134> INFO - WARNINGS: 5

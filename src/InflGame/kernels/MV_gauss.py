@@ -85,6 +85,124 @@ import InflGame.utils.general as general
 from typing import Union, List, Tuple
 
 
+# ========================= JIT-COMPILED HELPER FUNCTIONS =========================
+
+@torch.jit.script
+def _influence_vectorized_core(
+    agents_pos: torch.Tensor,
+    bin_points: torch.Tensor,
+    sigma_inv: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for multivariate Gaussian influence calculation.
+    
+    Args:
+        agents_pos: Agent positions (num_agents, num_dims)
+        bin_points: Bin points (num_bins, num_dims)
+        sigma_inv: Inverse covariance matrices (num_agents, num_dims, num_dims)
+    
+    Returns:
+        torch.Tensor: Influence matrix (num_agents, num_bins)
+    """
+    num_agents, agent_dims = agents_pos.shape
+    num_bins, bin_dims = bin_points.shape
+    
+    # Compute differences: (num_agents, 1, num_dims) - (1, num_bins, num_dims) = (num_agents, num_bins, num_dims)
+    agents_expanded = agents_pos.unsqueeze(1)  # Shape: (num_agents, 1, num_dims)
+    bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, num_bins, num_dims)
+    diff_vectors = bins_expanded - agents_expanded  # Shape: (num_agents, num_bins, num_dims)
+    
+    # Vectorized quadratic form computation
+    # For each agent and bin: diff^T @ sigma_inv @ diff
+    
+    # Step 1: sigma_inv @ diff (batch matrix multiplication)
+    # Need to reshape for bmm: (num_agents * num_bins, num_dims, 1)
+    diff_reshaped = diff_vectors.reshape(num_agents * num_bins, agent_dims, 1)
+    
+    # Expand sigma_inv to match: (num_agents * num_bins, num_dims, num_dims)
+    sigma_expanded = sigma_inv.unsqueeze(1).expand(-1, num_bins, -1, -1)
+    sigma_reshaped = sigma_expanded.reshape(num_agents * num_bins, agent_dims, agent_dims)
+    
+    # Batch matrix multiplication
+    sigma_diff = torch.bmm(sigma_reshaped, diff_reshaped)  # Shape: (num_agents * num_bins, num_dims, 1)
+    
+    # Step 2: diff^T @ (sigma_inv @ diff)
+    diff_t_reshaped = diff_vectors.reshape(num_agents * num_bins, 1, agent_dims)
+    quadratic_forms = torch.bmm(diff_t_reshaped, sigma_diff)  # Shape: (num_agents * num_bins, 1, 1)
+    
+    # Reshape back to (num_agents, num_bins)
+    quadratic_forms = quadratic_forms.squeeze(-1).squeeze(-1).reshape(num_agents, num_bins)
+    
+    # Compute influence: exp(-0.5 * quadratic_form)
+    influence_matrix = torch.exp(-0.5 * quadratic_forms)
+    
+    return influence_matrix
+
+@torch.jit.script
+def _d_ln_f_vectorized_core(
+    agents_pos: torch.Tensor,
+    bin_points: torch.Tensor,
+    sigma_inv: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for multivariate Gaussian gradient calculation.
+    
+    Args:
+        agents_pos: Agent positions (num_agents, num_dims)
+        bin_points: Bin points (num_bins, num_dims)
+        sigma_inv: Inverse covariance matrices (num_agents, num_dims, num_dims)
+    
+    Returns:
+        torch.Tensor: Gradient tensor (num_agents, num_dims, num_bins)
+    """
+    # Compute differences: (num_agents, 1, num_dims) - (1, num_bins, num_dims) = (num_agents, num_bins, num_dims)
+    agents_expanded = agents_pos.unsqueeze(1)  # Shape: (num_agents, 1, num_dims)
+    bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, num_bins, num_dims)
+    diff_vectors = bins_expanded - agents_expanded  # Shape: (num_agents, num_bins, num_dims)
+    
+    # Vectorized gradient computation: sigma_inv @ diff_vectors
+    # sigma_inv: (num_agents, num_dims, num_dims)
+    # diff_vectors: (num_agents, num_bins, num_dims) -> need to transpose last two dims for bmm
+    diff_transposed = diff_vectors.transpose(1, 2)  # Shape: (num_agents, num_dims, num_bins)
+    
+    # Batch matrix multiplication: (num_agents, num_dims, num_dims) @ (num_agents, num_dims, num_bins)
+    # Result: (num_agents, num_dims, num_bins)
+    gradient_tensor = torch.bmm(sigma_inv, diff_transposed)
+    
+    return gradient_tensor
+
+@torch.jit.script
+def _symmetric_nash_vectorized_core(
+    bin_points: torch.Tensor,
+    resource_distribution: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for symmetric Nash equilibrium.
+    
+    Args:
+        bin_points: Bin points (num_bins, num_dims)
+        resource_distribution: Resource distribution (num_bins,)
+    
+    Returns:
+        torch.Tensor: Nash equilibrium point (num_dims,)
+    """
+    # Total resources: (num_bins,)
+    total_resources = torch.sum(resource_distribution)
+    
+    # Vectorized computation of weighted means
+    # bin_points: (num_bins, num_dims)
+    # resource_distribution: (num_bins,) -> (num_bins, 1) for broadcasting
+    weights = resource_distribution.unsqueeze(1)  # Shape: (num_bins, 1)
+    
+    # Weighted sum along bins dimension: (num_dims,)
+    weighted_sums = torch.sum(bin_points * weights, dim=0)
+    
+    # Normalize by total resources
+    nash_point = weighted_sums / total_resources
+    
+    return nash_point
+
+
 # ========================= VECTORIZED FUNCTIONS =========================
 
 def cov_matrix_vectorized(parameter_instances: Union[torch.Tensor, np.ndarray, List]) -> torch.Tensor:
@@ -251,36 +369,8 @@ def influence_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
         num_bins, bin_dims = bin_points.shape
 
         
-        # Compute differences: (num_agents, 1, num_dims) - (1, num_bins, num_dims) = (num_agents, num_bins, num_dims)
-        agents_expanded = agents_pos.unsqueeze(1)  # Shape: (num_agents, 1, num_dims)
-        bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, num_bins, num_dims)
-        diff_vectors = bins_expanded - agents_expanded  # Shape: (num_agents, num_bins, num_dims)
-        
-        # Vectorized quadratic form computation
-        # For each agent and bin: diff^T @ sigma_inv @ diff
-        # diff_vectors: (num_agents, num_bins, num_dims)
-        # sigma_inv: (num_agents, num_dims, num_dims)
-        
-        # Step 1: sigma_inv @ diff (batch matrix multiplication)
-        # Need to reshape for bmm: (num_agents * num_bins, num_dims, 1)
-        diff_reshaped = diff_vectors.reshape(num_agents * num_bins, agent_dims, 1)
-        
-        # Expand sigma_inv to match: (num_agents * num_bins, num_dims, num_dims)
-        sigma_expanded = sigma_inv.unsqueeze(1).expand(-1, num_bins, -1, -1)
-        sigma_reshaped = sigma_expanded.reshape(num_agents * num_bins, agent_dims, agent_dims)
-        
-        # Batch matrix multiplication
-        sigma_diff = torch.bmm(sigma_reshaped, diff_reshaped)  # Shape: (num_agents * num_bins, num_dims, 1)
-        
-        # Step 2: diff^T @ (sigma_inv @ diff)
-        diff_t_reshaped = diff_vectors.reshape(num_agents * num_bins, 1, agent_dims)
-        quadratic_forms = torch.bmm(diff_t_reshaped, sigma_diff)  # Shape: (num_agents * num_bins, 1, 1)
-        
-        # Reshape back to (num_agents, num_bins)
-        quadratic_forms = quadratic_forms.squeeze(-1).squeeze(-1).reshape(num_agents, num_bins)
-        
-        # Compute influence: exp(-0.5 * quadratic_form)
-        influence_matrix = torch.exp(-0.5 * quadratic_forms)
+        # Use JIT-compiled core for optimal performance
+        influence_matrix = _influence_vectorized_core(agents_pos, bin_points, sigma_inv)
         
         # Validate output
         if not torch.all(torch.isfinite(influence_matrix)):
@@ -374,19 +464,8 @@ def d_ln_f_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
         sigma_inv = sigma_inv.float()
         
         
-        # Compute differences: (num_agents, 1, num_dims) - (1, num_bins, num_dims) = (num_agents, num_bins, num_dims)
-        agents_expanded = agents_pos.unsqueeze(1)  # Shape: (num_agents, 1, num_dims)
-        bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, num_bins, num_dims)
-        diff_vectors = bins_expanded - agents_expanded  # Shape: (num_agents, num_bins, num_dims)
-        
-        # Vectorized gradient computation: sigma_inv @ diff_vectors
-        # sigma_inv: (num_agents, num_dims, num_dims)
-        # diff_vectors: (num_agents, num_bins, num_dims) -> need to transpose last two dims for bmm
-        diff_transposed = diff_vectors.transpose(1, 2)  # Shape: (num_agents, num_dims, num_bins)
-        
-        # Batch matrix multiplication: (num_agents, num_dims, num_dims) @ (num_agents, num_dims, num_bins)
-        # Result: (num_agents, num_dims, num_bins)
-        gradient_tensor = torch.bmm(sigma_inv, diff_transposed)
+        # Use JIT-compiled core for optimal performance
+        gradient_tensor = _d_ln_f_vectorized_core(agents_pos, bin_points, sigma_inv)
         
         # Validate output
         if not torch.all(torch.isfinite(gradient_tensor)):
@@ -464,20 +543,8 @@ def symmetric_nash_vectorized(bin_points: Union[np.ndarray, torch.Tensor],
         bin_points = bin_points.float()
         resource_distribution = resource_distribution.float()
         
-        # total resources: (num_bins,)
-        total_resources = torch.sum(resource_distribution)
-        
-        
-        # Vectorized computation of weighted means
-        # bin_points: (num_bins, num_dims)
-        # resource_distribution: (num_bins,) -> (num_bins, 1) for broadcasting
-        weights = resource_distribution.unsqueeze(1)  # Shape: (num_bins, 1)
-        
-        # Weighted sum along bins dimension: (num_dims,)
-        weighted_sums = torch.sum(bin_points * weights, dim=0)
-        
-        # Normalize by total resources
-        nash_point = weighted_sums / total_resources
+        # Use JIT-compiled core for optimal performance
+        nash_point = _symmetric_nash_vectorized_core(bin_points, resource_distribution)
         
         # Validate output
         if not torch.all(torch.isfinite(nash_point)):

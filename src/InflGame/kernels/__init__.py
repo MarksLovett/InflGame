@@ -10,6 +10,7 @@ Pre-made influence kernels from the paper including Gaussian, Multi-variate Gaus
 ==================  =============================================
 Submodules          Description
 ==================  =============================================
+`beta`              Beta influence kernels
 `diric`             Dirichlet influence kernels 
 `gauss`             Gaussian influence kernels
 `jones`             Mathew Jones influence kernels
@@ -84,6 +85,25 @@ where:
   - :math:`x_i` is the position of agent :math:`i`
   - :math:`b` is the bin point
   - :math:`\Sigma_i` is the covariance matrix for agent :math:`i`
+
+
+Beta Influence Kernel
+===========================
+
+Mathematical Definitions:
+-------------------------
+The Beta influence kernel is parameterized by mode (m) and concentration (phi):
+
+.. math::
+    f_i(x_i, b) = \frac{b^{\alpha-1} (1-b)^{\beta-1}}{B(\alpha, \beta)}
+
+where:
+  - :math:`x_i` is the position (mode) of agent :math:`i`
+  - :math:`b` is the bin point
+  - :math:`\alpha = x_i(\phi - 2) + 1`
+  - :math:`\beta = (1 - x_i)(\phi - 2) + 1`
+  - :math:`\phi` is the concentration parameter for agent :math:`i` (must be > 2)
+  - :math:`B(\alpha, \beta)` is the Beta function
 
    
 """

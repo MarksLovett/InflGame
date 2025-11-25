@@ -72,6 +72,9 @@ def validate_adaptive_config(num_agents: int,
             raise ValueError("parameters must contain finite values (no NaN or Inf)")
         if torch.any(parameters < 0) and infl_configs.get('infl_type') in ['gaussian', 'multi_gaussian','dirichlet']:
             warnings.warn("Parameters with negative values detected, this may result in unpredictable behavior", UserWarning)
+        # Beta distribution requires concentration parameter phi > 2 for proper mode parameterization
+        if infl_configs.get('infl_type') == 'beta' and torch.any(parameters < 0) :
+            raise ValueError("Beta kernel concentration parameters (phi) must be >0 for mode parameterization")
         validated['parameters'] = parameters
     
     # 4. Validate and convert resource_distribution (fourth parameter)
@@ -94,7 +97,7 @@ def validate_adaptive_config(num_agents: int,
     if not isinstance(infl_configs, dict):
         raise TypeError("infl_configs must be a dictionary")
     
-    valid_infl_types = ['gaussian', 'Jones_M', 'dirichlet', 'multi_gaussian', 'custom']
+    valid_infl_types = ['gaussian', 'Jones_M', 'dirichlet', 'multi_gaussian', 'beta', 'custom']
     infl_type = infl_configs.get('infl_type')
     if infl_type not in valid_infl_types:
         raise ValueError(f"Invalid influence type '{infl_type}'. Supported types are {valid_infl_types}")
@@ -108,7 +111,7 @@ def validate_adaptive_config(num_agents: int,
     validated['infl_configs'] = infl_configs
     
     # 7. Validate learning_rate_type (seventh parameter)
-    valid_lr_types = ['cosine_annealing', 'fixed']
+    valid_lr_types = ['cosine_annealing', 'fixed', 'trust_region','gradient_magnitude']
     if learning_rate_type not in valid_lr_types:
         raise ValueError(f"Invalid learning rate type '{learning_rate_type}'. Supported types are {valid_lr_types}")
     validated['learning_rate_type'] = learning_rate_type

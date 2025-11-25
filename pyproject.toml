@@ -1,14 +1,13 @@
 [build-system]
-
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
 
 
 
 
 
 [project]
-name = "InGame"
+name = "InflGame"
 version = "0.1.0"
 authors = [
   { name="Mark Lovett", email="mark.s.lovett981@gmail.com" },
@@ -33,6 +32,9 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/InflGame"]
 
 [project.urls]
 Homepage = "https://github.com/pypa/sampleproject"

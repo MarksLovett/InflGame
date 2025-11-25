@@ -19,6 +19,127 @@
 
 \refsection{0}
   \datalist[entry]{none/global//global/global/global}
+    \entry{robertson1998cake}{book}{}{}
+      \name{author}{2}{}{%
+        {{hash=4449745e4ea1c3e134b91db40acc4532}{%
+           family={Robertson},
+           familyi={R\bibinitperiod},
+           given={Jack},
+           giveni={J\bibinitperiod}}}%
+        {{hash=fadab5667255862e36103bae07a0c073}{%
+           family={Webb},
+           familyi={W\bibinitperiod},
+           given={William},
+           giveni={W\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {AK Peters/CRC Press}%
+      }
+      \strng{namehash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{fullhash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{fullhashraw}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{bibnamehash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{authorbibnamehash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{authornamehash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{authorfullhash}{645eb075aac6b08f1431020788e1b9d1}
+      \strng{authorfullhashraw}{645eb075aac6b08f1431020788e1b9d1}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Cake-cutting algorithms: be fair if you can}
+      \field{year}{1998}
+    \endentry
+    \entry{brams2016fair}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=cc5eaef845f31fd897f6b91f0bba0ec6}{%
+           family={Brams},
+           familyi={B\bibinitperiod},
+           given={Steven\bibnamedelima J},
+           giveni={S\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=9518c9bf78e7b2cc4b2eda272091f431}{%
+           family={Taylor},
+           familyi={T\bibinitperiod},
+           given={Alan\bibnamedelima D},
+           giveni={A\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press}%
+      }
+      \strng{namehash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{fullhash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{fullhashraw}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{bibnamehash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{authorbibnamehash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{authornamehash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{authorfullhash}{fc96864edddb1071a24d96efa739cb9c}
+      \strng{authorfullhashraw}{fc96864edddb1071a24d96efa739cb9c}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Fair division: From cake-cutting to dispute resolution}
+      \field{year}{2016}
+    \endentry
+    \entry{kovenock2012colonel}{article}{}{}
+      \name{author}{2}{}{%
+        {{hash=a377caa5c1f7bfc953c2fab6c41ed695}{%
+           family={Kovenock},
+           familyi={K\bibinitperiod},
+           given={Dan},
+           giveni={D\bibinitperiod}}}%
+        {{hash=316f41a538299c743b1ab835df6384bf}{%
+           family={Roberson},
+           familyi={R\bibinitperiod},
+           given={Brian},
+           giveni={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{fullhash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{fullhashraw}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{bibnamehash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{authorbibnamehash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{authornamehash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{authorfullhash}{b1b2917bc8cc79b64b12a804376760f3}
+      \strng{authorfullhashraw}{b1b2917bc8cc79b64b12a804376760f3}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Encyclopedia of complexity and systems science}
+      \field{title}{The Colonel Blotto game}
+      \field{year}{2012}
+      \field{pages}{1\bibrangedash 12}
+      \range{pages}{12}
+    \endentry
+    \entry{roberson2006colonel}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=316f41a538299c743b1ab835df6384bf}{%
+           family={Roberson},
+           familyi={R\bibinitperiod},
+           given={Brian},
+           giveni={B\bibinitperiod}}}%
+      }
+      \strng{namehash}{316f41a538299c743b1ab835df6384bf}
+      \strng{fullhash}{316f41a538299c743b1ab835df6384bf}
+      \strng{fullhashraw}{316f41a538299c743b1ab835df6384bf}
+      \strng{bibnamehash}{316f41a538299c743b1ab835df6384bf}
+      \strng{authorbibnamehash}{316f41a538299c743b1ab835df6384bf}
+      \strng{authornamehash}{316f41a538299c743b1ab835df6384bf}
+      \strng{authorfullhash}{316f41a538299c743b1ab835df6384bf}
+      \strng{authorfullhashraw}{316f41a538299c743b1ab835df6384bf}
+      \field{sortinit}{2}
+      \field{sortinithash}{8b555b3791beccb63322c22f3320aa9a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Economic Theory}
+      \field{number}{1}
+      \field{title}{The Colonel Blotto game}
+      \field{volume}{29}
+      \field{year}{2006}
+      \field{pages}{1\bibrangedash 24}
+      \range{pages}{24}
+    \endentry
     \entry{reny2020nash}{article}{}{}
       \name{author}{1}{}{%
         {{hash=065fca061ecc494ea82a25787b078ebb}{%
@@ -39,8 +160,8 @@
       \strng{authorfullhash}{065fca061ecc494ea82a25787b078ebb}
       \strng{authorfullhashraw}{065fca061ecc494ea82a25787b078ebb}
       \field{extraname}{1}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Annual Review of Economics}
@@ -71,8 +192,8 @@
       \strng{authorfullhash}{065fca061ecc494ea82a25787b078ebb}
       \strng{authorfullhashraw}{065fca061ecc494ea82a25787b078ebb}
       \field{extraname}{2}
-      \field{sortinit}{1}
-      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{sortinit}{3}
+      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Economic Theory}
@@ -101,8 +222,8 @@
       \strng{authornamehash}{2d2bfe2c79a8386fb773bd53c379fdef}
       \strng{authorfullhash}{2d2bfe2c79a8386fb773bd53c379fdef}
       \strng{authorfullhashraw}{2d2bfe2c79a8386fb773bd53c379fdef}
-      \field{sortinit}{3}
-      \field{sortinithash}{ad6fe7482ffbd7b9f99c9e8b5dccd3d7}
+      \field{sortinit}{5}
+      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Linear Algebra and its Applications}
@@ -146,8 +267,8 @@
       \strng{authornamehash}{62c5dd3aa7059c4199445a8c11bfb389}
       \strng{authorfullhash}{d9d7871b3e56efe40b5e241ecec5389f}
       \strng{authorfullhashraw}{d9d7871b3e56efe40b5e241ecec5389f}
-      \field{sortinit}{4}
-      \field{sortinithash}{9381316451d1b9788675a07e972a12a7}
+      \field{sortinit}{6}
+      \field{sortinithash}{b33bc299efb3c36abec520a4c896a66d}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{SIAM Review}
@@ -157,6 +278,44 @@
       \field{year}{2020}
       \field{pages}{646\bibrangedash 657}
       \range{pages}{12}
+    \endentry
+    \entry{borger2008effects}{article}{}{}
+      \name{author}{3}{}{%
+        {{hash=283af5f2290caef93fa7448e2b744511}{%
+           family={Börger},
+           familyi={B\bibinitperiod},
+           given={Luca},
+           giveni={L\bibinitperiod}}}%
+        {{hash=cd79aa2d67eae63bfc3505e266961b40}{%
+           family={Dalziel},
+           familyi={D\bibinitperiod},
+           given={Benjamin\bibnamedelima D},
+           giveni={B\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=e5df0bebd6a49880b8532e01744ab27e}{%
+           family={Fryxell},
+           familyi={F\bibinitperiod},
+           given={John\bibnamedelima M},
+           giveni={J\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \strng{namehash}{01055ad2442134c7aa18c2070326dec0}
+      \strng{fullhash}{3296bb044fcd1a912fed6f8be5236925}
+      \strng{fullhashraw}{3296bb044fcd1a912fed6f8be5236925}
+      \strng{bibnamehash}{3296bb044fcd1a912fed6f8be5236925}
+      \strng{authorbibnamehash}{3296bb044fcd1a912fed6f8be5236925}
+      \strng{authornamehash}{01055ad2442134c7aa18c2070326dec0}
+      \strng{authorfullhash}{3296bb044fcd1a912fed6f8be5236925}
+      \strng{authorfullhashraw}{3296bb044fcd1a912fed6f8be5236925}
+      \field{sortinit}{7}
+      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Journal of Animal Ecology}
+      \field{number}{6}
+      \field{title}{Effects of sampling regime on the mean and variance of home range size estimates}
+      \field{volume}{77}
+      \field{year}{2008}
+      \field{pages}{1393\bibrangedash 1405}
+      \range{pages}{13}
     \endentry
     \entry{jones2022polarization}{article}{}{}
       \name{author}{3}{}{%
@@ -187,8 +346,8 @@
       \strng{authornamehash}{19dc564bbf112abf5c04d391cc52cf2f}
       \strng{authorfullhash}{71e174a964eb9250d42330b01650e97d}
       \strng{authorfullhashraw}{71e174a964eb9250d42330b01650e97d}
-      \field{sortinit}{5}
-      \field{sortinithash}{20e9b4b0b173788c5dace24730f47d8c}
+      \field{sortinit}{8}
+      \field{sortinithash}{a231b008ebf0ecbe0b4d96dcc159445f}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Humanities and Social Sciences Communications}
@@ -223,8 +382,8 @@
       \strng{authornamehash}{2cea7ec92966082c9c11ff7ee77cda35}
       \strng{authorfullhash}{2cea7ec92966082c9c11ff7ee77cda35}
       \strng{authorfullhashraw}{2cea7ec92966082c9c11ff7ee77cda35}
-      \field{sortinit}{7}
-      \field{sortinithash}{108d0be1b1bee9773a1173443802c0a3}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
       \field{labelnamesource}{author}
       \field{labeltitlesource}{title}
       \field{journaltitle}{Journal of Mathematical Economics}

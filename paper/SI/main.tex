@@ -1,3 +1,4 @@
+% !TEX root = main.tex
 \documentclass{article}
 \usepackage[utf8]{inputenc} % Load inputenc first
 \usepackage[english]{babel} % Load babel early
@@ -105,53 +106,62 @@
     \section{Introduction to the Model}
         The purpose of this section is to introduce the necessary background to understand the intricacies of the model which we discuss in later sections. This section will then introduce influencer games rigorously with definition of spatial resource games (SRGs) and expected spatial resource games (ESRGs). 
        
-        \subsection{Introduction to Spatial Resource Games and Expected Spatial Resource Games}
-            We now introduce the concept of spatial resource games (SRGs). A SRG is a normal form game, with some additional caveats; SRGs as their name implies add a spatial component to the traditional normal form game. Players compete in a space or game board $\mathbb{D}$, this is where players are contained. The players' payoff or utility is tied directly to their position in and the positions of their competition $\mathbf{x}\in\mathbb{D}$; therefore, position will be explicitly accounted for in a player's utility. The second component to a spatial resource allocation game is the game board's environment $\mathbb{B}$, which describes how resources are distributed. Resources are distributed across a space $\mathbb{B}$, according to a distribution kernel $B:\mathbb{B}\to \R$, such that $B(b)\in \R$ for all $b\in \mathbb{B}$. Formally the definition of a SRG is 
+        \subsection{Introduction to Spatial Resource Games and ESRGs}
+            We now introduce the concept of spatial resource games (SRGs). A SRG is a type of normal form game; SRGs as their name implies add a spatial component to the utilities of the players. Like most games, SRGs have players compete in a strategy space $\mathbb{D}$, which contains each players individual strategy space. However, SRGs add a second component that is an environmental state $\{(b,B(b))|b\in \mathbb{B}, B:\mathbb{B}\to \mathbb{R}\}$, a set of points in the environment $\mathbb{B}$, each assigned with resource or reward values $B(b)$. One might imagine environmental states akin to stacks of pennies scattered across a room with players competing to grab as many pennies as possible. Here a player's strategy might be their initial position or their movement strategy. Formally, we define a spatial resource game as follows:
             \begin{definition}[Spatial resource game]
-                A game is said to be a spatial resource game, if it is a normal form game $T(I,\mathbb{D},\mathbf{\mu})$ with an accompanying game board $\mathbb{D}$, resource space $\mathbb{B}$, resource distribution $B(b)\in \R$ for $b\in \mathbb{B}$, such that a players payoff is 
+                A game is said to be a spatial resource game, if it is a normal form game $T(I,\mathbb{D},\mathbf{\mu})$ with an accompanying strategy space $\mathbb{D}$, environmental state $\{(b,B(b))|b\in \mathbb{B}, B:\mathbb{B}\to \mathbb{R}\}$, and players' utility functions of the form 
                 \begin{equation}
-                    u_i(x,\mathbf{x},b,B)\to \mathbb{R}
+                    u_i(\mathbf{x},b,B)\to \mathbb{R}
                 \end{equation}
-                where $\mathbf{x}=(x_1,x_2,\dots,x_N), x_i\in\mathbb{D}$ the strategic position of the $i$th player $i\in I$ and $b\in\mathbb{B}$. 
+                where $\mathbf{x}=(x_1\in X_1,x_2\in X_2,\dots,x_N\in X_n), X_i\subset\mathbb{D}$, and $x_i$ the strategic position of the $i$th player. 
             \end{definition}
-            There are many spatial resource games in the game theory literature, some examples that are explicitly spatial are the cake cutting games and Pac-Man. 
-
-            An extension of a spatial resource game is the expected spatial resource game or ESRG. These games take into account that players can't know the exact return of the reward that they have but rather receive a utility or reward that is based on expected returns from each resource position in $\mathbb{B}$.            \begin{definition}[Expected Spatial Resource Game (ESRG)]
-                An expected spatial resource game is a type of spatial resource game with the following utility function for the $i$'th player
+            There are many spatial resource games in the game theory literature. Examples that are explicitly spatial include cake cutting games and location-based games. Cake cutting games involve players dividing a resource (cake) in a fair manner, where the spatial component arises from the cake being represented as a 1D line segment or 2D rectangle, and players must choose where to cut to maximize their reward \cite{robertson1998cake,brams2016fair}.
+            
+            A sub-type of spatial resource games is the expected spatial resource game (ESRG). A ESRG uses expected returns instead of exact returns from an environmental state in a players utility function. In our penny example, a ESRG could be the expected return of pennies given players initial positions in the room.  Formally we define an ESRG as follows,
+            \begin{definition}[Expected Spatial Resource Game (ESRG)]
+                 Given $n$ players' strategies $\mathbf{x}=(x_1\in X_1,x_2 \in X_2,\dots,x_n\in X_n)$ are the player strategies in $\D$ and $G_i(\mathbf{x},b)$ is the probability of the $i$th player receiving the resource $B(b)$. An expected spatial resource game is a type of spatial resource game with the following utility function for the $i$'th player
                 \begin{align}
                     u_{i}(\mathbf{x})&=\sum_{b\in\B} B(b)G_i(\mathbf{x},b) \label{eq:SI_disc_ESRG}\\
                     u_{i}(\mathbf{x})&=\int_{\B} B(b)G_i(\mathbf{x},b)db \label{eq:SI_cont_ESRG}
                 \end{align}
-                Where \cref{eq:SI_disc_ESRG} is for a discrete ESRG and \cref{eq:SI_cont_ESRG} is for a continuous ESRG. Here $\mathbf{x}=(x_1,x_2,\dots,x_n)$ are the player strategies in $\D$ and $G_i(\mathbf{x},b)$ is the probability of the $i$th player receiving the resource $B(b)$. 
+                Where \cref{eq:SI_disc_ESRG} is a discrete environment's ESRG utility function and \cref{eq:SI_cont_ESRG} is a continuous environment ESRG utility function. 
             \end{definition}
-            Many SRGs are ESRGs, some examples of ESRGS are political games where politicians compete for voters (resources) in ideological space ($\D$). An example of ESRG in physical space is the competition for resources such as mates and food for species via their home range or migration strategies. 
+            Many SRGs are ESRGs. Examples of ESRGs include political games where politicians compete for voters (resources) in ideological space ($\D$). An example of ESRGs in physical space is the competition for resources such as mates and food among species via their home range or migration strategies. 
 
-            Another type of ESRG is a Blotto game also known as a Colonel Blotto game. A Blotto game is a game where players are given a finite pool of resources and several "battlefields" which they can dedicate these resources to fight for. Each battlefield is won or lost based on which player has dedicated more resources to a battlefield. Players' utility or payoff is determined by the number of battle fields won. Blotto games have had several applications in political games, network defense, and hiring decisions \cite{}. 
+            Another type of ESRG is a Blotto game, also known as a Colonel Blotto game. A Blotto game is a game where players are given a finite pool of resources and several "battlefields" to which they can dedicate these resources to fight for. Each battlefield is won or lost based on which player has dedicated more resources to that battlefield. Players' utility or payoff is determined by the number of battlefields won. Blotto games have had several applications including in economics and the formation of alliances\cite{kovenock2012colonel,roberson2006colonel}. 
 
-             Blotto games are a limited ESRG, because they only consider 2 player games, have discrete allocation schemes, and an all-or-nothing reward allocation. This leaves a gap in the field to study games where players might be able to allocate a resources in a continuous manner or where there might be multiple players competing for the same resources. 
+            Traditional Blotto games are a limited ESRG because they only consider 2-player games, have discrete allocation schemes, and use all-or-nothing reward allocation. While there have been spinoffs of the traditional Blotto game there is still a gap in the game theory to study games where players might be able to allocate resources in a continuous manner or where multiple players compete for the same resources. 
 
-            \subsubsection{Influencer Games (Our Model)}
+            \subsection{Influencer Games (Our Model)}
                 We seek to introduce a new form of game denoted an \textbf{Influencer Game}. Influencer games are a type of expected spatial resource game, where players' expected utilities are based on their relative influence over a resource, measured by an influence kernel $f_i(x_i,b)$. 
                 \begin{definition}[Influence Kernel]
-                    A player $i\in I$'s influence over a resource at $b\in B$ is measured by the influence kernel 
+                    A player $i\in I$'s influence over a resource at $b\in \mathbb{B}$ is measured by the influence kernel 
                     \begin{equation}\label{eq:SI_influence_kernel_def}
                         f_{i}(x_i,b):X_i\times \mathbb{B}\to\mathbb{R}
                     \end{equation}
                 \end{definition}
-                In this way an influence kernel is a measure of distance from a players' position $x_i$ in $\mathbb{D}$ and a resource at $b$ in $\mathbb{B}$.  
+                In this way, an influence kernel measures the impact that a player's strategy $x_i$ in $X_i \subset \mathbb{D}$ will have on a resource point $b$ in $\mathbb{B}$. 
+    
+                An influence kernel can model a species' home range: a function centered at the den (or nest) that gives the probability of the species being at a given location. A species' strategy could then be the den location or the shape/scale of the home range, chosen to maximize expected resource intake. In this example resources could be food or mates distributed across a landscape.
+
+                In social media, an influence kernel can represent reach or engagement across a trait space (e.g., topics, sentiment, posting time). An influencer's strategy then corresponds to where in trait space they position their content (topic selection, tone, posting frequency). Competing resources are engagement metrics (followers, likes, shares) allocated according to relative influence.
+
+                In both examples influence is gradual (not binary) and captured by the kernel. Overlapping kernels produce competition: resource allocation at a point is shared proportionally by competing influences.
                 
-                We model a player's expected return of a resource as proportional to the player's influence over the resource at point $b$ relative to the total influence being exerted on that resource point. 
+                We model a player's expected return from a resource as proportional to the player's influence over the resource at point $b$ relative to the total influence being exerted on that resource point. 
                 \begin{definition}[relative influence, influence probability]
-                    Formally we denoted the relative influence as 
+                    Formally, we denote the relative influence as 
                     \begin{equation}\label{eq:SI_relative_influence}
                         G_i(\mathbf{x},b)=\frac{f_i(x_i,b)}{\sum_{j=1}^{N}f_j(x_j,b)}
                     \end{equation}
-                    One can also think of this as the probability that a player $i$ influences a point $b\in \B$. If we let $\beta$ be a random variable such that $\beta=i$ represents the event player $i$ influence $b$.                    \begin{equation}\label{eq:SI_relative_influence_prob}
+                    One can also think of this as the probability that player $i$ influences point $b\in \mathbb{B}$. If we let $\beta$ be a random variable such that $\beta=i$ represents the event that player $i$ influences $b$, then
+                    \begin{equation}\label{eq:SI_relative_influence_prob}
                         G_i(\mathbf{x},b)=\mathbb{P}(\beta=i|b), \text{ s.t. } \sum_i\mathbb{P}(\beta=i|b)=1.
                     \end{equation}
                 \end{definition}
-                Then an influencer game is a type of ESRG with players' utility function is the sum of expected resources that player will receive from all $b\in \mathbb{B}$. 
-                \begin{definition}[Utility function]
+                
+                With this foundation, an Influencer Game is a type of ESRG where players' utility functions are defined as the sum of expected resources that each player will receive from all $b\in \mathbb{B}$. 
+                \begin{definition}[Utility function]\label{def:SI_utility_function}
                     The utility function for a player $i\in I$ is 
                     \begin{equation}
                         u_{i}(\mathbf{x})=\sum_{b} B(b)\cdot  G_i(\mathbf{x},b)
@@ -162,34 +172,44 @@
                     \end{equation}
                     for continuous influencer games where $\mathbb{B}$ is a closed subset of $\mathbb{R}^L$ for $L\in \mathbb{N}$.
                 \end{definition}
+                \Cref{fig01} illustrates the general setup of an influencer game.
+                \begin{figure}[ht!]
+                    \includesvg[width=\textwidth]{figures/SI_plots/1_2/fig01/demo.svg}
+                    \caption{\Cref{fig01} Represents a general influencer game set up. Starting from the left, resources are distributed in via a resource landscape $B(b)$. In this case resources are distributed in a two dimensional space with two traits. Players choose strategies $x_i$ in the strategy space $\mathbb{D}$ represented as their positions. In the center the environment divides the resources in the resource landscape via relative influence \cref{eq:SI_relative_influence}. The total resources distributed to a player is their utility function, which players use to optimize their strategy choice, represented as their movement in strategy space on the right.}
+                    \label{fig01}
+                \end{figure}
+                Influencer games extend Colonel‑Blotto–style contests to continuous resource and strategy spaces: here $f_i(x_i,b)$ models a player's continuous allocation (influence) at location $b$. Unlike many classical Blotto formulations, the resource density $B(b)$ may vary across the domain (battlefields can have heterogeneous values) and allocations need not be discrete. The framework naturally handles multi‑dimensional strategy and resource spaces and arbitrarily many players. This generalization admits a richer set of equilibria; below we focus on symmetric influencer games and derive existence, uniqueness, and stability conditions for symmetric Nash equilibria.
 
-        Influencer games can be thought of as a continuous expansion of Blotto games, where $f_i(x_i,b)$ represents a players committed resources to a battlefield at point $b$. Unlike a blotto game though $B(b)$ is not limited to a 1-1 value, meaning that battlefields are allowed to have different values. Additionally, influencer games can easily be extended to multi dimensional strategy spaces, resource spaces, and multiple players. The introduction of influencer games opens a multitude of avenues of games to study as well as provides a elegant results for symmetric influencer games as we demonstrate in the next section. 
+        
         
     \section{General Results on Nash Analysis}
-         Without loss of generality we assume for the rest of the work that the resources at a point will be nonnegative such that $B(b)\in \R^+_0$. This assumption will make the analysis of equilibria behavior more straight forward. A negative resource value would imply that a player will loose reward by getting closer to a resource. To ensure positive resource values; a constant shift would apply the same result since the relative resource values will be maintained. Additionally, we assume that the influence kernels $f_i(x_i,b)\in C^2(\D,\B)$ are all differentiable functions in $x_i\in \D$ and $b\in \B$ and $f_i(x_i,b)>0$. 
+
+        Here we study Nash equilibria to understand long-term behavior of influencer games. Because influencer games have the structure of normal‑form games, we may invoke classical results; we begin by establishing the existence of a Nash equilibrium.
+
+        For simplicity, we assume resources are nonnegative everywhere, $(B(b)\ge0)$. This choice eases the analysis of equilibria because negative resource values would make increased influence reduce a player's payoff. Adding a constant to ($B$) does not change the relative resource landscape and therefore does not affect strategic behavior. Finally, we assume each influence kernel ($f_i(x_i,b)$) is strictly positive and twice continuously differentiable on the product domain, $(f_i\in C^2(\mathbb{D}\times\mathbb{B}))$ and $(f_i(x_i,b)>0)$. This ensures that the relative influence ($G_i(\mathbf{x},b)$) is well-defined and smooth.
     
-        This section's main focus is studying the Nash equilibrium behavior; understanding the Nash behavior is an excellent way to provide insight into the long-term behavior of our game. Given that our expected return spatial resource games are normal form games, we can utilize many results regarding to the Nash within the game. First of which is the existence of a Nash in the system.
         
         \subsection{Existence of Nash Equilibria}
-            Given our influencer game $T(I,\mathbf{X},\mathbf{u})$ we may utilize \cref{thm:SI_Reny} from  \cite{reny2020nash,reny2016nash}. 
+            Given our influencer game is a normal form game denoted by $T(I,\mathbf{X},\mathbf{u})$, where $I$ is the player index, $\mathbf{X}=\mathbb{D}$, the strategy space, and $u$ is the utility defined in \cref{def:SI_utility_function}, we can use existing theorems to prove the existence of a Nash equilibrium. We use
+            \cref{thm:SI_Reny} from \cite{reny2020nash,reny2016nash}. 
             \begin{theorem}[Reny Pure Strategy Nash Equilibrium]\label{thm:SI_Reny}
                 Suppose that $T$ is a compact, convex, bounded, and quasi-concave normal-form game and that the sum of the players’ payoff functions $\sum_{i\in I} u_i(\mathbf{x})$ is upper semi continuous in $\mathbf{x}\in X_1\times X_2\times \dots \times X_N$. If for each player $i$ and for any $x \in X$ we obtain that $u_i (x_i,x_{-i})$ is lower semi continuous in $x_{-i} \in X_{-i}$, then $T$ has a pure strategy Nash equilibrium.
             \end{theorem}
-            If we have $X_i=\mathbb{D}\subset \R^L$ be a closed and bounded space then our influencer game $T$ must be a compact, convex, and bounded game. Since $f_i(x_i,b)>0$ and $f_i(x_i,b)\in C^{2}$, then $u_i(\mathbf{x},b)$ is continuous and therefore satisfies the requirements for continuity in \cref{thm:SI_Reny}. The final requirement is that $f_i(x_i,b)$ is quasi-concave, this is a fair assumption given that much of the literature with influencer games have influence kernels that are at least quasi-concave. Reny also has conditions on mixed Nash equilibria but for now we restrict our analysis to the pure symmetric strategy Nash \cite{reny2020nash,reny2016nash}. If we assume that $\mathbf{x}^*$ is a symmetric Nash equilibrium then it follows that there are certain dynamical constraints that it must satisfy in an influencer game.  
+            If we have $X_i=\mathbb{D}\subset \mathbb{R}^L$ as a closed and bounded space, then our influencer game $T$ must be a compact, convex, and bounded game. Since $f_i(x_i,b)>0$ and $f_i(x_i,b)\in C^{2}$, then $u_i(\mathbf{x},b)$ is continuous and therefore satisfies the continuity requirements in \cref{thm:SI_Reny}. The final requirement is that $f_i(x_i,b)$ is quasi-concave. This is a reasonable assumption given that much of the literature on influencer games uses influence kernels that are at least quasi-concave. While Reny also provides conditions for mixed Nash equilibria, we restrict our analysis to pure symmetric strategy Nash equilibria \cite{reny2020nash,reny2016nash}. If we assume that $\mathbf{x}^*$ is a symmetric Nash equilibrium, then it follows that there are certain dynamical constraints that it must satisfy in an influencer game.  
             \begin{lemma}[First Order Symmetric Nash Requirements]\label{lem:SI_requirements}
-                    For a symmetric influencer game, in dimension $L\in \N$, with $N$ players $i\in I$, $I=\set{1,2,\dots,N}$ utilizing strategies $x_i\in \set{x_1,x_2,\dots,x_N}$, $x_i=(x_{(i,1)},x_{(i,2)},\dots,x_{(i,L)})$, $x_i\in\D$ $\forall i\in I$, $\D\subset \R^L$, influence kernels $f_i(x_i,b)$, and resource distribution $B:\B\to \R, \; B(b)\in \R$ $\B\subset \R^L$. 
+                    For a symmetric influencer game in dimension $L,K\in \mathbb{N}$, with $N$ players $i\in I$, $I=\{1,2,\dots,N\}$, utilizing strategies $x_i=(x_{(i,1)},x_{(i,2)},\dots,x_{(i,L)}) \in X_i \subset \mathbb{D}$ for all $i\in I$, where $X_i\subset \mathbb{R}^L$, influence kernels $f_i(x_i,b)$, and resource distribution $B:\mathbb{B}\to \mathbb{R}$ with $\mathbb{B}\subset \mathbb{R}^K$. 
                     
-                    A symmetric Nash $\mathbf{x^*}\in X_1\times X_2\times \dots\times X_N$, $\mathbf{x}^*=(x_1^*,x_2^*,\dots, x_N^*)$ where $x^*_i=(x_{(i,1)}^*,x_{(i,2)}^*,\dots, x_{(i,L)}^*)$, $x_l\in\D^l,\; \D=\D^1\times \D^2\times \dots \times \D^L$, $\forall l=1,2,\dots,L$ and $\forall i\in I$ must satisfy the following system of equations
+                    A symmetric Nash equilibrium $\mathbf{x}^*\in \mathbb{D}$, where $\mathbf{x}^*=(x_1^*,x_2^*,\dots, x_N^*)$ and $x^*_i=(x_{(i,1)}^*,x_{(i,2)}^*,\dots, x_{(i,L)}^*)$ for all $i\in I$, must satisfy the following system of equations:
                     \begin{equation}
-                         \pdv{u_i(\mathbf{x})}{x_{(i,l)}}|_{x_{i,l}=x_{(i,l)}^*}=0 \; \forall i\in I \text{ and } l=1,2,\dots,L
+                         \frac{\partial u_i(\mathbf{x})}{\partial x_{(i,l)}}\bigg|_{\mathbf{x}=\mathbf{x}^*}=0 \quad \forall i\in I \text{ and } l=1,2,\dots,L
                     \end{equation}
-                    Where
+                    where
                     \begin{equation}
-                       \pdv{u_i(\mathbf{x})}{x_{(i,l)}}= \sum_{b\in \B} B(b)d_{(i,l)}(x_{i},b)G_i(\mathbf{x},b)G_i^c(\mathbf{x},b)
+                       \frac{\partial u_i(\mathbf{x})}{\partial x_{(i,l)}}= \sum_{b\in \mathbb{B}} B(b) \cdot d_{(i,l)}(x_{i},b) \cdot G_i(\mathbf{x},b) \cdot G_i^c(\mathbf{x},b)
                     \end{equation}
                     and 
                     \begin{equation}
-                        d_{(i,l)}(x_{i},b)=\pdv{}{x_{(i,l)}}\ln(f_i(x_{i},d))
+                        d_{(i,l)}(x_{i},b)=\frac{\partial}{\partial x_{(i,l)}}\ln(f_i(x_{i},b))
                     \end{equation}
                     
             \end{lemma}
@@ -278,7 +298,7 @@
                         B& B & \cdots & A \\ %
                         \end{pmatrix}
                 \end{equation}
-            where $A=\beta_{i,i}$ and $B=\beta_{i,j}$ $i\neq j$ are $L\times L$ blocks with 
+            where $A=\beta_{i,i}$ and $B=\beta_{i,j}$ $i\neq j$ are $L\times L$ blocks. Each block is a \textbf{Hessian matrix}, with respect to the corresponding players strategy vector, i.e.  
             \begin{align}
                 \beta_{(i,j)}=\begin{pmatrix}
                     \pdv[2]{u_i(\mathbf{x})}{x_{(j,1)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*} & \pdv[2]{u_i(\mathbf{x})}{x_{(j,2)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*}& \cdots &\pdv[2]{u_i(\mathbf{x})}{x_{(j,L)}}{x_{(i,1)}}|_{\mathbf{x}=\mathbf{x}^*} \\ %
@@ -373,7 +393,7 @@
             Thus the problem of solving for the stability of a symmetric Nash equilibrium is simplified to finding when the maximum eigenvalues of the $L \times L$ matrices $A^+$ and $A^-$ are greater than zero. Note this does not tell us the multiplicity of the eigenvalues created by the increase in the number of players, but increasing the number of players doesn't make the calculation more computationally difficult. This result is applicable across game board and resource distribution dimensions. 
             \subsubsection{One Dimensional Influencer Games}
                 
-                 For 1-D  symmetric influencer games if players are in the same position then \cref{thm:SI_Jacobian} implies the Jacobian of the system is given by 
+                 For 1-D  symmetric influencer games the Hessian, blocks are each one by one blocks, if players are in the same position then \cref{thm:SI_Jacobian} implies the Jacobian of the system is given by 
                 \begin{equation}
                     \mathbf{J}_{\mathbf{u}}^*=\begin{pmatrix}
                     a & b& \cdots & b\ \\ %
@@ -546,7 +566,7 @@
     \section{Rich Dynamics in One Dimensional Sentiment Landscapes}
         From the previous section we have a toolbox to study most one-dimensional influencer games. To summarize, if our influencer game is in a 1-D game board i.e. $\D\subset \R$ and $\B\subset \R$, symmetric, and if the influence kernel is positive $f_{i}(x_i,B(b))>0$, in $C^2$ with respect to the strategy space $f_{i}(x_i,B(b))\in C^2(\D)$, and is quasi-concave for all players $i\in I$, we know of the existence of a symmetric Nash equilibrium by \cref{thm:SI_Reny}. Furthermore we can determine the stability of any symmetric Nash equilibrium via \cref{thm:SI_one-dimensional-stability}. Finally, if the influence kernels are log-concave with respect to their strategies then uniqueness of the Symmetric Nash is guaranteed \cref{thm:SI_uniqueness}. 
         \subsection{Gaussian Influence Kernels}\label{subsec:SI_Gaussian}
-            One of the most popular models for measuring influence kernels has been the Gaussian model of influence. Gaussian kernels have been used to approximate political influence \cite{yang2020us} as well as species home ranges and territories in ecology \cite{}. A Gaussian influence kernel has the following form: 
+            One of the most popular models for measuring influence kernels has been the Gaussian model of influence. Gaussian kernels have been used to approximate political influence \cite{yang2020us} as well as species home ranges and territories in ecology \cite{borger2008effects}. A Gaussian influence kernel has the following form: 
             \begin{definition}[Gaussian influence]
                 A player $i\in I$ using strategy $x_i\in \D$, $\D\subset\R$, $\B\in \R$, and Gaussian influence with 'reach' $\sigma_i$, has the influence kernel
                 \begin{equation}\label{eq:SI_Gaussian_infl}
@@ -632,10 +652,108 @@
                      \implies \sigma&>\sqrt{\frac{n-2}{n-1}} \sigma_B
                 \end{align}
             \end{proof}
-            Essentially, we have that if the mean of the resources lies within the possible positions $\mathbb{D}$ space for an influencer game with $N$ players using symmetric Gaussian influence kernels, then the players may converge to the mean of the resources if the variance of their influence kernel is greater than a rescaling of the resource distribution's variance. Note that even as $N\to \infty$ $\frac{N-2}{N-1}\to 1$, implying that scaling approaches one as the number of players increases. Thus it is easier for players to converge to a symmetric Nash in a symmetric influencer game with Gaussian influence kernels when there are fewer players and the symmetric Nash is guaranteed stable with 2 players. 
+            Essentially, if the mean of the resources lies within the possible positions $\mathbb{D}$ space for an influencer game with $N$ players using symmetric Gaussian influence kernels, then the players may converge to the mean of the resources if the variance of their influence kernel is greater than a rescaling of the resource distribution's variance. Note that even as $N\to \infty$ $\frac{N-2}{N-1}\to 1$, implying that scaling approaches one as the number of players increases. Thus it is easier for players to converge to a symmetric Nash in a symmetric influencer game with Gaussian influence kernels when there are fewer players and the symmetric Nash is guaranteed stable with 2 players. 
+            \subsubsection{Three Player Dynamics}
+                    From the previous subsection on stability in the Gaussian kernel, we observed that the symmetric nash has a boundary of stability that is dependent on the number players. In particular, for games with more then 2 players the symmetric Nash can destabilize. It is natural to explore the behavior below such thresholds. In this subsection we explore the rich dynamics that three players can demonstrate below such a threshold. Later we observe that games with 3+ players may demonstrate the behavior of a 3-player system, or a two player game depending on their local configuration and initial conditions. Often these games converge to one of the 3-player dynamical regimes or a two-player local symmetric Nash based on $\sigma$. This appears in \cref{fig3} for influencer games with 8+ players at small $\sigma$ and in \cref{fig5:g} when 8 players split into groups with member sizes $(3,2,3)$. We discover from the 3 player dynamics in \cref{fig6} there can be multiple local equilibria, depending on the reach parameter $\sigma$. In particular we find that there are 3 types of equilibria that can occur in a 3 player game. We classify these equilibria as follows:
+                    \begin{definition}[(1,n-2,1) equalbirium]
+                        A $(1,n-2,1)$ equilibrium is of the form 
+                        \begin{equation}
+                            (x_i, x_{-ij} ,x_j)
+                        \end{equation}
+                        where all of the agents other then $i,j$ share the same strategic position.
+                    \end{definition}
+                    \begin{definition}[(n-1,1) equalibirum]
+                        A $(n-1,1)$ equilibrium is of the form 
+                        \begin{equation}
+                            (x_i, x_{-i})
+                        \end{equation}   
+                        where $x_{-i}=y$ where $y\in \mathbb{D}$, i.e. all but one agent are in same position. 
+                    \end{definition}
+                    So in a 3 player game in addition to the symmetric Nash there may be additional equilibria, of the form $(2,1)$ or $(1,1,1)$. These types of equilibria are demonstrated in \cref{fig6}. While the results for \cref{fig6} are restricted based on initial conditions it is possible to demonstrate this behavior still occurs across initial conditions via a grid search and using newtons method to solve for when strategic positions with zero gradients. We introduce the algorithm for solving for equilibria in the the \textbf{DO THIS}. In \cref{fig313_1} we see the results of such a grid search for $\sigma=0.16$ demonstrating the different equilibria that can occur based on initial positions. Finally in \cref{fig313_2} we see how the bifurcation diagram for fixed initial conditions changes as $\sigma$ changes and based on the resource distribution.
+
+                    \begin{figure}[ht!] 
+                    \centering
+                        \begin{subfigure}[b]{.47\linewidth}
+                            \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6/1d_3a_all_3_agents_sig_25.svg} 
+                            \caption{$\sigma=0.25$: 1 shared unique equilibrium } 
+                            \label{fig6:a} 
+                        \end{subfigure} 
+                        \begin{subfigure}[b]{.47\linewidth}
+                            \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6/1d_3a_all_3_agents_sig_17.svg}
+                            \caption{$\sigma=0.17$: 1-separated symmetrical non-unique equilibrium} 
+                            \label{fig6:b} 
+                        \end{subfigure} 
+                        \vspace{4ex}
+                    
+                        \begin{subfigure}[b]{.47\linewidth}
+                            \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6/1d_3a_all_3_agents_sig_16.svg}
+                            \caption{$\sigma=0.16$: dampening cycle about a non-unique equilibrium}
+                            \label{fig6:c} 
+                        \end{subfigure}
+                        \begin{subfigure}[b]{.47\linewidth}
+                            \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6/1d_3a_all_3_agents_sig_15.svg}
+                            \caption{$\sigma=0.15$: cycle about a non-unique equilibrium} 
+                            \label{fig6:d} 
+                        \end{subfigure} 
+                        \vspace{4ex}
+                
+                        \begin{subfigure}[b]{.47\linewidth}
+                            \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6/1d_3a_all_3_agents_sig_08.svg} 
+                            \caption{$\sigma=0.08$: 1-separate an unsymmetrical non-unique equilibrium near peak} 
+                            \label{fig6:e} 
+                        \end{subfigure} 
+                
+                        \caption{For a 3 player 1-D game there can be 5 different equilibrium types. In the sub-figures there are two plots: on the left, the player positions in 3-D representation and on the right, the final player positions in 1-D. In \cref{fig6:a} the players converge to a unique equilibrium at large $\sigma$ ($\sim 0.25$). For \cref{fig6:b} the players converge to a dispersed non-unique equilibrium (determined by initial positions) ($\sigma \sim 0.17$). \cref{fig6:c} is slightly different, the players stay near the equilibrium in \cref{fig6:b} but they now have dampening cycles. \cref{fig6:d} demonstrates how the players could possibly be stuck in a cycle. Finally, in \cref{fig6:e} the players reach an equilibrium around one of the peaks of the resource distribution. Each of these figures assumes that the players are not starting in the same positions, since having the same position will lead to players converging to the coalesced equilibrium in \cref{fig6:a}.}
+                        \label{fig6} 
+                    \end{figure}
+
+
+                    \begin{figure}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_1_3/fig2/1d_bifurcation_equilibrium_combined_3_agents.svg}
+                        \caption{The main figure, is a bifurcation diagram demonstrating how the resource distribution mode split $\alpha$ impacts the $\sigma$ values for bifurcations to occur in. Here we see that as $\alpha$ increases the symmetric Nash equilibrium becomes unstable at higher $\sigma$ values, leading to the emergence of the non-unique equilibria at higher $\sigma$ values. In each subfigure, a,b,c,d we take a random sample of 10,000 initial  conditions and use gradient ascent to find the equilibria they converge to. Each color represents a different equilibrium type: blue is the symmetric nash stable region, purple is the $(1,1,1)$ region, yellow is an estimated cycling region, and red is the $(2,1)$ equilibrium. Using a fixed initial condition we can estimate the boundary for the where cycles occur and where the $(2,1),(1,2)$ equilibria dominate.}
+                        \label{fig313_1}
+                     \end{figure}
+
+
+                    \Cref{fig313_1} demonstrates how rich the three player dynamics can be. Based on resource distribution and reach, players may exhibit radically different behavior, unlike in the two player dynamics where the symmetric nash remains stable regardless of $\sigma$ and resource distribution. However, \cref{fig313_1} does not give a complete picture of the equilibria that can occur, as it only demonstrates the stable or convergent equilibria behavior. Rather \cref{fig313_2}, demonstrates a snap shot of the different equilibria that can occur for fixed $\sigma=0.16$ and resource split $\alpha=0.5$. We observe that in addition to the symmetric Nash equilibrium and the stable $(1,1,1)$ equilibria there are unstable $(2,1)$ equilibria. Giving insight into the full range of equilibria that can occur in a 3 player influencer game.
+
+                    In later sections we observe that games with more then 3 players may demonstrate the behavior of a 3-player system, or a two player game depending on their local configuration and initial conditions. Often these games converge to one of the 3-player dynamical regimes or a two-player local symmetric Nash based on $\sigma$. This appears in \cref{fig3} for influencer games with 3+ players at small $\sigma$ and in \cref{fig5:g} when 8 players split into groups with member sizes $(3,2,3)$. 
+
+                    \begin{figure}[ht!] 
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig5_2/1d_equil_heat_3_agents.svg}
+                        \caption{Here we see the different equilibria that can occur for $\sigma=0.16$, for fixed $\alpha=0.5$. This occurs in the yellow region (region b) in \cref{fig313_1}. There are two main types of equilibria: the symmetric nash equilibrium and the asymmetrical non-unique equilibria, the stable $(1,1,1)$ equilibria and the unstable $(2,1)$ equilibria.} 
+                        \label{fig313_2}
+                    \end{figure}
+
+                \clearpage
+                \subsubsection{Four Player Dynamics}
+                    Extending our work  to 4 players, similar behavior as the three player dynamics begin to appear. In particular, by restricting our players in the hyper-plane where $(x,y,y,z)$, there is a bifurcation from centered $(1,2,1)$ (i.e. c$(1,2,1)$) to other types of mixed non-unique equilibria. However, one key difference is that the below the symmetric nash threshold $\sigma^*_0$, there is a dominant $(2,2)$ equilibria type, where agents converge to a local symmetric Nash.  Thus indicating that influencer games may locally behave like smaller player games depending on their configuration and initial conditions. Thus it may be possible to break any influencer game of player size $n$ into smaller local games eventually getting to 2 or 3 player games which have better known dynamics. 
+                    
+                    However, as noted in \cref{313_1}, the it becomes a difficult challenge to determine which equilibria type they will converge to, and this challenge is dynamically changing based on resource distribution and reach $\sigma$. While the dominant equilibria remains consistent, the equilibrium that players will converge to is highly dependent on initial conditions as indicated in \cref{fig313_3} (c,d) where proportion of agents converging to a (2,2) (1,3), (3,1) and (1,2,1) equilibria changes.
+
+                    We can also choose to look again at all equilibria in the hyper-plane where $(x,y,y,z)$ for fixed $\sigma=0.16$ and resource split $\alpha=0.5$  (region b), via \cref{fig313_4}. We observe that in addition to the symmetric Nash equilibrium and the stable $(2,2)$ equilibria there are unstable $(3,1)$ and semi-stable $(1,2,1)$ equilibria. Demonstrating that all types of equalbiria that are convergent and non-convergent can occur in a 4 player influencer game if $\sigma$ is below the threshold $\sigma^*_0$.
+
+                    \begin{figure}
+                        \centering
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_1_3/fig2/1d_bifurcation_equilibrium_combined_4_agents.svg}
+                        \caption{By fixing the initial positions we can then generate a bifurcation diagram demonstrating how the resource distribution mode split $\alpha$ impacts the $\sigma$ values for each equilibrium type. Here we see that as $\alpha$ increases the symmetric Nash equilibrium becomes unstable at higher $\sigma$ values, leading to the emergence of the non-unique equilibria at higher $\sigma$ values, as do the bounds of the regions of their stability.}
+                        \label{fig313_3}
+                    \end{figure}
+                    \begin{figure}[ht!] 
+                        \includesvg[width=\linewidth]{figures/SI_plots/3_2_6/fig6_2/1d_equil_heat_4_agents.svg}
+                        \caption{For a 4 player system some similar behavior occurs. If we restrict the players initial conditions to be in the hyper plane where $(x,y,y,z)$, then we see the equilibrium the above heatmap for 4 players. There are still 2 main types of equilibria: the symmetric nash equilibrium and the asymmetrical non-unique equilibria. The asymmetric equilibria include the stable $(2,2)$ equilibria, the unstable $(3,1)$ and $(1,2,1)$ equilibria.} 
+                        \label{fig313_4}
+                    \end{figure}
+                    
+
+
             
+
+        \clearpage
+
         \subsection{Bifurcation of Equilibria into Local Games in Symmetric Influencer Games}
-            The results of \cref{subsec:SI_Gaussian} show what happens for $\sigma>t_*$. It is natural to explore what happens when $\sigma \leq t_*$. We know that the symmetric Nash is now unstable, so the stable Nash equilibria that players converge to must now be mixed Nash equilibria if they exist. In fact, exploring an influencer game with $\sigma<t_*$ empirically we may expect that these mixed Nash equilibria will resemble local Nash equilibria; we explore this behavior with a symmetric resource distribution in \cref{fig1}
+            The results of \cref{subsec:SI_Gaussian} show what happens for three and four player games. It is natural to explore what happens when there are more players. We know that games with more then 3 players can demonstrate complex equilibrium structures that can behave similarly to smaller order games like 2 and three player games. Often times exploring an influencer game with $\sigma<t_*$ empirically we may expect that the mixed equilibria will resemble local symmetric Nash equilibria; we explore this behavior with a symmetric resource distribution in \cref{fig1}. 
             \begin{figure}[ht!] 
                 \centering
                 \begin{subfigure}[b]{0.4\linewidth}
@@ -975,49 +1093,86 @@ t_estimate(num_players,$B$,refinements):
                 \end{figure}
                 \clearpage
                 
-        \subsection{Three Player Dynamics}
-            From the previous sections, we observe that three-agent systems are unique in their behavior. There are, in fact, multiple types of dynamics we can see with three-player influencer games, which depend on $\sigma$. An emergent behavior of the influencer game dynamics we observe is games with 3+ players having groups that behave like a 3-player system, converging to one of the 3-player dynamical regimes based on $\sigma$. This appears in \cref{fig3} for influencer games with 8+ players at small $\sigma$ and in \cref{fig5:g} when 8 players split into groups with member sizes $(3,2,3)$.
-            \begin{figure}[ht!] 
-            \centering
-                \begin{subfigure}[b]{.47\linewidth}
-                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_25.svg} 
-                    \caption{$\sigma=0.25$: 1 shared unique equilibrium } 
-                    \label{fig6:a} 
-                \end{subfigure} 
-                \begin{subfigure}[b]{.47\linewidth}
-                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_17.svg}
-                    \caption{$\sigma=0.17$: 1-separated symmetrical non-unique equilibrium} 
-                    \label{fig6:b} 
-                \end{subfigure} 
-                \vspace{4ex}
-            
-                \begin{subfigure}[b]{.47\linewidth}
-                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_16.svg}
-                    \caption{$\sigma=0.16$: dampening cycle about a non-unique equilibrium}
-                    \label{fig6:c} 
-                \end{subfigure}
-                \begin{subfigure}[b]{.47\linewidth}
-                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_15.svg}
-                    \caption{$\sigma=0.15$: cycle about a non-unique equilibrium} 
-                    \label{fig6:d} 
-                \end{subfigure} 
-                \vspace{4ex}
-        
-                \begin{subfigure}[b]{.47\linewidth}
-                    \includesvg[width=\linewidth]{figures/SI_plots/3_3/fig6/1d_3a_all_3_agents_sig_08.svg} 
-                    \caption{$\sigma=0.08$: 1-separate an unsymmetrical non-unique equilibrium near peak} 
-                    \label{fig6:e} 
-                \end{subfigure} 
-           
-                \caption{For a 3 player 1-D game there can be 5 different equilibrium types. In the sub-figures there are two plots: on the left, the player positions in 3-D representation and on the right, the final player positions in 1-D. In \cref{fig6:a} the players converge to a unique equilibrium at large $\sigma$ ($\sim 0.25$). For \cref{fig6:b} the players converge to a dispersed non-unique equilibrium (determined by initial positions) ($\sigma \sim 0.17$). \cref{fig6:c} is slightly different, the players stay near the equilibrium in \cref{fig6:b} but they now have dampening cycles. \cref{fig6:d} demonstrates how the players could possibly be stuck in a cycle. Finally, in \cref{fig6:e} the players reach an equilibrium around one of the peaks of the resource distribution. Each of these figures assumes that the players are not starting in the same positions, since having the same position will lead to players converging to the coalesced equilibrium in \cref{fig6:a}.}
-                \label{fig6} 
-            \end{figure}
-                
 
-        \clearpage
+        \subsection{Beta Distribution}
+            One other common distribution is the Beta Distribution, traditionally a beta distribution probability density function has the form 
+            \begin{equation}\label{eq:beta_dist}
+                f(b;\alpha,\beta)= \frac{1}{B(\alpha,\beta)} b^{\alpha-1}b^{\beta-1}
+            \end{equation}
+            where $B(\alpha,\beta)$ is the beta function
+            \begin{equation}\label{eq:beta_func}
+                B(\alpha,\beta)=\frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha,\beta)}.
+            \end{equation}
+            To make the beta distribution into a form that is more intuitively applied to influencer games, we can instead parametrize the equation by its mode. By doing the following substitution 
+            \begin{equation}\label{eq:beta_subs}
+                \alpha_i=x_i(\frac{1}{\sigma_i}-2)+1; \quad \beta=(1-x_i)(\frac{1}{\sigma_i}-2)+1 
+            \end{equation}
+            here $x_i$ and $\sigma_i=\alpha+\beta$ are the players strategy and their influence parameter respectively. There are several conditions that must be satisfied. First, $x\in (0,1)$, because of domain restrictions of the beta distribution. Second, if $x$ is to be the mode of the pdf, then $0<\sigma<\frac{1}{2}$. 
+            Thus, for the context of this paper we define 
+            \begin{definition}[Beta Influence Kernel]\label{def:beta_infl}
+                The $i$th player is said to have beta influence if they have the following influence kernel. 
+                \begin{equation}\label{eq:beta_kernel}
+                    f(x_i,\sigma_i;b)=\frac{b^{x_i(\frac{1}{\sigma_i}-2)}b^{(1-x_i)(\frac{1}{\sigma_i}-2)}}{B(x_i(\frac{1}{\sigma_i}-2)+1,(1-x_i)(\frac{1}{\sigma_i}-2)+1)}
+                \end{equation}
+                where $\sigma_i\in (0,2)$, $x_i,b\in(0,1)$.
+            \end{definition}
+            \begin{definition}[First derivative: Beta]\label{def:d_ln_beta}
+                If the $i$th player has a beta influence kernel as defined in \cref{def:beta_infl}, then the first order derivative of the natural-logarithm of their influence is
+                \begin{equation}\label{eq:d_ln_beta}
+                    \pdv{}{x_i}f(x_i,\sigma_i; b)= (\frac{1}{\sigma_i}-2)(\ln{\frac{b}{1-b}})-\psi_0(\alpha)+\psi_0(\beta)
+                \end{equation}
+                where $\alpha=x_i(\frac{1}{\sigma_i}-2)+1$ and $\beta=(1-x_i)(\frac{1}{\sigma_i}-2)+1$. Here $\psi_0(\cdot)$ is the digamma function (the 0th polygamma function).
+            \end{definition}
+            \begin{definition}[Polygamma Function]\label{def:polygamma}
+                The $p$-th order polygamma function is defined as 
+                \begin{equation}
+                    \dv[p+1]{}{a} \ln(\Gamma(a))
+                \end{equation}
+            \end{definition}
 
-            
+            \begin{definition}[Second order derivative: Beta]\label{def:d_ln_2_beta}
+                If the $i$th player has a beta influence kernel as defined in \cref{def:beta_infl}, then the second order derivative of the  natural-logarithm of their influence kernel is given by, 
+                \begin{equation}\label{eq:d_ln_2_beta}
+                    \pdv[2]{}{x_i} f(x_i,\sigma_i;b)=-(\frac{1}{\sigma_i}-2)^2[\psi_1(\alpha)+\psi_1(\beta)] 
+                \end{equation}
+                where $\alpha=x_i(\frac{1}{\sigma_i}-2)+1$, $\beta=(1-x_i)(\frac{1}{\sigma_i}-2)+1$ and 
+                $\psi_1(\cdot)$ is the first order polygamma function.  
+            \end{definition}
+            From \cref{def:d_ln_2_beta} the beta influence kernel is log-concave respect to $x_i$. Thus for the symmetric influencer game with beta influence kernel \cref{lem:SI_requirements} implies there is a symmetric Nash; furthermore, \cref{thm:SI_uniqueness} implies it is unique.
+            \begin{corollary}[Symmetric Nash: Beta]\label{cor:nash_beta}
+                If $T$ is a symmetric influencer game with influence kernels defined in \cref{def:beta_infl}, and resource distribution $B(b)$, such that $\mathbb{D}\subset \mathbb{R}(0,1)$ and $\mathbb{B}\subset \mathbb{R}(0,1)$. Then $T$ has a unique symmetric Nash equalbirium $\mathbf{x}^*=(x^*_1,x^*_2 ,\dots, x_N^*)$ with $x_i\in \mathbb{D}$ for all $ i \in I$, such that $x=x_i$ $\forall i\in I$ solves 
+                \begin{equation}
+                    \psi_0(\alpha)-\psi_0(\beta)=\frac{\sum_{b\in\mathbb{B}}B(b)\ln(\frac{b}{1-b})}{\sum_{b\in\mathbb{B}}B(b)}
+                \end{equation}
+                where $\alpha=x(\frac{1}{\sigma}-2)+1$, $\beta=(1-x)(\frac{1}{\sigma}-2)+1$ and 
+                $\psi_0(\cdot)$ is the digamma function.
+            \end{corollary}
+            While not analytically simple to solve, this allows us to use numerical methods to explicitly solve for the symmetric Nash. However, there is one case where the symmetric Nash is simple to solve for 
+            \begin{remark}
+                If 
+                \begin{equation}
+                    \frac{\sum_{b\in\mathbb{B}}B(b)\ln(\frac{b}{1-b})}{\sum_{b\in\mathbb{B}}B(b)}=0
+                \end{equation}
+                Then $x_i=0.5$. One way this occurs is if the resource distribution is symmetric across (0.5). 
+            \end{remark}
+
+            \begin{corollary}\label{cor:SI_stability_Beta}
+            If $T$ is a symmetric influencer game with beta influence as defined in \cref{def:beta_infl}then the symmetric Nash equilibrium is the $x$ that solves 
+            \begin{equation}
+                    \psi_0(\alpha)-\psi_0(\beta)=\frac{\sum_{b\in\mathbb{B}}B(b)\ln(\frac{b}{1-b})}{\sum_{b\in\mathbb{B}}B(b)}
+            \end{equation}
+            where $\alpha=x(\frac{1}{\sigma}-2)+1$, $\beta=(1-x)(\frac{1}{\sigma}-2)+1$ and 
+            $\psi_0(\cdot)$ is the digamma function.
+
+            This Nash is stable if and only if 
+            \begin{equation}
+                \psi_1(\alpha)+\psi_1(\beta)>\frac{n-2}{n-1}\left(\frac{\sum_{b\in \mathbb{B}} B(b)\ln(\frac{b}{1-b})^2}{\sum_{b\in\mathbb{B}}B(b)}-\left[\frac{\sum_{b\in\mathbb{B}}B(b)\ln(\frac{b}{1-b})}{\sum_{b\in\mathbb{B}}B(b)}\right]^2\right)
+            \end{equation}
+            \end{corollary}
+        \subsubsection{Bifurication behavior}
+            Much like the Gaussian influence, in the prior subsection, the beta influence is prone to similar three player dynamics. In particular beta players tend to split into regions of 2-1, 1-1-1, or cyclic behaviors. Indicating that this behavior is not unique to the gaussian kernel and maybe a result of of the log-concavity of the influence kernels. We demonstrate this in a bifurcation diagram. 
         \subsection{Other Examples}
+            In addition to the Gaussian and beta 1d kernels we introduce two more other influence kernels that demonstrate interesting behavior, the exponential influence and the Jones et al. model introduced in their paper \cite{jones2022polarization}. 
             \subsubsection{Exponential Influence}
                 For a symmetric game with exponential influence if $\mathbb{D}=\R$ we can show that for the exponential distribution $x_i^{*}=\mathbb{E}(B)$ is a strategic equilibrium, is unique, and is stable if
                 \begin{equation}
@@ -1075,7 +1230,7 @@ t_estimate(num_players,$B$,refinements):
        
     
     \section{Multi-Dimensional Sentiment Landscapes}
-        The results can be extended in aspects to multi-dimensional systems where $\D\subset \R^L$ and $\B\subset \R^L$ has more than 1 dimension. 
+        The results can be applied to multi-dimensional systems where $\D\subset \R^L$ and $\B\subset \R^L$ where $L>1$ dimension. In this section we explore three such multi-dimensional influence kernels, the multi-variate Gaussian influence kernel, Dirichlet influence kernel (mean parameterization), and the Dirichlet influence kernel (mode parameterization).
         \subsection{Multi-Variate Gaussian Influence Kernel}
              A natural extension of our 1-D results with Gaussian influence are multi-variate Gaussian influence kernels. Which have the form of
             \begin{equation}
@@ -1234,8 +1389,8 @@ t_estimate(num_players,$B$,refinements):
                 
                 \clearpage
 
-    
-    \subsection{Dirichlet Influence Kernel on the Simplex}
+
+    \subsection{Dirichlet Influence Kernel: Mean Parameterization on the Unit Simplex}
          The Dirichlet distribution has been widely used as a prior estimate in Bayesian statistics, and can be used in influencer games to flexibly study social games in a multi-dimensional resource spaces. Problems such as multi-party electoral systems like parliamentary elections, different food sources for animals, and other categorical resource problems. For a Dirichlet kernel, we use the simplex to represent the resource space $\mathbb{B}$ and $\mathbb{D}$. In particular, a probability simplex defined as the following, 
          \begin{equation}
              \Delta ^L=\left\{(x_1,x_2,x_3\dots,x_L )|\sum_{l\in L}x_l=1, x_l\geq 0 \;\forall l \right\}
@@ -1336,10 +1491,69 @@ t_estimate(num_players,$B$,refinements):
 
         
         \clearpage
-     
+
+    \subsection{Dirichlet Influence Kernel: Mode Parameterization on the Unit Simplex}
+    The Dirichlet distribution can also be parameterized via its mode rather than its mean. This parameterization has the advantage of being able to center the distribution exactly on the player's position rather than having to fix one dimension's $\alpha$ value. The mode parameterization of the Dirichlet distribution has the following form for the influence kernel,
+    \begin{definition}[Reparameterized Dirichlet PDF]
+        Let \(b = (b_1,\dots,b_L)\) lie on the simplex \(b_i > 0, \sum_{l=1}^L b_l = 1\), 
+        and parameterize the Dirichlet distribution by its mode \(x_i = (x_{(i,1)},\dots,x_{(i,L)})\) 
+        and concentration \(\sigma > 0\) via \(\alpha_{(i,l)} = 1 + \sigma x_{(i,l)}\) and \(\alpha_0 = L + \sigma.\)
+
+        Then the log-density is
+        \begin{equation}
+        \ln f(x_i,b;\sigma) = \ln\Gamma(L+\sigma)- \sum_{j=1}^L \ln\Gamma(1+\sigma x_{(i,j)}) + \sigma \sum_{l=1}^L x_{(i,l)} \log b_{l}.
+        \end{equation}
+    \end{definition}
+
+    \begin{definition}[First Derivatives of the Log-PDF]
+        Let \(\psi_0(\cdot)\) denote the digamma function.  
+        The first derivatives of \(\ln f(x;\sigma,m)\) with respect to $x_{(i,l)}$ are
+        \begin{equation}
+           d_{(i,l)}= \frac{\partial}{\partial x_{(i,l)}}\ln f
+        = \sigma\big(\ln(b_l) - \psi_0(1+\sigma x_{(i,l)})\big).
+        \end{equation}
+    \end{definition}
+    \subsubsection{Symmetric Nash Equilibrium}
+    We can calculate for the symmetric Nash equilibrium, by solving when $\pdv{u}{x_{(i,l)}}=0$ for all $i\in I$ and $l=1,\dots,L$. 
+    \begin{corollary}[Symmetric: Nash Equilibrium for Dirichlet Mode Parameterization]
+        In a symmetric influencer game $T(I,\mathbf{X},\mathbf{u})$ with Dirichlet influence kernels parameterized by mode, there exists a unique symmetric pure Nash equilibrium $\mathbf{x}^*=(x_1^*,\dots ,x_N^*)$ where each player's strategy is given by the $x_l^*$ that solves the following equation for $l=1,\dots,L$,
+        \begin{equation}
+            \psi_0(1+\sigma*x_{l}^*)=\frac{\sum_{b\in \B}B(b)\ln(b_{l})}{\sum_{b\in \B}B(b)}
+        \end{equation}
+         i.e. $\mathbf{x}^{*}$ is the average of the resource distribution.
+    \end{corollary}
+    Now to determine the stability condition, we can calculate the Hessian terms for stability analysis. The Hessian with respect to $x_i$ is given by the following.
+    \begin{definition}[Hessian of the Log-PDF w.r.t.\ \(x_i\)]
+    Let \(\psi_1(\cdot)\) denote the trigamma function and let \(\alpha_{(i,l)} = 1+\sigma x_{(i,l)}\). The Hessian of
+    \(\ln f(x_i,b;\sigma)\) with respect to the vector \(x_i=(x_{(i,1)},\dots,x_{(i,L)})\) has entries
+    \begin{equation}
+        \frac{\partial^2}{\partial x_{(i,l)}\partial x_{(i,k)}}\log f(x_i,b;\sigma)=\begin{cases}
+                    -\,\sigma^2\,\psi_1(\alpha_{(i,l)}), & l=k,\\[6pt]
+                    0, & l\neq k,
+                \end{cases}\qquad l,k=1,\dots,L.
+    \end{equation}
+    Equivalently, in matrix form,
+    \begin{equation}x
+        H_{x_i}( \sigma,x_i )=-\,\sigma^2 \begin{bmatrix}
+        \psi_1(1+\sigma x_{(i,1)}) & 0 & \cdots & 0 \\
+        0 & \psi_1(1+\sigma x_{(i,2)}) & \cdots & 0 \\
+        \vdots & \vdots & \ddots & \vdots \\
+        0 & 0 & \cdots & \psi_1(1+\sigma x_{(i,L)})
+        \end{bmatrix}
+    \end{equation}
+    \end{definition}
+    Given that the Hessian is diagonal we can easily calculate the stability condition for the symmetric Nash equilibrium.
+
+
+
+
+
+
+
+
     \section{Applications}
         \subsection{Applications to Political Science}
-        One of the major applications of our work in resource games is in political games where the players are the politicians and the voters are the resource they are competing for. Games like these have been extensively studied in political science and sociology literature; however the study of political games has been limited to 2 active players or systems with fixed other players \cite{jones2022polarization}. In Jones et. al.'s paper the authors examined a 1-D ideological space where players compete for votes, but are subject to different distribution shapes, fixed third parties, and abstaining voters. Jones et al. concluded that all three factors impacted the player's convergence to a mixed equilibrium away from a symmetric  equilibrium at the mean. However, in their paper the authors limited the number of active players to two, and yet they still observed instability at the symmetric equilibrium at the median. This result is in alignment with our results as we saw in section 3.4.2. Given the convex behavior as long as $0<p$ in \cref{eq:SI_Jones_influence_kernel} the model should always be divergent regardless of the number of players. Additionally, the Jones et. al. model is difficult to study via gradient ascent and adaptive dynamics due to it's non-differentiable at $x=b$ (players at resource points). 
+        One of the major applications of our work in influencer games is in political games where the players are the politicians and the voters are the resource they are competing for. Games like these have been extensively studied in political science and sociology literature; however the study of political games has been limited to 2 active players or systems with fixed other players \cite{jones2022polarization}. In Jones et. al.'s paper the authors examined a 1-D ideological space where players compete for votes, but are subject to different distribution shapes, fixed third parties, and abstaining voters. Jones et al. concluded that all three factors impacted the player's convergence to a mixed equilibrium away from a symmetric  equilibrium at the mean. However, in their paper the authors limited the number of active players to two, and yet they still observed instability at the symmetric equilibrium at the median. This result is in alignment with our results as we saw in section 3.4.2. Given the convex behavior as long as $0<p$ in \cref{eq:SI_Jones_influence_kernel} the model should always be divergent regardless of the number of players. Additionally, the Jones et. al. model is difficult to study via gradient ascent and adaptive dynamics due to it's non-differentiable at $x=b$ (players at resource points). 
 
         The Jones model accomplishes much regardless of the symmetric equilibrium being always unstable. We demonstrate that the same results the authors showed can be accomplished by a differentiable and log-concave influence kernel like the Gaussian kernel.  
         
@@ -1355,6 +1569,7 @@ t_estimate(num_players,$B$,refinements):
             where $J$ is the set of all of the non-fixed candidates. 
             \cref{fig9} shows the impact that varying the the parameters $R,Q$.
          \begin{figure}[htbp]
+            \centering
           \begin{subfigure}[b]{0.3\linewidth}
                 \centering
                 \includesvg[width=\linewidth]{figures/SI_plots/5_1/fig9/1d_vector_2_agents_3party.svg} 
@@ -1403,7 +1618,7 @@ t_estimate(num_players,$B$,refinements):
         \end{figure}
         We can see in \cref{fig:8-19_2} that the addition of a fixed third party at the extremes can force our candidates from the mean convergence. While the addition of abstaining voters can change the dynamics further by mitigating the third parties affects and making the major parties converge closer to the mean. This is in-line with the results form Jones et al.. Note however, these are also in line with the results we discussed since the addition of a fixed third party could explain why the stability of the symmetric Nash equilibrium is no longer guaranteed. While the abstaining 'candidate' not only adds another choice for players it also breaks the symmetry of the system. Which will result in potentially destabilizing the symmetric Nash; especially if the abstaining candidate is influential enough and dynamic.
 
-        These results are also represented in the divergence of based on the reach parameter $\sigma$. as $\sigma$ increases the asymmteric features introduced by fixed third parties and abstaining voters become less impactful, which leads to convergece to the expecte symmetric Nash equalbirium in the agents' ideological playing field, as demonstrated in \cref{fig10}
+        These results are also represented in the divergence of based on the reach parameter $\sigma$. as $\sigma$ increases the asymmetric features introduced by fixed third parties and abstaining voters become less impactful, which leads to convergence to the expected symmetric Nash equilibrium in the agents' ideological playing field, as demonstrated in \cref{fig10}
 
         \begin{figure}[htbp]
           \begin{subfigure}[b]{0.3\linewidth}

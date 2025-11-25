@@ -74,6 +74,93 @@ import torch
 from typing import Union, List
 
 
+# ========================= JIT-COMPILED HELPER FUNCTIONS =========================
+
+@torch.jit.script
+def _influence_vectorized_core(
+    agents_pos: torch.Tensor,
+    bin_points: torch.Tensor,
+    parameter_instance: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for Gaussian influence calculation.
+    
+    Args:
+        agents_pos: Agent positions (N,)
+        bin_points: Bin points (K,)
+        parameter_instance: Gaussian parameters (N,)
+    
+    Returns:
+        torch.Tensor: Influence matrix (N, K)
+    """
+    # Reshape for broadcasting:
+    agents_expanded = agents_pos.unsqueeze(1)  # Shape: (N, 1)
+    bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, K)
+    params_expanded = parameter_instance.unsqueeze(1)  # Shape: (N, 1)
+    
+    # Vectorized computation: (N, 1) - (1, K) = (N, K)
+    diff_squared = (bins_expanded - agents_expanded) ** 2
+    variance = 2.0 * params_expanded ** 2
+    
+    # Compute influence matrix: (N, K)
+    influence_matrix = torch.exp(-diff_squared / variance)
+    
+    return influence_matrix
+
+@torch.jit.script
+def _d_ln_f_vectorized_core(
+    agents_pos: torch.Tensor,
+    bin_points: torch.Tensor,
+    parameter_instance: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for Gaussian gradient calculation.
+    
+    Args:
+        agents_pos: Agent positions (N,)
+        bin_points: Bin points (K,)
+        parameter_instance: Gaussian parameters (N,)
+    
+    Returns:
+        torch.Tensor: Gradient matrix (N, K)
+    """
+    # Reshape for broadcasting
+    agents_expanded = agents_pos.unsqueeze(1)      # Shape: (N, 1)
+    bins_expanded = bin_points.unsqueeze(0)        # Shape: (1, K)
+    params_squared = parameter_instance.unsqueeze(1) ** 2  # Shape: (N, 1)
+    
+    # Vectorized gradient computation: (N, K)
+    gradient_matrix = (bins_expanded - agents_expanded) / params_squared
+    
+    return gradient_matrix
+
+@torch.jit.script
+def _symmetric_nash_stability_core(
+    d_values: torch.Tensor,
+    resource_distribution: torch.Tensor,
+    factor: float
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for symmetric Nash stability.
+    
+    Args:
+        d_values: Gradient values (K,)
+        resource_distribution: Resource distribution (K,)
+        factor: Pre-computed factor (N-2)/(N-1)
+    
+    Returns:
+        torch.Tensor: Stability parameter (scalar)
+    """
+    # Vectorized computation
+    weighted_sum = torch.sum(d_values * d_values * resource_distribution)
+    total_resources = torch.sum(resource_distribution)
+    
+    # Stability parameter calculation
+    sigma_star = torch.sqrt(factor * weighted_sum / total_resources)
+    
+    return sigma_star
+
+
 # ========================= VECTORIZED FUNCTIONS =========================
 
 def influence_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tensor],
@@ -124,21 +211,8 @@ def influence_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tenso
     if not isinstance(parameter_instance, torch.Tensor):
         parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)
     
-    # Reshape for broadcasting: 
-    # agents_pos: (N,) -> (N, 1)
-    # bin_points: (K,) -> (1, K)  
-    # parameters: (N,) -> (N, 1)
-    agents_expanded = agents_pos.unsqueeze(1)  # Shape: (N, 1)
-    bins_expanded = bin_points.unsqueeze(0)    # Shape: (1, K)
-    params_expanded = parameter_instance.unsqueeze(1)  # Shape: (N, 1)
-    
-    # Vectorized computation: (N, 1) - (1, K) = (N, K)
-    diff_squared = (bins_expanded - agents_expanded) ** 2
-    variance = 2 * params_expanded ** 2
-    
-    # Compute influence matrix: (N, K)
-    influence_matrix = torch.exp(-diff_squared / variance)
-    
+    # Use JIT-compiled core for optimal performance
+    influence_matrix = _influence_vectorized_core(agents_pos, bin_points, parameter_instance)
     return influence_matrix
 
 
@@ -189,13 +263,8 @@ def d_ln_f_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tensor],
     if not isinstance(parameter_instance, torch.Tensor):
         parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)
     
-    # Reshape for broadcasting
-    agents_expanded = agents_pos.unsqueeze(1)      # Shape: (N, 1)
-    bins_expanded = bin_points.unsqueeze(0)        # Shape: (1, K)
-    params_squared = parameter_instance.unsqueeze(1) ** 2  # Shape: (N, 1)
-    
-    # Vectorized gradient computation: (N, K)
-    gradient_matrix = (bins_expanded - agents_expanded) / params_squared
+    # Use JIT-compiled core for optimal performance
+    gradient_matrix = _d_ln_f_vectorized_core(agents_pos, bin_points, parameter_instance)
     
     return gradient_matrix
 
@@ -248,13 +317,11 @@ def symmetric_nash_stability_vectorized(num_agents: int,
         # Multi-agent case: average across agents or use first agent for symmetric case
         d_values = d_values[0]  # Symmetric case - all agents identical
     
-    # Vectorized computation
-    weighted_sum = torch.sum(d_values ** 2 * resource_distribution)
-    total_resources = torch.sum(resource_distribution)
+    # Pre-compute factor for JIT optimization
+    factor = float(num_agents - 2) / float(num_agents - 1)
     
-    # Stability parameter calculation
-    factor = (num_agents - 2) / (num_agents - 1)
-    sigma_star = torch.sqrt(factor * weighted_sum / total_resources)
+    # Use JIT-compiled core for optimal performance
+    sigma_star = _symmetric_nash_stability_core(d_values, resource_distribution, factor)
     
     return sigma_star
 

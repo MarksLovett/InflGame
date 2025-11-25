@@ -19,24 +19,30 @@ can be used to plot agent positions over time and their influence distributions.
 
 """
 
+from typing import Optional
 import numpy as np
 import torch
+import colorsys
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 import pylab
 import matplotlib.figure
 import matplotlib as mpl
+from scipy.interpolate import griddata
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 def dist_and_pos_plot_2d_simple(num_agents: int,
                                 bin_points: np.ndarray,
-                                rect_X: np.ndarray,
-                                rect_Y: np.ndarray,
                                 cmap1,
                                 cmap2,
                                 pos_matrix: torch.Tensor,
                                 infl_dist: torch.Tensor,
                                 resource_type: str,
-                                resources: str = 0,
+                                x_min: Optional[float] = None,
+                                y_min: Optional[float] = None,
+                                domain_bounds: Optional[torch.Tensor] = None,
+                                resources: torch.Tensor = 0,
                                 font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12,'font_family': 'sans-serif','sub_title_size':12},
                                  ) -> matplotlib.figure.Figure:
     """
@@ -73,48 +79,179 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
     mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
     mpl.rcParams['legend.fontsize'] = legend_font_size
 
+    x_coords = bin_points[:, 0].numpy() if torch.is_tensor(bin_points) else bin_points[:, 0]
+    y_coords = bin_points[:, 1].numpy() if torch.is_tensor(bin_points) else bin_points[:, 1]
 
-    NUM_COLORS = num_agents+1
+    # Generate a distinct, high-contrast color for each agent using HSV spacing.
+    # This scales to any number of agents and returns a suggested edge color
+    # (black or white) chosen for good contrast against the marker fill.
+    def make_agent_colors(n: int, saturation: float = 0.65, value: float = 0.9):
+        cols = []
+        for i in range(n):
+            # Evenly space hues around the circle
+            h = float(i) / max(1, n)
+            r, g, b = colorsys.hsv_to_rgb(h, saturation, value)
+            # Perceived luminance to select an edge color for contrast
+            lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            edge = 'black' if lum > 0.5 else 'white'
+            cols.append(((r, g, b), edge))
+        return cols
+
+    agent_colors = make_agent_colors(num_agents)
     cm = pylab.get_cmap(cmap1)
-    fig = plt.figure(figsize=(19, 7))
-    gs = GridSpec(nrows=num_agents, ncols=2,width_ratios=[1, 1],wspace=0.0, hspace=0.2, top=1, bottom=0.05, left=0.17, right=0.845)
+    fig = plt.figure(figsize=(24, 18))
 
-    ax0 = fig.add_subplot(gs[:, 0])
+    # Arrange the right column into a square grid (k x k) if possible so
+    # that multiple agent influence plots form a compact square layout.
+    k = int(np.ceil(np.sqrt(max(1, num_agents))))
+    outer_gs = GridSpec(nrows=k, ncols=2, width_ratios=[1, 1], wspace=.5,
+                        hspace=.1,top=.65)
+
+    # Left column: big positions/heatmap spanning all k rows
+    ax0 = fig.add_subplot(outer_gs[:, 0])
+    ax0.set_box_aspect(1)
     for a_id in range(num_agents):
-        new_coor=pos_matrix[:,a_id]
-        y=new_coor.detach().numpy()
-        ax0.scatter(y[-1,0],y[-1,1],s=70,color=cm(1.*a_id/NUM_COLORS),linewidth=0.3,label='Agent '+str(a_id))
-        ax0.scatter(y[0,0],y[0,1],s=70,facecolors='none',edgecolors=cm(1.*a_id/NUM_COLORS),linewidth=1)
-        ax0.plot(y[:,0],y[:,1],color=cm(1.*a_id/NUM_COLORS))
-    if resource_type in  ["multi_modal_gaussian_distribution_2D",'multi_modal_gaussian_distribution_2D_square','multi_modal_gaussian_distribution_2D_square''multi_modal_gaussian_distribution_2D_triangle']:
-        pval=resources.reshape(len(rect_Y),len(rect_X))
-        im = ax0.pcolormesh(rect_X,rect_Y, pval,alpha=.2)
+        new_coor = pos_matrix[:, a_id]
+        y = new_coor.detach().cpu().numpy()
+        fill_color, edge_color = agent_colors[a_id]
+        # Ensure agents are drawn above the heatmap by increasing zorder
+        ax0.scatter(y[-1, 0], y[-1, 1], s=70, color=fill_color, linewidth=0.3,
+                    label='Agent ' + str(a_id), zorder=6)
+        # Starting position: hollow marker with a contrasting edge
+        ax0.scatter(y[0, 0], y[0, 1], s=70, facecolors='none', edgecolors=edge_color,
+                    linewidth=1, zorder=7)
+        ax0.plot(y[:, 0], y[:, 1], color=fill_color, linewidth=2, zorder=5)
         
-
+    # Ensure domain_bounds are numeric floats (handle torch tensors gracefully)
+    if domain_bounds is None:
+        domain_bounds = np.array([[np.min(x_coords), np.max(x_coords)], [np.min(y_coords), np.max(y_coords)]], dtype=float)
     else:
-        for b_id in range(len(bin_points)):
-            new_coor=torch.tensor(bin_points[b_id])
-            y=new_coor.detach().numpy()
-            if b_id==0:
-                ax0.scatter(y[0],y[1],color=cm(1.*(a_id+1)/NUM_COLORS),s=70,linewidth=0.3,label='Resource point')
-            else:
-                ax0.scatter(y[0],y[1],color=cm(1.*(a_id+1)/NUM_COLORS),s=70,linewidth=0.3)
-    plt.title('Agents positions in time',y=1.05,fontsize=title_font_size)
-    plt.legend(title="End pos", bbox_to_anchor=(1.05, 1), loc='upper right', borderaxespad=0.)
+        # If domain_bounds are torch tensors, convert to numpy
+        if torch.is_tensor(domain_bounds):
+            domain_bounds = domain_bounds.detach().cpu().numpy()
+        domain_bounds = np.asarray(domain_bounds, dtype=float)
 
+    # Create a regular grid for interpolation using numeric floats
+    grid_x, grid_y = np.mgrid[domain_bounds[0, 0]:domain_bounds[0, 1]:100j,
+                              domain_bounds[1, 0]:domain_bounds[1, 1]:100j]
+
+    # Interpolate resource values onto the grid
+    points = np.column_stack((x_coords, y_coords))
+    grid_z = griddata(points, resources, (grid_x, grid_y), method='cubic', fill_value=0)
+
+    # Create interpolated heatmap on the positions axis (ax0) so positions overlay the heatmap
+    # Draw heatmap below agent markers
+    im = ax0.pcolormesh(grid_x, grid_y, grid_z, shading='auto', cmap=cmap1, alpha=.9, zorder=1)
+    ax0.set_xlabel('Trait 1', fontsize=14)
+    ax0.set_ylabel('Trait 2', fontsize=14)
+    ax0.set_title('Resource Heatmap', fontsize=16, fontweight='bold')
+    ax0.set_aspect('equal', adjustable='box')
+    ax0.set_xlim(domain_bounds[0, 0], domain_bounds[0, 1])
+    ax0.set_ylim(domain_bounds[1, 0], domain_bounds[1, 1])
+    if resource_type=='custom_2d_rect':
+        ax0.set_xticks([0,5])
+        ax0.set_xticklabels([f'{x_min}','1'],fontdict={'size':20})
+        ax0.set_yticks([0,5])
+        ax0.set_yticklabels([f'{y_min}','1'],fontdict={'size':20})
+    ax0.legend(loc='upper right', fontsize=10)
+    # Place the first colorbar in an explicit axes just to the right of ax0
+    # so there is guaranteed empty space between the heatmap and its colorbar.
+    try:
+        pos0 = ax0.get_position()
+        gap0 = 0.01
+        cax0_width = 0.03
+        cax0_height = pos0.height * 0.9
+        cax0_x = pos0.x1 + gap0
+        cax0_y = pos0.y0 + 0.05 * pos0.height
+        cax0 = fig.add_axes([cax0_x, cax0_y, cax0_width, cax0_height])
+        cbar1 = fig.colorbar(im, cax=cax0)
+        cbar1.set_label('Resource Values', rotation=270, labelpad=20, fontsize=12)
+    except Exception:
+        # Fallback to automatic colorbar placement
+        cbar1 = fig.colorbar(im, ax=ax0)
+        cbar1.set_label('Resource Values', rotation=270, labelpad=20, fontsize=12)
+
+
+    # Create a container axis for the right column (used for title + colorbar)
+    ax_right_container = fig.add_subplot(outer_gs[:, 1])
+    # Reduce the visual height of the right-column container so the column
+    # of small agent plots appears shorter. We move the bottom up slightly
+    # and shrink height to keep the title and colorbar aligned.
+    try:
+        pos = ax_right_container.get_position()
+        new_pos = [pos.x0, pos.y0 + 0.08 * pos.height, pos.width, pos.height * 0.82]
+        ax_right_container.set_position(new_pos)
+    except Exception:
+        # If position manipulation fails in some backends, fall back silently
+        pass
+    # Subdivide the right column into a k x k grid
+    right_spec = GridSpecFromSubplotSpec(k, k, subplot_spec=ax_right_container.get_subplotspec(),
+                                         hspace=0.001, wspace=0.15)
+
+    pcm = None
     for a_id in range(num_agents):
-        ax1 = fig.add_subplot(gs[a_id, 1])
-        pvals=infl_dist[a_id].numpy()
-        pvals=pvals.reshape(len(rect_Y),len(rect_X))
-        pcm = ax1.pcolormesh(rect_X,rect_Y, pvals,cmap=cmap2)
-        ax1.axis('equal')
-        ax1.axis('off')
-        plt.title("Player "+str(a_id),x=.15,y=0.5,fontsize=sub_title_font_size)
+        r = a_id // k
+        c = a_id % k
+        ax1 = fig.add_subplot(right_spec[r, c])
+        ax1.set_box_aspect(1)
+        pvals = infl_dist[a_id].numpy()
+        grid_w = griddata(points, pvals, (grid_x, grid_y), method='cubic', fill_value=0)
+        pcm = ax1.pcolormesh(grid_x, grid_y, grid_w, cmap=cmap2)
+        ax1.set_aspect('equal')
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+        ax1.set_title(f"Agent {a_id}", fontsize=max(8, sub_title_font_size - 1))
 
-    ax2 = fig.add_subplot(gs[:, 1])
-    fig.colorbar(pcm,ax=ax2, extend='max')
-    plt.title('Players\' influence distributions',x=.65,y=1.05,fontsize=sub_title_font_size)
-    ax2.axis('off')
+    # Blank-out any remaining cells in the k x k grid (if k*k > num_agents)
+    total_cells = k * k
+    for idx in range(num_agents, total_cells):
+        r = idx // k
+        c = idx % k
+        ax_empty = fig.add_subplot(right_spec[r, c])
+        ax_empty.axis('off')
+    
+    # Create a (mostly empty) subplot on the right column and attach a
+    # narrow colorbar axis to it so the colorbar appears small regardless
+    # of the figure size.
+    # Create an explicit colorbar axis placed a fixed gap to the right of
+    # the agent column so there is guaranteed empty space between the
+    # agent plots and the colorbar regardless of GridSpec scaling.
+    try:
+        pos = ax_right_container.get_position()
+        gap = 0.03  # fraction of figure width to separate the colorbar
+        cax_width = 0.04
+        cax_height = pos.height * 0.85
+        cax_x = pos.x1 + gap
+        cax_y = pos.y0 + 0.07 * pos.height
+        # Add axes in figure coordinates [x, y, width, height]
+        cax = fig.add_axes([cax_x, cax_y, cax_width, cax_height])
+        if pcm is not None:
+            cbar2 = fig.colorbar(pcm, cax=cax, extend='max')
+            cbar2.set_label('Influence Values', rotation=270, labelpad=20, fontsize=12)
+    except Exception:
+        # Fallback: use make_axes_locatable if explicit placement isn't supported
+        divider = make_axes_locatable(ax_right_container)
+        cax = divider.append_axes("right", size="6%", pad=0.5)
+        if pcm is not None:
+            cbar2 = fig.colorbar(pcm, cax=cax, extend='max')
+            cbar2.set_label('Influence Values', rotation=270, labelpad=20, fontsize=12)
+
+    # Create a dedicated title axes above the right-column container so the
+    # title has its own space and won't be clipped by the agent subplots.
+    try:
+        pos = ax_right_container.get_position()
+        title_h = 0.1  # height of title area in figure coords
+        # place title just above the container, clamped to fit inside figure
+        title_y = min(0.98 - title_h, pos.y1 + 0.01)
+        title_ax = fig.add_axes([pos.x0, title_y, pos.width, title_h])
+        title_ax.text(0.5, 0.5, "Agents' influence distributions",
+                      ha='center', va='center', fontsize=22)
+        title_ax.axis('off')
+    except Exception:
+        # Fallback: set title on container (may be clipped on some backends)
+        ax_right_container.set_title("Agents' influence distributions", fontsize=sub_title_font_size, pad=12)
+    ax_right_container.axis('off')
+    
     plt.close()
     return fig
 

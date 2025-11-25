@@ -72,6 +72,87 @@ import torch
 from typing import Union, List
 
 
+# ========================= JIT-COMPILED HELPER FUNCTIONS =========================
+
+@torch.jit.script
+def _influence_vectorized_core(
+    agents_pos_tensor: torch.Tensor,
+    bin_points_tensor: torch.Tensor,
+    parameter_tensor: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for Jones influence calculation.
+    
+    Args:
+        agents_pos_tensor: Agent positions (N,)
+        bin_points_tensor: Bin points (K,)
+        parameter_tensor: Jones parameters (N,)
+    
+    Returns:
+        torch.Tensor: Influence matrix (N, K)
+    """
+    # Reshape for broadcasting:
+    agents_expanded = agents_pos_tensor.unsqueeze(1)  # Shape: (N, 1)
+    bins_expanded = bin_points_tensor.unsqueeze(0)    # Shape: (1, K)
+    params_expanded = parameter_tensor.unsqueeze(1)   # Shape: (N, 1)
+    
+    # Compute absolute differences: (N, 1) - (1, K) = (N, K)
+    abs_diff = torch.abs(agents_expanded - bins_expanded)
+    
+    # Apply small epsilon to avoid division by zero
+    abs_diff = torch.maximum(abs_diff, torch.tensor(1e-10, dtype=torch.float32))
+    
+    # Compute influence matrix using vectorized power operation
+    # f_i(x_i, b) = 1 / |x_i - b|^{P_i}
+    influence_matrix = 1.0 / torch.pow(abs_diff, params_expanded)  # Shape: (N, K)
+    
+    # Apply numerical stability bounds
+    influence_matrix = torch.clamp(influence_matrix, min=1e-10, max=1e10)
+    
+    return influence_matrix
+
+@torch.jit.script
+def _d_ln_f_vectorized_core(
+    agents_pos_tensor: torch.Tensor,
+    bin_points_tensor: torch.Tensor,
+    parameter_tensor: torch.Tensor
+) -> torch.Tensor:
+    """
+    JIT-compiled core computation for Jones gradient calculation.
+    
+    Args:
+        agents_pos_tensor: Agent positions (N,)
+        bin_points_tensor: Bin points (K,)
+        parameter_tensor: Jones parameters (N,)
+    
+    Returns:
+        torch.Tensor: Gradient matrix (N, K)
+    """
+    # Reshape for broadcasting
+    agents_expanded = agents_pos_tensor.unsqueeze(1)      # Shape: (N, 1)
+    bins_expanded = bin_points_tensor.unsqueeze(0)        # Shape: (1, K)
+    params_expanded = parameter_tensor.unsqueeze(1)       # Shape: (N, 1)
+    
+    # Compute position differences (vectorized)
+    diff = agents_expanded - bins_expanded  # Shape: (N, K)
+    
+    # Apply numerical stability for small differences
+    # Use a small epsilon to avoid division by zero
+    diff_stable = torch.where(
+        torch.abs(diff) < 1e-10,
+        torch.sign(diff) * 1e-10,  # Preserve sign but avoid zero
+        diff
+    )
+    
+    # Compute gradient: d_ln_f = P_i / (x_i - b)
+    gradient_matrix = params_expanded / diff_stable  # Shape: (N, K)
+    
+    # Apply numerical bounds to prevent extreme values
+    gradient_matrix = torch.clamp(gradient_matrix, min=-1000.0, max=1000.0)
+    
+    return gradient_matrix
+
+
 # ========================= VECTORIZED FUNCTIONS =========================
 
 def influence_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tensor],
@@ -169,27 +250,8 @@ def influence_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tenso
         if torch.any(torch.isnan(bin_points_tensor)) or torch.any(torch.isinf(bin_points_tensor)):
             raise ValueError("bin_points contains NaN or infinite values")
         
-        # Vectorized computation using broadcasting
-        # Reshape for broadcasting: 
-        # agents_pos: (N,) -> (N, 1)
-        # bin_points: (K,) -> (1, K)  
-        # parameters: (N,) -> (N, 1)
-        agents_expanded = agents_pos_tensor.unsqueeze(1)  # Shape: (N, 1)
-        bins_expanded = bin_points_tensor.unsqueeze(0)    # Shape: (1, K)
-        params_expanded = parameter_tensor.unsqueeze(1)   # Shape: (N, 1)
-        
-        # Compute absolute differences: (N, 1) - (1, K) = (N, K)
-        abs_diff = torch.abs(agents_expanded - bins_expanded)
-        
-        # Apply small epsilon to avoid division by zero
-        abs_diff = torch.maximum(abs_diff, torch.tensor(1e-10, dtype=torch.float32))
-        
-        # Compute influence matrix using vectorized power operation
-        # f_i(x_i, b) = 1 / |x_i - b|^{P_i}
-        influence_matrix = 1.0 / torch.pow(abs_diff, params_expanded)  # Shape: (N, K)
-        
-        # Apply numerical stability bounds
-        influence_matrix = torch.clamp(influence_matrix, min=1e-10, max=1e10)
+        # Use JIT-compiled core for optimal performance
+        influence_matrix = _influence_vectorized_core(agents_pos_tensor, bin_points_tensor, parameter_tensor)
         
         # Final validation
         if torch.any(torch.isnan(influence_matrix)):
@@ -301,28 +363,8 @@ def d_ln_f_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tensor],
         if torch.any(torch.isnan(bin_points_tensor)) or torch.any(torch.isinf(bin_points_tensor)):
             raise ValueError("bin_points contains NaN or infinite values")
         
-        # Vectorized gradient computation using broadcasting
-        # Reshape for broadcasting
-        agents_expanded = agents_pos_tensor.unsqueeze(1)      # Shape: (N, 1)
-        bins_expanded = bin_points_tensor.unsqueeze(0)        # Shape: (1, K)
-        params_expanded = parameter_tensor.unsqueeze(1)       # Shape: (N, 1)
-        
-        # Compute position differences (vectorized)
-        diff = agents_expanded - bins_expanded  # Shape: (N, K)
-        
-        # Apply numerical stability for small differences
-        # Use a small epsilon to avoid division by zero
-        diff_stable = torch.where(
-            torch.abs(diff) < 1e-10,
-            torch.sign(diff) * 1e-10,  # Preserve sign but avoid zero
-            diff
-        )
-        
-        # Compute gradient: d_ln_f = P_i / (x_i - b)
-        gradient_matrix = params_expanded / diff_stable  # Shape: (N, K)
-        
-        # Apply numerical bounds to prevent extreme values
-        gradient_matrix = torch.clamp(gradient_matrix, min=-1000.0, max=1000.0)
+        # Use JIT-compiled core for optimal performance
+        gradient_matrix = _d_ln_f_vectorized_core(agents_pos_tensor, bin_points_tensor, parameter_tensor)
         
         # Final validation
         if torch.any(torch.isnan(gradient_matrix)):

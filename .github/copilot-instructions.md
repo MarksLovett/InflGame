@@ -63,49 +63,48 @@ self.agents_pos = original_pos
 ## Performance Optimization
 
 ### Memory Management
-- Use `torch.tensor.clone()` for safe copying
-- Clear large matrices with `self.field.pos_matrix = 0` between runs
-- Monitor memory in batch processing operations
+## Influencer Games — Quick AI contributor guide
 
-### Learning Rate Scheduling
-```python
-# Common pattern for adaptive learning rates
-learning_rate = [initial_lr, min_lr, decay_steps]
-lr_type = 'cosine_annealing'  # or 'cosine', 'linear'
-```
+This file captures the minimal, actionable knowledge an AI coding agent needs to work in this repo.
 
-## Key Files for Understanding
+1) Big picture (why & where)
+ - Two research paths: Adaptive dynamics (gradient-ascent) in `src/InflGame/adaptive/` and MARL experiments in `src/InflGame/MARL/`.
+ - Influence kernels live under `src/InflGame/kernels/`; domain-specific code is in `src/InflGame/domains/`.
 
-- `src/InflGame/adaptive/visualization.py` - Main user interface and plotting
-- `src/InflGame/adaptive/grad_func_env.py` - Core gradient ascent engine
-- `src/InflGame/utils/general.py` - Parameter setup utilities
-- `demo/paper_kernels/` - Complete working examples
-- `src/InflGame/domains/*/` - Domain-specific implementations
+2) Critical design patterns to follow
+ - domain_type is authoritative: values are `'1d'`, `'2d'`, or `'simplex'`. Branch logic based on this—`'1d'` uses numpy, `'2d'` uses torch tensors, `'simplex'` uses barycentric projections.
+ - Preserve and restore state when mutating agent positions: use `.clone()` for torch tensors and `.copy()` for numpy arrays.
+ - Gradient-ascent API: create a `Shell`, call `setup_adaptive_env()`, then `field.gradient_ascent()`; results are stored in `field.pos_matrix` and `field.grad_matrix`.
 
-## Testing and Debugging
+3) Where to make changes (examples)
+ - Add kernels: `src/InflGame/kernels/` (follow `gaussian_infl()` signature and autograd rules when using torch).
+ - Modify dynamics: `src/InflGame/adaptive/grad_func_env.py` (mv/sv gradient-ascent routines).
+ - Visualization & experiment harness: `src/InflGame/adaptive/visualization.py` (Shell). Many demos call these directly.
 
-### Common Debug Patterns
-```python
-# Test single point before batch processing
-shell.simple_diagonal_test_point(torch.tensor([0.3, 0.5, 0.7]))
+4) Tests, runs, and common commands
+ - Install deps: `pip install -r requirements.txt` (use project venv).
+ - Run small tests/examples by executing root scripts `python test_classifier2_forward_simple.py` or the matching `test_*` files. Not all tests use pytest; use `python` for single-file tests or install `pytest` and run `pytest` if preferred.
+ - Many reproducible examples are in `demo/paper_kernels/` (Jupyter notebooks & .hkl experiment data).
 
-# Check convergence manually
-if hasattr(shell.field, 'pos_matrix') and len(shell.field.pos_matrix) > 0:
-    print(f"Converged in {len(shell.field.pos_matrix)} steps")
-```
+5) Performance & parallelism
+ - CPU parallelism uses `concurrent.futures.ProcessPoolExecutor`; provide a sequential fallback to avoid deep-copy overhead.
+ - Memory tips: clone tensors, zero-out large matrices between runs (`field.pos_matrix = 0`) and prefer in-place ops only when safe.
 
-### Typical Workflow
-1. Set up agent positions, parameters, resource distribution
-2. Configure influence kernel type and domain
-3. Create `Shell` instance and call `setup_adaptive_env()`
-4. Run gradient ascent with `field.gradient_ascent()`
-5. Visualize results using Shell's plotting methods
+6) Common snippets (copy-paste)
+ - Preserve/restore positions:
+   - `original = self.agents_pos.clone()` (torch) or `.copy()` (numpy)
+   - `self.agents_pos = original`
+ - Single-point sanity test:
+   - `shell.simple_diagonal_test_point(torch.tensor([0.3, 0.5, 0.7]))`
 
-## Dependencies and Environment
-- **PyTorch** - Primary tensor operations and autograd
-- **NumPy** - Array operations, especially for 1D domains  
-- **Ray[rllib]** - MARL components
-- **Matplotlib** - All visualization
-- **Hickle** - Data serialization for experiments
+7) Dependencies & integration notes
+ - Heavy: PyTorch (autograd), NumPy, Matplotlib, Hickle (data), Ray[rllib] for MARL experiments.
+ - Many demo notebooks assume a working interactive kernel; prefer running notebooks for exploratory work before refactoring code.
 
-Use proper torch tensor operations for gradients and autograd compatibility.
+8) Where to look when you get stuck
+ - `src/InflGame/adaptive/visualization.py` (Shell) — experiment wiring and examples
+ - `src/InflGame/adaptive/grad_func_env.py` — core gradient ascent logic
+ - `src/InflGame/kernels/` and `src/InflGame/domains/` — kernel math and coordinate transforms
+
+If anything here is unclear or you'd like me to expand a section (examples, test commands, or a short checklist for PR reviewers), tell me which part and I will iterate.
+

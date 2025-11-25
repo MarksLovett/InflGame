@@ -1,8 +1,8 @@
 \babel@toc {english}{}\relax 
 \contentsline {section}{\numberline {1}Introduction to the Model}{2}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Introduction to Spatial Resource Games and Expected Spatial Resource Games}{2}{subsection.1.1}%
-\contentsline {subsubsection}{\numberline {1.1.1}Influencer Games (Our Model)}{3}{subsubsection.1.1.1}%
-\contentsline {section}{\numberline {2}General Results on Nash Analysis}{3}{section.2}%
+\contentsline {subsection}{\numberline {1.1}Introduction to Spatial Resource Games and ESRGs}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Influencer Games (Our Model)}{3}{subsection.1.2}%
+\contentsline {section}{\numberline {2}General Results on Nash Analysis}{4}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Existence of Nash Equilibria}{4}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Uniqueness of the Symmetric Nash Equilibrium in Symmetric Log-Concave Influencer Games}{5}{subsection.2.2}%
 \contentsline {subsection}{\numberline {2.3}Stability of Symmetric Nash Equilibria in Symmetric Influencer Games}{6}{subsection.2.3}%
@@ -12,34 +12,39 @@
 \contentsline {subsection}{\numberline {3.1}Gaussian Influence Kernels}{11}{subsection.3.1}%
 \contentsline {subsubsection}{\numberline {3.1.1}Symmetric Nash equilibrium}{11}{subsubsection.3.1.1}%
 \contentsline {subsubsection}{\numberline {3.1.2}Stability of the Symmetric Nash Equilibrium}{12}{subsubsection.3.1.2}%
-\contentsline {subsection}{\numberline {3.2}Bifurcation of Equilibria into Local Games in Symmetric Influencer Games}{13}{subsection.3.2}%
-\contentsline {subsubsection}{\numberline {3.2.1}Explanation for Behavior}{15}{subsubsection.3.2.1}%
-\contentsline {subsubsection}{\numberline {3.2.2}Estimate for Higher Order Bifurcation Thresholds}{15}{subsubsection.3.2.2}%
-\contentsline {subsubsection}{\numberline {3.2.3}Effects of Number of Players on Higher Order Bifurcation Behavior}{16}{subsubsection.3.2.3}%
-\contentsline {subsubsection}{\numberline {3.2.4}Effects of Asymmetric Resource Distribution on Bifurcation Behavior}{18}{subsubsection.3.2.4}%
-\contentsline {subsubsection}{\numberline {3.2.5}Noisy Resource Distributions}{19}{subsubsection.3.2.5}%
-\contentsline {subsection}{\numberline {3.3}Three Player Dynamics}{20}{subsection.3.3}%
-\contentsline {subsection}{\numberline {3.4}Other Examples}{22}{subsection.3.4}%
-\contentsline {subsubsection}{\numberline {3.4.1}Exponential Influence}{22}{subsubsection.3.4.1}%
-\contentsline {subsubsection}{\numberline {3.4.2}Matt Jones Model}{22}{subsubsection.3.4.2}%
-\contentsline {section}{\numberline {4}Multi-Dimensional Sentiment Landscapes}{23}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Multi-Variate Gaussian Influence Kernel}{23}{subsection.4.1}%
-\contentsline {subsection}{\numberline {4.2}Dirichlet Influence Kernel on the Simplex}{27}{subsection.4.2}%
-\contentsline {subsubsection}{\numberline {4.2.1}Dirichlet influence: Symmetric Nash equilibrium}{27}{subsubsection.4.2.1}%
-\contentsline {section}{\numberline {5}Applications}{29}{section.5}%
-\contentsline {subsection}{\numberline {5.1}Applications to Political Science}{29}{subsection.5.1}%
-\contentsline {subsubsection}{\numberline {5.1.1}Voting: Fixed 3rd Parties and Abstaining Voters with Gaussian Influence}{29}{subsubsection.5.1.1}%
-\contentsline {subsubsection}{\numberline {5.1.2}Relationship to the Median Voter Theorem}{29}{subsubsection.5.1.2}%
-\contentsline {subsection}{\numberline {5.2}Applications to Ecology}{31}{subsection.5.2}%
-\contentsline {subsubsection}{\numberline {5.2.1}Dispersal and Migration with Constant Movement Costs}{31}{subsubsection.5.2.1}%
-\contentsline {section}{\numberline {6}Relationship to Blotto Games}{31}{section.6}%
-\contentsline {section}{\numberline {7}Q-learning dynamics}{32}{section.7}%
-\contentsline {subsubsection}{\numberline {7.0.1}independent Q-learning}{32}{subsubsection.7.0.1}%
-\contentsline {subsection}{\numberline {7.1}Q-learning environment for influencer games}{32}{subsection.7.1}%
-\contentsline {subsubsection}{\numberline {7.1.1}Partial Observability}{33}{subsubsection.7.1.1}%
-\contentsline {subsection}{\numberline {7.2}MARL dynamics vs adaptive dynamics}{33}{subsection.7.2}%
-\contentsline {subsection}{\numberline {7.3}Finding an Optimal Policy}{34}{subsection.7.3}%
-\contentsline {subsubsection}{\numberline {7.3.1}Effects of Partial Observability}{34}{subsubsection.7.3.1}%
-\contentsline {subsubsection}{\numberline {7.3.2}Number of Observations}{34}{subsubsection.7.3.2}%
-\contentsline {subsubsection}{\numberline {7.3.3}Effects of the Reach on Policies}{37}{subsubsection.7.3.3}%
-\contentsline {subsubsection}{\numberline {7.3.4}Effects of Number of Agents}{38}{subsubsection.7.3.4}%
+\contentsline {subsubsection}{\numberline {3.1.3}Three Player Dynamics}{13}{subsubsection.3.1.3}%
+\contentsline {subsubsection}{\numberline {3.1.4}Four Player Dynamics}{17}{subsubsection.3.1.4}%
+\contentsline {subsection}{\numberline {3.2}Bifurcation of Equilibria into Local Games in Symmetric Influencer Games}{19}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}Explanation for Behavior}{20}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Estimate for Higher Order Bifurcation Thresholds}{20}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Effects of Number of Players on Higher Order Bifurcation Behavior}{21}{subsubsection.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.2.4}Effects of Asymmetric Resource Distribution on Bifurcation Behavior}{23}{subsubsection.3.2.4}%
+\contentsline {subsubsection}{\numberline {3.2.5}Noisy Resource Distributions}{24}{subsubsection.3.2.5}%
+\contentsline {subsection}{\numberline {3.3}Beta Distribution}{25}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Bifurication behavior}{26}{subsubsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.4}Other Examples}{26}{subsection.3.4}%
+\contentsline {subsubsection}{\numberline {3.4.1}Exponential Influence}{26}{subsubsection.3.4.1}%
+\contentsline {subsubsection}{\numberline {3.4.2}Matt Jones Model}{27}{subsubsection.3.4.2}%
+\contentsline {section}{\numberline {4}Multi-Dimensional Sentiment Landscapes}{27}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Multi-Variate Gaussian Influence Kernel}{27}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Dirichlet Influence Kernel: Mean Parameterization on the Unit Simplex}{31}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Dirichlet influence: Symmetric Nash equilibrium}{31}{subsubsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.3}Dirichlet Influence Kernel: Mode Parameterization on the Unit Simplex}{33}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}Symmetric Nash Equilibrium}{33}{subsubsection.4.3.1}%
+\contentsline {section}{\numberline {5}Applications}{33}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Applications to Political Science}{33}{subsection.5.1}%
+\contentsline {subsubsection}{\numberline {5.1.1}Voting: Fixed 3rd Parties and Abstaining Voters with Gaussian Influence}{34}{subsubsection.5.1.1}%
+\contentsline {subsubsection}{\numberline {5.1.2}Relationship to the Median Voter Theorem}{35}{subsubsection.5.1.2}%
+\contentsline {subsection}{\numberline {5.2}Applications to Ecology}{35}{subsection.5.2}%
+\contentsline {subsubsection}{\numberline {5.2.1}Dispersal and Migration with Constant Movement Costs}{35}{subsubsection.5.2.1}%
+\contentsline {section}{\numberline {6}Relationship to Blotto Games}{36}{section.6}%
+\contentsline {section}{\numberline {7}Q-learning dynamics}{37}{section.7}%
+\contentsline {subsubsection}{\numberline {7.0.1}independent Q-learning}{37}{subsubsection.7.0.1}%
+\contentsline {subsection}{\numberline {7.1}Q-learning environment for influencer games}{37}{subsection.7.1}%
+\contentsline {subsubsection}{\numberline {7.1.1}Partial Observability}{38}{subsubsection.7.1.1}%
+\contentsline {subsection}{\numberline {7.2}MARL dynamics vs adaptive dynamics}{38}{subsection.7.2}%
+\contentsline {subsection}{\numberline {7.3}Finding an Optimal Policy}{38}{subsection.7.3}%
+\contentsline {subsubsection}{\numberline {7.3.1}Effects of Partial Observability}{39}{subsubsection.7.3.1}%
+\contentsline {subsubsection}{\numberline {7.3.2}Number of Observations}{40}{subsubsection.7.3.2}%
+\contentsline {subsubsection}{\numberline {7.3.3}Effects of the Reach on Policies}{42}{subsubsection.7.3.3}%
+\contentsline {subsubsection}{\numberline {7.3.4}Effects of Number of Agents}{43}{subsubsection.7.3.4}%
