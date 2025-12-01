@@ -174,8 +174,6 @@ class Shell:
         :type resource_distribution: torch.Tensor
         :param bin_points: Discretized points in the domain.
         :type bin_points: Union[List[float], np.ndarray]
-        :param mean: Mean value for certain influence functions.
-        :type mean: Optional[int]
         :param infl_configs: Configuration for influence kernels.
             - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "beta", "custom").
             - ``custom_influence`` (callable): Function for a custom influence (see guides).
@@ -198,6 +196,14 @@ class Shell:
         :type Q: Optional[int]
         :param domain_type: Type of domain ('1d', '2d', or 'simplex').
         :type domain_type: str
+        :param rect_X: X-coordinates for 2D rectangular domain mesh.
+        :type rect_X: Optional[List[float]]
+        :param rect_Y: Y-coordinates for 2D rectangular domain mesh.
+        :type rect_Y: Optional[List[float]]
+        :param rect_positions: Position grid for 2D rectangular domain.
+        :type rect_positions: Optional[torch.Tensor]
+        :param resource_grid: Resource values on 2D grid.
+        :type resource_grid: Optional[torch.Tensor]
         :param domain_bounds: Bounds of the domain.
         :type domain_bounds: Union[List[float], torch.Tensor]
         :param resource_type: Type of resource distribution.
@@ -208,6 +214,8 @@ class Shell:
         :type tolerance: float
         :param tolerated_agents: Number of agents allowed to tolerate deviations.
         :type tolerated_agents: Optional[int]
+        :param ignore_zero_infl: Whether to ignore agents with zero influence.
+        :type ignore_zero_infl: bool
         """
         validated=validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -264,8 +272,14 @@ class Shell:
 
     def setup_adaptive_env(self) -> None:
         """
-        Set up the adaptive environment for the simulation. This initializes the
-        gradient function environment with the provided parameters.
+        Set up the adaptive environment for the simulation.
+        
+        This initializes the :class:`InflGame.adaptive.grad_func_env.AdaptiveEnv` instance
+        with all parameters configured in the Shell constructor. The adaptive environment
+        handles gradient ascent computation, influence calculations, and trajectory tracking.
+        
+        After calling this method, gradient ascent can be performed via ``self.field.gradient_ascent()``
+        and results accessed through ``self.field.pos_matrix`` and ``self.field.grad_matrix``.
         """
         self.field=grad_func_env.AdaptiveEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
@@ -274,8 +288,14 @@ class Shell:
     
     def setup_bifurcation_env(self) -> None:
         """
-        Set up the bifurcation environment for the simulation. This initializes the
-        bifurcation analysis environment with the provided parameters.
+        Set up the bifurcation environment for parameter sweep analysis.
+        
+        This initializes the :class:`InflGame.adaptive.bifurcation_analysis.BifurcationEnv` instance
+        for computing equilibrium positions across parameter ranges. The bifurcation environment
+        extends the adaptive environment with specialized methods for systematic parameter variation.
+        
+        After calling this method, bifurcation analysis can be performed via methods like
+        ``self.bif_field.final_pos_over_reach()`` and ``self.bif_field.equilibrium_bifurcation_complete()``.
         """
         self.bif_field=BifurcationEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
@@ -892,6 +912,40 @@ class Shell:
                              fontmain= {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
                              save_types: List[str] = ['.png', '.svg'],
                              paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'}) -> matplotlib.figure.Figure:
+        """
+        Create combined visualization showing three-agent dynamics in 3D space alongside position trajectories.
+        
+        This method produces a side-by-side comparison plot for three-player games in 1D domains:
+        - Left panel: 3D visualization of agent positions over time
+        - Right panel: Traditional position vs. time plot
+        
+        Only available for 1D domains with exactly 3 agents, as it visualizes the 3-dimensional
+        trajectory space where each axis represents one agent's position.
+        
+        :param x_star: Equilibrium position (computed from resource distribution if not provided).
+        :type x_star: Optional[float]
+        :param title_ads: Additional title text components.
+        :type title_ads: List[str]
+        :param save: Whether to save the figure to file.
+        :type save: bool
+        :param name_ads: Additional filename components for saving.
+        :type name_ads: List[str]
+        :param fontL: Font configuration dictionary for left (3D) panel.
+        :type fontL: dict
+        :param fontR: Font configuration dictionary for right (position) panel.
+        :type fontR: dict
+        :param fontmain: Font configuration dictionary for main title.
+        :type fontmain: dict
+        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
+        :type paper_figure: dict
+        
+        :return: Combined matplotlib figure with both visualizations.
+        :rtype: matplotlib.figure.Figure
+        
+        :raises ValueError: If domain_type is not '1d' or num_agents is not 3.
+        """
         
         if self.domain_type=='1d':
             if x_star is None:
@@ -937,10 +991,10 @@ class Shell:
                                      percentage: float = None) -> Union[torch.Tensor, matplotlib.figure.Figure]:
         r"""
         Plots the equilibrium bifurcation for agents over a range of reach parameters. As :math:`\sigma` or as variance goes to zero for players' influence kernels, 
-        the players begin to bifuricate. This plotting function computes the gradient ascent alogorithm repetively for varying parameter values util the players reach an equalbiirum.
+        the players begin to bifurcate. This plotting function computes the gradient ascent algorithm repetively for varying parameter values until the players reach an equilibrium.
         
         I.e. each player will have a vector of final positions :math:`X_i=[x_1,x_2,\dots,x_A]` where :math:`A` is the number of test parameters and
-        :math:`x_i` is the final postion of the :math:`i` th player. Then the plot plots each players final postion.
+        :math:`x_i` is the final position of the :math:`i` th player. Then the plot plots each players final position.
 
         This is done via the function :func:`final_pos_over_reach`.
 
@@ -949,7 +1003,7 @@ class Shell:
         .. figure:: examples/bifurcation.png
             :scale: 75 %
 
-            This is a 5 player positions bifurication plot for a 1d domain`.
+            This is a 5 player positions bifurcation plot for a 1d domain.
              
         the critical values are estimated via :func:`InflGame.domains.one_d.utils.critical_values_plot`. 
 
@@ -958,25 +1012,27 @@ class Shell:
         .. figure:: examples/2d_bifurcation.png
             :scale: 75 %
 
-            This is a 6 player positions bifurication plot for a 2d domain`.
+            This is a 6 player positions bifurcation plot for a 2d domain.
 
         **Simplex example**
 
         .. figure:: examples/simplex_bifurcation.png
             :scale: 75 %
 
-            This is a 3 player positions bifurication plot for a simplex`.
+            This is a 3 player positions bifurcation plot for a simplex.
 
+        :param matrix: Pre-computed matrix of final positions (optional, will compute if None).
+        :type matrix: Optional[Dict]
         :param reach_start: Starting value of reach parameter.
         :type reach_start: float
         :param reach_end: Ending value of reach parameter.
         :type reach_end: float
         :param reach_num_points: Number of points in the reach parameter range.
         :type reach_num_points: int
-        :param num_interations: Number of gradient ascent steps.
-        :type num_interations: int
-        :param intitial_pos: Initial positions of agents.
-        :type intitial_pos: Union[List[float], np.ndarray]
+        :param time_steps: Number of gradient ascent steps.
+        :type time_steps: int
+        :param initial_pos: Initial positions of agents.
+        :type initial_pos: Union[List[float], np.ndarray]
         :param current_alpha: Current alpha value.
         :type current_alpha: float
         :param tolerance: Tolerance for convergence.
@@ -985,6 +1041,8 @@ class Shell:
         :type tolerated_agents: Optional[int]
         :param refinements: Refinement level for plotting.
         :type refinements: int
+        :param plot_type: Type of plot ('heat', 'trajectory', etc.).
+        :type plot_type: str
         :param title_ads: Additional titles for the plot.
         :type title_ads: List[str]
         :param name_ads: Additional names for saved files.
@@ -995,12 +1053,30 @@ class Shell:
         :type save_types: List[str]
         :param return_matrix: Whether to return the final position matrix.
         :type return_matrix: bool
-        :param parallel: Whether to use parallel processing.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None).
-        :type batch_size: Optional[int]
+        :param parallel_configs: Configuration dictionary for parallel processing with keys 'parallel', 'max_workers', 'batch_size'.
+        :type parallel_configs: Optional[Dict[str, Union[bool, int]]]
+        :param cmaps: Color map configuration dictionary.
+        :type cmaps: dict
+        :param font: Font configuration dictionary.
+        :type font: dict
+        :param cbar_config: Colorbar configuration dictionary.
+        :type cbar_config: dict
+        :param paper_figure: Paper figure configuration dictionary.
+        :type paper_figure: dict
+        :param show_pred: Whether to show predictions.
+        :type show_pred: bool
+        :param envelope: Whether to use envelope method.
+        :type envelope: bool
+        :param optional_vline: Optional vertical lines to add to plot.
+        :type optional_vline: Optional[List[float]]
+        :param verbose: Whether to print verbose output.
+        :type verbose: bool
+        :param complete: Whether to compute complete bifurcation envelope.
+        :type complete: bool
+        :param learning_rate: Learning rate schedule.
+        :type learning_rate: Optional[List]
+        :param percentage: Percentage threshold for envelope method.
+        :type percentage: Optional[float]
 
         :return: The generated plot figure or final position matrix.
         :rtype: Union[torch.Tensor, matplotlib.figure.Figure]
@@ -1191,8 +1267,8 @@ class Shell:
         :type alpha_st: float
         :param alpha_end: Ending value of alpha.
         :type alpha_end: float
-        :param varying_paramter_type: Type of varying parameter (e.g., 'mean').
-        :type varying_paramter_type: str
+        :param varying_parameter_type: Type of varying parameter (e.g., 'mean').
+        :type varying_parameter_type: str
         :param fixed_parameters_lst: List of fixed parameters.
         :type fixed_parameters_lst: Optional[List[float]]
         :param name_ads: Additional names for saved files.
@@ -1243,8 +1319,8 @@ class Shell:
         
     def position_at_equalibirum_histogram(self,
                                          reach_parameter: float = .5,
-                                         num_interations: int = 100,
-                                         intitial_pos: Union[List[float], np.ndarray] = 0,
+                                         time_steps: int = 100,
+                                         initial_pos: Union[List[float], np.ndarray] = 0,
                                          current_alpha: float = .5,
                                          tolerance: Optional[float] = None,
                                          tolerated_agents: Optional[int] = None,
@@ -1265,17 +1341,17 @@ class Shell:
         .. figure:: examples/histogram.png
             :scale: 75 %
 
-            This is the histogram of player postions at equalibirum for 5 player game.
+            This is the histogram of player positions at equilibrium for 5 player game.
              
            
         
 
         :param reach_parameter: Reach parameter value.
         :type reach_parameter: float
-        :param num_interations: Number of gradient ascent steps.
-        :type num_interations: int
-        :param intitial_pos: Initial positions of agents.
-        :type intitial_pos: Union[List[float], np.ndarray]
+        :param time_steps: Number of gradient ascent steps.
+        :type time_steps: int
+        :param initial_pos: Initial positions of agents.
+        :type initial_pos: Union[List[float], np.ndarray]
         :param current_alpha: Current alpha value.
         :type current_alpha: float
         :param tolerance: Tolerance for convergence.
@@ -1298,18 +1374,22 @@ class Shell:
         :type max_workers: Optional[int]
         :param batch_size: Batch size for processing (auto-calculated if None).
         :type batch_size: Optional[int]
+        :param paper_figure: Paper figure configuration dictionary.
+        :type paper_figure: dict
+        :param font: Font configuration dictionary.
+        :type font: dict
 
         :return: The generated plot figure or final positions.
         :rtype: Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]
         """
         og_iterations=self.time_steps
         og_pos=self.agents_pos.clone()
-        self.field.time_steps=num_interations
+        self.field.time_steps=time_steps
         
-        if not torch.is_tensor(intitial_pos):
-            intitial_pos=torch.tensor(intitial_pos)
-        self.agents_pos=intitial_pos.clone()
-        self.field.agents_pos=intitial_pos.clone()
+        if not torch.is_tensor(initial_pos):
+            initial_pos=torch.tensor(initial_pos)
+        self.agents_pos=initial_pos.clone()
+        self.field.agents_pos=initial_pos.clone()
         
         if tolerated_agents==None:
             tolerated_agents=self.tolerated_agents
@@ -1319,7 +1399,7 @@ class Shell:
         self.setup_bifurcation_env()
         if self.domain_type=="1d":
             reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_parameter,reach_end = reach_parameter,reach_num_points = 1)
-            final_pos_vector=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=num_interations)
+            final_pos_vector=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=time_steps)
             fig=one_plots.final_position_histogram_1d(num_agents=self.num_agents,domain_bounds=self.domain_bounds,current_alpha=current_alpha,reach_parameter=reach_parameter,final_pos_vector=final_pos_vector,title_ads=title_ads,font=font)
         else:
             ValueError("Histogram is limited to 1d domains")
@@ -1346,6 +1426,54 @@ class Shell:
                                   save_types: List[str] = ['.png', '.svg'],
                                   paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'},
                                   ) -> matplotlib.figure.Figure:
+        """
+        Create side-by-side bifurcation plots comparing Adaptive Dynamics (AD) and Multi-Agent Reinforcement Learning (MARL) approaches.
+        
+        This method generates comparative visualization showing how equilibrium positions change with parameter variation
+        for both gradient-based adaptive dynamics and reinforcement learning methods.
+        
+        :param parameters_AD: Configuration dictionary for adaptive dynamics bifurcation with keys:
+            - 'reach_start': Starting reach parameter value
+            - 'reach_end': Ending reach parameter value
+            - 'reach_num_points': Number of parameter points
+            - 'time_steps': Gradient ascent iterations
+            - 'tolerance': Convergence tolerance
+            - 'tolerated_agents': Number of agents for convergence check
+            - 'plot_type': Type of bifurcation plot
+            - 'refinements': Plot refinement level
+            - 'title_ads': Additional title strings
+            - 'cmaps': Color map configuration
+            - 'cbar_config': Colorbar configuration
+            - 'parallel_configs': Parallel processing settings
+            - 'font': Font configuration
+        :type parameters_AD: dict
+        :param parameters_MARL: Configuration dictionary for MARL bifurcation with keys:
+            - 'step_size': Step size for RL environment
+            - 'resource': Resource distribution type
+            - 'reach_start': Starting reach parameter
+            - 'reach_end': Ending reach parameter
+            - 'reach_parameters': Array of reach parameter values
+            - 'refinements': Plot refinement level
+            - 'plot_type': Type of bifurcation plot
+            - 'infl_type': Influence kernel type
+            - 'title_ads': Additional title strings
+            - 'font': Font configuration
+            - 'cbar_config': Colorbar configuration
+        :type parameters_MARL: dict
+        :param fontmain: Main font configuration for combined plot.
+        :type fontmain: dict
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param name_ads: Additional filename components for saving.
+        :type name_ads: List[str]
+        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
+        :type paper_figure: dict
+        
+        :return: Combined matplotlib figure with AD and MARL bifurcation plots.
+        :rtype: matplotlib.figure.Figure
+        """
 
 
 
@@ -1450,7 +1578,29 @@ class Shell:
 
     # 3d visualization for traces 
     def _process_point_worker(self, args):
-        """Worker function for processing gradient ascent from a starting point."""
+        """
+        Worker function for processing gradient ascent from a starting point in parallel execution.
+        
+        This helper method is used by parallel processing workflows to compute gradient ascent
+        trajectories from different initial positions. It handles state setup, execution, and
+        result packaging for multiprocessing.
+        
+        :param args: Tuple containing (point, color, shell_obj, time_steps) where:
+            - point: Starting position tensor for agents
+            - color: Color code for visualization
+            - shell_obj: Shell instance for gradient ascent computation
+            - time_steps: Maximum iterations for gradient ascent
+        :type args: Tuple[torch.Tensor, str, Shell, int]
+        
+        :return: Dictionary with trajectory information containing:
+            - 'path': Numpy array of position history
+            - 'color': Color code for this path
+            - 'converged': Boolean indicating convergence
+            - 'start': Starting position
+            - 'end': Final position
+            Returns None if processing fails.
+        :rtype: Optional[dict]
+        """
         point, color, shell_obj, time_steps = args
         try:
             # Set the starting position
@@ -1500,7 +1650,19 @@ class Shell:
             return None
 
     def simple_diagonal_test_point(self, point=None):
-        """Test a single point to verify gradient ascent works."""
+        """
+        Test a single point to verify gradient ascent functionality.
+        
+        This diagnostic method performs a simple gradient ascent run from a specified
+        starting point to verify that the core optimization loop is working correctly.
+        Useful for debugging and validation.
+        
+        :param point: Starting position for agents (defaults to [0.3, 0.5, 0.7] if None).
+        :type point: Optional[torch.Tensor]
+        
+        :return: True if gradient ascent successfully generated a path, False otherwise.
+        :rtype: bool
+        """
         if point is None:
             point = torch.tensor([0.3, 0.5, 0.7])
         
@@ -1536,7 +1698,7 @@ class Shell:
                              figsize=(12, 10),
                              seed=42,
                              include_boundaries=True,
-                             elev=10,  # Lower elevation to look down diagonal
+                             elev=10,
                              azim=45,
                              num_workers=4,
                              use_parallel=True,
@@ -1544,7 +1706,40 @@ class Shell:
                              verbose=False) -> matplotlib.figure.Figure:
         """
         Creates a 3D plot with fixed view looking down the x=y=z diagonal line,
-        with optional parallel processing for improved performance.
+        showing gradient ascent trajectories from multiple starting points with optional parallel processing.
+        
+        This method visualizes how agents starting from different initial positions converge
+        or diverge under gradient ascent dynamics. The view is oriented to look down the
+        main diagonal (x=y=z line) to better visualize symmetric and asymmetric equilibria.
+        Paths are color-coded by the ordering of initial agent positions.
+        
+        :param resolution: Number of test points per dimension (total points = resolution^3).
+        :type resolution: int
+        :param time_steps: Maximum gradient ascent iterations per trajectory.
+        :type time_steps: int
+        :param show_planes: Whether to display equality planes (x=y, y=z, x=z) for reference.
+        :type show_planes: bool
+        :param figsize: Figure dimensions in inches (width, height).
+        :type figsize: Tuple[int, int]
+        :param seed: Random seed for reproducibility of starting points.
+        :type seed: int
+        :param include_boundaries: Whether to include boundary points in the analysis.
+        :type include_boundaries: bool
+        :param elev: Elevation viewing angle in degrees (lower values look more downward).
+        :type elev: int
+        :param azim: Azimuth viewing angle in degrees (rotation around vertical axis).
+        :type azim: int
+        :param num_workers: Number of parallel worker processes.
+        :type num_workers: int
+        :param use_parallel: Whether to use parallel processing for trajectory computation.
+        :type use_parallel: bool
+        :param only_results: If True, return only the results dictionary without creating plot.
+        :type only_results: bool
+        :param verbose: Whether to print detailed progress information.
+        :type verbose: bool
+        
+        :return: Tuple of (matplotlib figure, list of trajectory result dictionaries).
+        :rtype: Tuple[matplotlib.figure.Figure, List[dict]]
         """
         # Set random seed for reproducibility
         torch.manual_seed(seed)
@@ -2148,22 +2343,26 @@ class Shell:
                                         start_color='red',
                                         end_color='green',
                                         title='3D Path of Gradient Ascent (Interactive)',
-                                        show_planes=False):  # New parameter
+                                        show_planes=False):
         """
         Creates an interactive 3D plot of gradient ascent paths from multiple starting points,
         with paths color-coded based on the initial position's quadrant.
         
-        Args:
-            self_field: The visualization field object
-            resolution (int): Resolution of the cube grid (points per dimension)
-            time_steps (int): Maximum number of steps for gradient ascent
-            start_color (str): Color of the starting points
-            end_color (str): Color of the ending points (for converged paths)
-            title (str): Plot title
-            show_planes (bool): Whether to show the equality planes (x=y, y=z, z=x)
+        :param resolution: Resolution of the cube grid (points per dimension).
+        :type resolution: int
+        :param time_steps: Maximum number of steps for gradient ascent.
+        :type time_steps: int
+        :param start_color: Color of the starting points.
+        :type start_color: str
+        :param end_color: Color of the ending points (for converged paths).
+        :type end_color: str
+        :param title: Plot title.
+        :type title: str
+        :param show_planes: Whether to show the equality planes (x=y, y=z, z=x).
+        :type show_planes: bool
             
-        Returns:
-            plotly.graph_objects.Figure: Interactive 3D plot
+        :return: Interactive 3D plot.
+        :rtype: plotly.graph_objects.Figure
         """
         # Function to generate a 3D unit cube grid
         def unit_cube_3d(resolution=10):
@@ -2394,7 +2593,229 @@ class Shell:
         )
         
         return fig
+    def first_order_bifurcation_plot(self,
+                                     processed_data: dict,
+                                     alpha_st: float = 0,
+                                     alpha_end: float = 1,
+                                     alpha_values = None,
+                                     cutoff_index = None,
+                                     title_ads: List[str] = [],
+                                     save: bool = False,
+                                     name_ads: List[str] = [],
+                                     font ={'default_size': 24, 'cbar_size': 16, 'title_size': 34, 'legend_size': 12, 'table_size':15,'label_size':10,'font_family': 'sans-serif',},
+                                     save_types: List[str] = ['.png', '.svg'],
+                                     paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'bif_diag'}
+                                     ) -> matplotlib.figure.Figure:
+        r"""
+        Generate and plot first-order bifurcation diagram with stability analysis.
+        
+        This method creates a visualization of first-order (saddle-node) bifurcations by computing
+        equilibrium positions and their stability across a parameter range. The plot shows how
+        equilibrium agent positions change as a resource parameter (alpha) varies, with stability
+        indicated through :func:`InflGame.adaptive.jacobian.jacobian_stability_fast`.
+        
+        The method supports both original format (e.g., Gaussian kernels) and processed data format
+        with pre-computed stability flips, making it flexible for different analysis workflows.
+        
+        First-order bifurcations are characterized by the creation or annihilation of equilibrium pairs,
+        typically visualized as branches that meet and disappear at critical parameter values.
 
+        **Example Gaussian Bifurcation Diagram**
+
+        .. figure:: examples/first_order.png
+            :scale: 75 %
+
+            First-order bifurcation plot for 5 players using symmetric Gaussian influence kernels.
+                
+
+        :param infl_type: Type of influence kernel ('gaussian', 'beta', etc.).
+        :type infl_type: str
+        :param alpha_st: Starting value of the resource parameter range.
+        :type alpha_st: float
+        :param alpha_end: Ending value of the resource parameter range.
+        :type alpha_end: float
+        :param processed_data: Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
+        :type processed_data: Optional[dict]
+        :param alpha_values: Array of alpha (parameter) values corresponding to equilibria.
+        :type alpha_values: Optional[np.ndarray]
+        :param cutoff_index: Index to truncate the data (useful for focusing on specific parameter ranges).
+        :type cutoff_index: Optional[int]
+        :param title_ads: Additional text to append to plot title.
+        :type title_ads: List[str]
+        :param save: Whether to save the plot to file.
+        :type save: bool
+        :param name_ads: Additional text for saved filename.
+        :type name_ads: List[str]
+        :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 
+                     'legend_size', 'table_size', 'label_size', 'font_family'.
+        :type font: Dict
+        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
+                            'section' (str), 'figure_id' (str).
+        :type paper_figure: dict
+
+        :return: The generated matplotlib figure object.
+        :rtype: matplotlib.figure.Figure
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            fig = vis.first_order_bifurcation_plot(
+                infl_type='gaussian',
+                alpha_st=0.0,
+                alpha_end=1.0,
+                save=True,
+                name_ads=['my_bifurcation'],
+                title_ads=['3-Player System']
+            )
+            fig.show()
+        """
+
+
+                                
+        
+        font['font.family'] = font.get('font_family', 'sans-serif')
+        default_font_size = font.get('default_size', 12)
+        title_font_size = font.get('title_size', 14)
+        legend_font_size = font.get('legend_size', 12)
+        mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
+        mpl.rcParams['legend.fontsize'] = legend_font_size
+        
+        fig,ax=plt.subplots(figsize=(24, 16))
+        ax.set_box_aspect(1)
+        infl_type = self.infl_type
+        infl_type=self.infl_type
+        # Apply font settings
+        plt.rcParams.update({'font.size': font['default_size'], 'font.family': font['font_family']})
+        
+        # Determine which format we're using
+        # Original Gaussian case: using test['final_parameters'] as arrays
+        if alpha_values is None:
+                raise ValueError("alpha_values must be provided when using processed_data")
+            
+        if cutoff_index is None:
+                cutoff_index = len(alpha_values)
+        
+        alpha = alpha_values[:cutoff_index]
+        has_cycles = 'cycles_end' in processed_data and processed_data['cycles_end'] is not None
+        if self.num_agents>=5:
+            y = processed_data['sigma_star'][:cutoff_index]
+            ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
+            ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
+            ax.fill_between(alpha, 0, y,where=(alpha >= alpha_st), color="#388001", alpha=0.5)
+        else:
+            y = processed_data['sigma_star'][:cutoff_index]
+            z = processed_data['unstable_flip'][:cutoff_index, 0]
+            
+            
+            
+            # Plot sigma_star and unstable flip
+            ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
+            ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
+            
+            if infl_type == 'beta':
+                # If stable flip exists, add it
+                if processed_data['max_stable_len'] > 0:
+                    w = processed_data['stable_flip'][:cutoff_index, 0]
+                    ax.plot(alpha, w, label=r'$\sigma^{*}_1$ est.', color='black', linestyle='dashdot')
+                    ax.fill_between(alpha, w, y, where=(alpha >= alpha_st), color='#FF6B6B', alpha=0.5)  # Coral red for 2-1
+                    ax.fill_between(alpha, z, w, where=(alpha >= alpha_st), color='#9370DB', alpha=0.5)  # Medium purple for 1-1-1
+                else:
+                    ax.fill_between(alpha, 0, z, where=(alpha >= alpha_st), color='#FF6B6B', alpha=0.5)  # Coral red for 2-1
+                ax.plot(alpha, z, label=r'$\sigma^{*}_2$ est.', color='black', linestyle='--')
+                
+                # Fill regions with improved colors
+                if has_cycles:
+                    # Handle both 1D and 2D arrays for cycles_end
+                    cycles_data = processed_data['cycles_end']
+                    if isinstance(cycles_data, np.ndarray) and cycles_data.ndim > 1:
+                        w = cycles_data[:cutoff_index].flatten() if cycles_data.shape[1] == 1 else cycles_data[:cutoff_index, 0]
+                    else:
+                        w = np.array(cycles_data)[:cutoff_index]
+                    ax.plot(alpha, w, label=r'$\sigma^{*}_3$ est.', color='black', linestyle='dotted')
+                    ax.fill_between(alpha, w, z, where=(alpha >= alpha_st), color='#FFD700', alpha=0.5)  # Gold for cycle
+                    ax.fill_between(alpha, 0, w, where=(alpha >= alpha_st), color='#FF6B6B', alpha=0.5)  # Coral red for 2-1
+                
+            
+            else:
+                if self.num_agents==4:
+                    # Gaussian case: Fill regions with improved colors
+                    ax.fill_between(alpha, y, z, where=(alpha >= alpha_st), color='#9370DB', alpha=0.5)
+                    ax.plot(alpha, z, label=r'$\sigma^{*}_1$ est.', color='black', linestyle='--')
+                    ax.fill_between(alpha, 0, z,where=(alpha >= alpha_st), color="#388001", alpha=0.5)
+                    ax.fill_between(alpha, 0, y,where=(alpha >= alpha_st), facecolor='none', edgecolor="#090909", hatch='\\\\\\', linewidth=0)
+                        
+                else:
+                    # Gaussian case: Fill regions with improved colors
+                    ax.fill_between(alpha, y, z, where=(alpha >= alpha_st), color='#9370DB', alpha=0.5)
+                    ax.plot(alpha, z, label=r'$\sigma^{*}_1$ est.', color='black', linestyle='--')
+                    
+                    if has_cycles:
+                        # Handle both 1D and 2D arrays for cycles_end
+                        cycles_data = processed_data['cycles_end']
+                        if isinstance(cycles_data, np.ndarray) and cycles_data.ndim > 1:
+                            w = cycles_data[:cutoff_index].flatten() if cycles_data.shape[1] == 1 else cycles_data[:cutoff_index, 0]
+                        else:
+                            w = np.array(cycles_data)[:cutoff_index]
+                        ax.plot(alpha, w, label=r'$\sigma^{*}_2$ est.', color='black', linestyle='dotted')
+                        ax.fill_between(alpha, w, z, where=(alpha >= alpha_st), color='#FFD700', alpha=0.5)  # Gold for cycle
+                        ax.fill_between(alpha, 0, w, where=(alpha >= alpha_st), color='#FF6B6B', alpha=0.5)  # Coral red for 2-1
+            
+        
+        plt.ylim(0, max(max(y), .3))
+        
+        # Legend patches with improved colors
+        red_p = mpatches.Patch(color='#FF6B6B', alpha=0.5, label=f'({self.num_agents-1},1) or (1,{self.num_agents-1})')
+        yellow_p = mpatches.Patch(color='#FFD700', alpha=0.5, label='cycle')
+        purple_p = mpatches.Patch(color='#9370DB', alpha=0.5, label=f'(1,{self.num_agents-2},1)')
+        blue_p = mpatches.Patch(color='#87CEEB', alpha=0.5, label=r'sym nash')
+        green_p = mpatches.Patch(color='#388001', alpha=0.5, label=r'Mixed results')
+        black_p = mpatches.Patch(facecolor='white', edgecolor='#090909', hatch='\\\\\\', label='(2,2) dom')
+        old_handles, labels = ax.get_legend_handles_labels()
+        
+        # Conditionally add legend patches based on what's plotted
+        legend_handles = [blue_p]
+        if infl_type == 'beta':
+            legend_handles.append(red_p)
+            legend_handles.append(purple_p)
+            if has_cycles:
+                legend_handles.append(yellow_p)
+        else:
+            if self.num_agents==4:
+                legend_handles.append(black_p)
+                legend_handles.append(purple_p)
+                legend_handles.append(green_p)
+            elif self.num_agents>=5:
+                legend_handles.append(green_p)
+            else:
+                legend_handles.append(purple_p)
+            if has_cycles:
+                legend_handles.append(yellow_p)
+                legend_handles.append(red_p)
+            
+            
+
+        
+        plt.legend(handles=legend_handles + old_handles)
+        plt.ylabel("$\sigma$ (reach)", fontsize=font['default_size'])
+        plt.xlabel(r"$\alpha$ (mode distance)", fontsize=font['default_size'])
+        
+        title = r"$(\alpha,\sigma)$ $x^{*}$ stability bifurication for " + str(self.num_agents) + " players"
+        if len(title_ads) > 0:
+            for title_additon in title_ads:
+                title = title + " " + title_additon
+        plt.title(title, fontsize=font['title_size'])
+        plt.xlim(alpha_st, alpha[cutoff_index-1]) 
+        plt.close()
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bif_diagram','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','bif_diagram')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            for file_name in file_names:
+                fig.savefig(file_name,bbox_inches='tight')
+            
+        return fig ,ax
     #Utils integrated into the class for simplicity
     def calc_infl_dist(self,
                        pos: torch.Tensor,
@@ -2493,22 +2914,32 @@ class Shell:
                                 resource_entropy: bool = False,
                                 infl_entropy: bool = False) -> Tuple[List[torch.Tensor], List[float], List[float]]:
         """
-        Calculate the stability of the symmetric Nash equalbirium via analytically calculating the maximum Eigenvalues of the Jacobian. This function only works for 
-        multi-variate Gaussian influence and 1d Gaussian kernels. 
-
-        :param agent_parameter_instance: Parameters for the influence function.
+        Calculate the stability of the symmetric Nash equilibrium via analytical computation of maximum eigenvalues.
+        
+        This method analytically computes the Jacobian matrix eigenvalues at the symmetric Nash equilibrium
+        to determine stability regions. Currently supports Gaussian and multi-variate Gaussian influence kernels.
+        
+        The symmetric Nash equilibrium position is computed based on the resource distribution,
+        and stability is assessed by examining the sign of the maximum real eigenvalue of the Jacobian.
+        
+        :param agent_parameter_instance: Parameters for the influence function (e.g., sigma for Gaussian).
         :type agent_parameter_instance: Union[List[float], np.ndarray]
-        :param resource_distribution_type: Type of resource distribution.
+        :param resource_distribution_type: Type of resource distribution ('gauss_mix_2m', 'uniform', etc.).
         :type resource_distribution_type: str
-        :param resource_parameters: Resource parameters.
+        :param resource_parameters: Parameters defining the resource distribution for each test point.
         :type resource_parameters: Union[List[float], np.ndarray]
-        :param resource_entropy: Whether to calculate resource entropy.
+        :param resource_entropy: Whether to calculate and return entropy of resource distributions.
         :type resource_entropy: bool
-        :param infl_entropy: Whether to calculate influence entropy.
+        :param infl_entropy: Whether to calculate and return entropy of influence distributions.
         :type infl_entropy: bool
 
-        :return: The stability parameters, resource entropy, and influence entropy.
+        :return: Tuple containing:
+            - List of critical parameter values (one per resource configuration)
+            - List of resource entropies (empty if resource_entropy=False)
+            - List of influence entropies (empty if infl_entropy=False)
         :rtype: Tuple[List[torch.Tensor], List[float], List[float]]
+        
+        :raises ValueError: If influence type is not 'gaussian' or 'multi_gaussian'.
         """
         og_pos=self.agents_pos.clone()
         parameter_star_list=[]
@@ -2544,13 +2975,15 @@ class Shell:
         """
         Identify parameter values where eigenvalue real parts are close to zero.
         
-        Args:
-            test_eval: Tensor of eigenvalues [n_params, n_agents]
-            parameters_list: Tensor of parameter values [n_params, n_agents]
-            threshold: Maximum absolute value to consider "close to zero"
+        :param test_eval: Tensor of eigenvalues [n_params, n_agents].
+        :type test_eval: torch.Tensor
+        :param parameters_list: Tensor of parameter values [n_params, n_agents].
+        :type parameters_list: torch.Tensor
+        :param threshold: Maximum absolute value to consider "close to zero".
+        :type threshold: float
             
-        Returns:
-            Tuple of (parameter indices, parameter values) near zero crossings
+        :return: Tuple of (parameter indices, parameter values, real parts) near zero crossings.
+        :rtype: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
         """
         # Extract real parts from eigenvalues
         real_parts = test_eval.real
@@ -2568,13 +3001,15 @@ class Shell:
         """
         Perform detailed analysis of zero crossings in the refined parameter space.
         
-        Args:
-            refined_parameters: Tensor of refined parameter values
-            refined_eval: Tensor of eigenvalues at refined parameters
-            x_star: Theoretical critical point (if available)
+        :param refined_parameters: Tensor of refined parameter values.
+        :type refined_parameters: torch.Tensor
+        :param refined_eval: Tensor of eigenvalues at refined parameters.
+        :type refined_eval: torch.Tensor
+        :param x_star: Theoretical critical point (if available).
+        :type x_star: Optional[torch.Tensor]
         
-        Returns:
-            Dictionary of analysis results and figure handles
+        :return: Dictionary of analysis results and figure handles.
+        :rtype: dict
         """
         # Extract parameter values and real/imaginary parts
         param_indices = refined_parameters[:, 0]
@@ -2692,13 +3127,15 @@ class Shell:
         """
         Perform high-resolution analysis near the theoretical critical point x*.
         
-        Args:
-            x_star: Theoretical critical point
-            padding: Range to examine on either side of x*
-            num_points: Number of parameter points to examine
+        :param x_star: Theoretical critical point.
+        :type x_star: torch.Tensor
+        :param padding: Range to examine on either side of x*.
+        :type padding: float
+        :param num_points: Number of parameter points to examine.
+        :type num_points: int
             
-        Returns:
-            Analysis results focused on the critical point
+        :return: Analysis results focused on the critical point.
+        :rtype: dict
         """
         # Create parameter range centered on x*
         x_star_val = x_star.item()
@@ -2863,14 +3300,17 @@ class Shell:
         """
         Complete workflow to find, refine, and analyze eigenvalue zero crossings.
         
-        Args:
-            test_eval: Tensor of eigenvalues
-            parameters_list: Tensor of parameter values
-            x_star: Theoretical critical point (if available)
-            threshold: Maximum absolute value to consider "close to zero"
+        :param test_eval: Tensor of eigenvalues.
+        :type test_eval: torch.Tensor
+        :param parameters_list: Tensor of parameter values.
+        :type parameters_list: torch.Tensor
+        :param x_star: Theoretical critical point (if available).
+        :type x_star: Optional[torch.Tensor]
+        :param threshold: Maximum absolute value to consider "close to zero".
+        :type threshold: float
             
-        Returns:
-            Analysis results
+        :return: Analysis results dictionary.
+        :rtype: Optional[dict]
         """
         # Use the imported function from stability_analysis
         zero_indices, zero_params, real_parts = self.find_zero_crossings(test_eval, parameters_list, threshold)

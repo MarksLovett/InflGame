@@ -1,5 +1,5 @@
-﻿Data Management 
-===============================
+﻿Data Management
+===============================================
 
 .. currentmodule:: InflGame.utils.data_management
 

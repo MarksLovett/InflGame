@@ -1,5 +1,5 @@
-﻿General Utilities 
-==============================
+﻿General Utilities
+===============================================
 
 .. currentmodule:: InflGame.utils.general
 
@@ -10,6 +10,9 @@
 
    .. autosummary::
    
+      agent_optimal_position_setup
+      agent_parameter_setup
+      agent_position_setup
       discrete_covariance
       discrete_mean
       discrete_variance
@@ -17,12 +20,14 @@
       figure_final_name
       figure_name
       flatten_list
+      generate_color_palette
+      get_color_by_index
       learning_rate
       matrix_builder
       organize_array
-      player_optimal_position_setup
-      player_parameter_setup
-      player_position_setup
       resource_parameter_setup
+      smoothing_zeros
+      smoothing_zeros_batch
       split_favor_bottom
+      trust_region_learning_rate
    

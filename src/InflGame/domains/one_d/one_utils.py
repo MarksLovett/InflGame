@@ -45,26 +45,37 @@ def critical_values_plot(num_agents: int,
                          refinements: int = 2,
                          crit_cs: str = 'Greys') -> tuple:
     """
-    Plot critical values given a resource distribution and number of agents t_* (assume symmetric splitting).
+    Plot critical values given a resource distribution and number of agents :math:`t_*` (assuming symmetric splitting).
+    
+    This function calculates and visualizes critical threshold values for agent positioning in a 1D domain,
+    using recursive symmetric splitting to determine equilibrium configurations.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param bin_points: Points representing bins for resources.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Distribution of resources.
-    :type resource_distribution: torch.Tensor
-    :param axis: Matplotlib axis to plot on.
-    :type axis: plt.Axes
-    :param reach_start: Starting reach value, defaults to 0.3.
-    :type reach_start: float, optional
-    :param reach_end: Ending reach value, defaults to 0.
-    :type reach_end: float, optional
-    :param refinements: Number of refinements for splitting, defaults to 2.
-    :type refinements: int, optional
-    :param crit_cs: Color scheme for the plot, defaults to 'Greys'.
-    :type crit_cs: str, optional
-    :return: Updated axis, list of means for axis, and standard deviations.
-    :rtype: tuple
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the system.
+    bin_points : np.ndarray
+        Points representing bins for resource discretization.
+    resource_distribution : torch.Tensor
+        Distribution of resources across the domain.
+    axis : plt.Axes
+        Matplotlib axis object to plot on.
+    reach_start : float, optional
+        Starting reach value for critical threshold visualization, by default 0.3.
+    reach_end : float, optional
+        Ending reach value for critical threshold visualization, by default 0.
+    refinements : int, optional
+        Number of refinement iterations for symmetric splitting, by default 2.
+    crit_cs : str, optional
+        Colormap scheme for the critical value plot, by default 'Greys'.
+
+    Returns
+    -------
+    tuple
+        A tuple containing:
+        - axis (plt.Axes): Updated matplotlib axis with plotted critical values
+        - mean_for_axis (List[torch.Tensor]): List of mean values for each split level
+        - std_divisions (List[List[float]]): List of standard deviation values at each bifurcation level
     """
     # Convert bin_points to tensor for consistent operations
     bin_points_tensor = torch.tensor(bin_points) if not isinstance(bin_points, torch.Tensor) else bin_points
@@ -173,13 +184,26 @@ def critical_values_plot(num_agents: int,
 def _get_support_mask(split_id: int, num_splits: int, mid_point: torch.Tensor, 
                      bin_points: torch.Tensor) -> torch.Tensor:
     """
-    Helper function to get support mask for a given split.
+    Helper function to compute the support mask for a given split region.
     
-    :param split_id: ID of the current split
-    :param num_splits: Total number of splits
-    :param mid_point: Midpoint values for splits
-    :param bin_points: Bin points tensor
-    :return: Boolean mask for the support region
+    Determines which bin points fall within the support region of a particular split,
+    based on the split ID and midpoint boundaries.
+
+    Parameters
+    ----------
+    split_id : int
+        ID of the current split region.
+    num_splits : int
+        Total number of splits in the current bifurcation level.
+    mid_point : torch.Tensor
+        Tensor containing midpoint values that define split boundaries.
+    bin_points : torch.Tensor
+        Tensor of bin points for resource discretization.
+
+    Returns
+    -------
+    torch.Tensor
+        Boolean mask tensor indicating which bin points fall within the support region.
     """
     if split_id == 0:
         return mid_point[split_id] > bin_points
@@ -193,18 +217,28 @@ def symmetric_splitting(bin_points: Union[np.ndarray, torch.Tensor],
                         bifurcation_count: int,
                         means: List[float]) -> Tuple[List[torch.Tensor], List[torch.Tensor]]:
     """
-    Perform symmetric splitting of resources based on means.
+    Perform symmetric splitting of resource distribution based on means.
+    
+    Recursively divides the resource distribution into symmetric regions based on bifurcation count,
+    calculating local means for each split region.
 
-    :param bin_points: Points representing bins for resources.
-    :type bin_points: Union[np.ndarray, torch.Tensor]
-    :param resource_distribution: Distribution of resources.
-    :type resource_distribution: Union[torch.Tensor, np.ndarray]
-    :param bifurcation_count: Number of bifurcations.
-    :type bifurcation_count: int
-    :param means: List of means for splitting.
-    :type means: List[float]
-    :return: Symmetric splits and final array of means.
-    :rtype: Tuple[List[torch.Tensor], List[torch.Tensor]]
+    Parameters
+    ----------
+    bin_points : Union[np.ndarray, torch.Tensor]
+        Points representing bins for resource discretization.
+    resource_distribution : Union[torch.Tensor, np.ndarray]
+        Distribution of resources across the domain.
+    bifurcation_count : int
+        Number of bifurcation levels, determines :math:`2^{bifurcation\_count}` splits.
+    means : List[float]
+        List of mean values from previous bifurcation level used as boundaries.
+
+    Returns
+    -------
+    Tuple[List[torch.Tensor], List[torch.Tensor]]
+        A tuple containing:
+        - symmetric_splits (List[torch.Tensor]): List of locally computed means for each split region
+        - final_array (List[torch.Tensor]): Combined list of boundary means and local means
     """
     # Convert inputs to tensors for consistent operations
     if not isinstance(bin_points, torch.Tensor):
@@ -249,13 +283,25 @@ def symmetric_splitting(bin_points: Union[np.ndarray, torch.Tensor],
 def _get_support_mask_symmetric(split_id: int, num_splits: int, means: List[float], 
                                bin_points: torch.Tensor) -> torch.Tensor:
     """
-    Helper function to get support mask for symmetric splitting.
+    Helper function to compute support mask for symmetric splitting operations.
     
-    :param split_id: ID of the current split
-    :param num_splits: Total number of splits
-    :param means: List of mean values
-    :param bin_points: Bin points tensor
-    :return: Boolean mask for the support region
+    Determines which bin points belong to each symmetric split region based on mean boundaries.
+
+    Parameters
+    ----------
+    split_id : int
+        ID of the current split region.
+    num_splits : int
+        Total number of splits at the current bifurcation level.
+    means : List[float]
+        List of mean values defining split boundaries.
+    bin_points : torch.Tensor
+        Tensor of bin points for resource discretization.
+
+    Returns
+    -------
+    torch.Tensor
+        Boolean mask tensor indicating which bin points fall within the symmetric split region.
     """
     if split_id == 0:
         # For the first split, check if we have any means
@@ -282,20 +328,28 @@ def direction_strength_1d(gradient_function,
                           ids: List[int] = [0, 1],
                           pos: torch.Tensor = None) -> torch.Tensor:
     """
-    Compute the gradient strength in a 1D direction using PyTorch operations.
+    Compute gradient strength in a 1D direction using PyTorch operations.
+    
+    Evaluates the gradient function across a 2D grid to compute directional gradient strengths,
+    useful for vector field visualization in 1D domains.
 
-    :param gradient_function: Function to compute gradients.
-    :type gradient_function: callable
-    :param two_a: Flag indicating whether to use two arguments.
-    :type two_a: bool
-    :param parameter_instance: Parameters for the gradient function, defaults to 0.
-    :type parameter_instance: Union[list, np.ndarray, torch.Tensor], optional
-    :param ids: Indices for the gradient computation, defaults to [0, 1].
-    :type ids: List[int], optional
-    :param pos: Position tensor, defaults to None.
-    :type pos: torch.Tensor, optional
-    :return: Computed gradients.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    gradient_function : callable
+        Function to compute gradients, should accept position and parameters.
+    two_a : bool
+        Flag indicating whether the gradient function uses a two-argument coordinate array format.
+    parameter_instance : Union[list, np.ndarray, torch.Tensor], optional
+        Parameters for the influence function, by default 0.
+    ids : List[int], optional
+        Indices of agents to compute gradients for, by default [0, 1].
+    pos : torch.Tensor, optional
+        Position tensor for agents, by default None.
+
+    Returns
+    -------
+    torch.Tensor
+        Computed gradient values as a flattened tensor of shape :math:`(10000,)` for a 100x100 grid.
     """
     # Create coordinate grid using torch to match the OLD version's np.mgrid behavior
     # np.mgrid[0:1:100j, 0:1:100j] creates Y, X order
@@ -358,20 +412,29 @@ def direction_strength_1d_OLD(gradient_function,
                           ids: list = [0, 1],
                           pos: torch.Tensor = None):
     """
-    Compute the gradient strength in a 1D direction.
+    Compute gradient strength in a 1D direction (legacy NumPy implementation).
+    
+    .. deprecated::
+        This is the original NumPy-based implementation. Use :func:`direction_strength_1d` for 
+        PyTorch-based operations with autograd support.
 
-    :param gradient_function: Function to compute gradients.
-    :type gradient_function: callable
-    :param two_a: Flag indicating whether to use two arguments.
-    :type two_a: bool
-    :param parameter_instance: Parameters for the gradient function, defaults to 0.
-    :type parameter_instance: list | np.ndarray | torch.Tensor, optional
-    :param ids: Indices for the gradient computation, defaults to [0, 1].
-    :type ids: list, optional
-    :param pos: Position tensor, defaults to None.
-    :type pos: torch.Tensor, optional
-    :return: Computed gradients.
-    :rtype: np.ndarray
+    Parameters
+    ----------
+    gradient_function : callable
+        Function to compute gradients.
+    two_a : bool
+        Flag indicating whether to use two-argument coordinate array format.
+    parameter_instance : list | np.ndarray | torch.Tensor, optional
+        Parameters for the gradient function, by default 0.
+    ids : list, optional
+        Indices for the gradient computation, by default [0, 1].
+    pos : torch.Tensor, optional
+        Position tensor, by default None.
+
+    Returns
+    -------
+    np.ndarray
+        Computed gradients as a NumPy array.
     """
     Y, X = np.mgrid[0:1:100j, 0:1:100j]
     a1=X.flatten()
@@ -390,20 +453,28 @@ def direction_strength_1d_OLD(gradient_function,
 
 def projection_to_plane_coordinates(matrix: torch.Tensor) -> torch.Tensor:
     """
-    Project 3D coordinates to 2D plane coordinates using optimized vectorized operations.
+    Project 3D simplex coordinates to 2D plane coordinates using orthogonal projection.
+    
+    Uses an orthogonal projection matrix to map 3D barycentric coordinates onto a 2D plane
+    for visualization purposes. The projection preserves relative distances and orientations.
     
     Following project patterns:
+    
     - Use vectorized torch operations for performance
     - Handle dtype compatibility automatically
     - Maintain tensor device consistency
     - Handle single vector and batch inputs
     - Ensure consistent dtype=torch.float32 output
-    
-    Args:
-        matrix: Input tensor of shape (3,) or (N, 3) containing 3D coordinates
-        
-    Returns:
-        torch.Tensor: Projected 2D coordinates of shape (2,) or (N, 2) with dtype=torch.float32
+
+    Parameters
+    ----------
+    matrix : torch.Tensor
+        Input tensor of shape :math:`(3,)` or :math:`(N, 3)` containing 3D coordinates.
+
+    Returns
+    -------
+    torch.Tensor
+        Projected 2D coordinates of shape :math:`(2,)` or :math:`(N, 2)` with dtype=torch.float32.
     """
     # Ensure input is 2D for batch processing - following project patterns
     if matrix.dim() == 1:
@@ -439,25 +510,37 @@ def projection_to_plane_coordinates(matrix: torch.Tensor) -> torch.Tensor:
 def projection_to_3d_auto_constrained(matrix: torch.Tensor, target_bounds: tuple = (0.0, 1.0), 
                                      tolerance: float = 1e-8, max_iterations: int = 100) -> torch.Tensor:
     """
-    Mathematically correct 3D projection with automatic constraint satisfaction.
+    Project 2D plane coordinates back to 3D simplex coordinates with automatic constraint satisfaction.
+    
+    Uses the Moore-Penrose pseudo-inverse to compute a base 3D projection from 2D coordinates,
+    then applies an offset along the :math:`[1,1,1]` direction to ensure all coordinates satisfy
+    simplex constraints (all elements within target_bounds).
     
     Following Influencer Games patterns:
+    
     - Use torch tensor operations for autograd compatibility
     - State management with .clone() for torch tensors
-    - Adaptive optimization to find optimal c parameter
+    - Adaptive optimization to find optimal offset parameter
     - Handle single vector and batch inputs
     - Ensure consistent dtype=torch.float32 output
     - Convergence checking with project tolerance patterns
-    
-    Args:
-        matrix: Input tensor of shape (2,) or (N, 2) containing 2D coordinates
-        target_bounds: Tuple (min_val, max_val) for coordinate constraints
-        tolerance: Convergence tolerance following project patterns (default: 1e-8)
-        max_iterations: Maximum iterations for c optimization
-        
-    Returns:
-        torch.Tensor: Projected 3D coordinates of shape (3,) or (N, 3) with dtype=torch.float32,
-                     all elements guaranteed to be within target_bounds
+
+    Parameters
+    ----------
+    matrix : torch.Tensor
+        Input tensor of shape :math:`(2,)` or :math:`(N, 2)` containing 2D plane coordinates.
+    target_bounds : tuple, optional
+        Tuple :math:`(min\_val, max\_val)` for coordinate constraints, by default (0.0, 1.0).
+    tolerance : float, optional
+        Convergence tolerance for constraint satisfaction, by default 1e-8.
+    max_iterations : int, optional
+        Maximum iterations for offset optimization (currently unused), by default 100.
+
+    Returns
+    -------
+    torch.Tensor
+        Projected 3D coordinates of shape :math:`(3,)` or :math:`(N, 3)` with dtype=torch.float32,
+        all elements guaranteed to be within target_bounds.
     """
     # Handle single vector input - following project patterns
     if matrix.dim() == 1:
@@ -514,24 +597,44 @@ def projection_to_3d_auto_constrained(matrix: torch.Tensor, target_bounds: tuple
 
 def generate_constrained_2d_points(num_points=50, method='analytical_transform'):
     """
-    Generate 2D points (x,y) such that:
-    1. x ∈ [-1/√2, 1/√2] 
-    2. y ∈ [-1/√2, 1/√2]
-    3. (x-y) ∈ [-1/√2, 1/√2]
+    Generate 2D points satisfying simplex projection constraints.
+    
+    Generates 2D points :math:`(x,y)` that satisfy the constraints:
+    
+    1. :math:`x \\in [-1/\\sqrt{2}, 1/\\sqrt{2}]`
+    2. :math:`y \\in [-1/\\sqrt{2}, 1/\\sqrt{2}]`
+    3. :math:`(x-y) \\in [-1/\\sqrt{2}, 1/\\sqrt{2}]`
+    
+    These constraints ensure the points can be validly projected back to 3D simplex coordinates.
     
     Following Influencer Games patterns:
+    
     - Use torch tensor operations for autograd compatibility
     - State management with .clone() for torch tensors
     - Handle domain bounds properly for 1D domain type
     - Return torch.float32 tensors
     - Memory management with matrix clearing
-    
-    Args:
-        num_points: Number of valid 2D points to generate
-        method: Generation method ('analytical_transform', 'rejection_sampling', 'grid_filtering')
+
+    Parameters
+    ----------
+    num_points : int, optional
+        Number of valid 2D points to generate, by default 50.
+    method : str, optional
+        Generation method, by default 'analytical_transform'.
         
-    Returns:
-        dict: Contains 'points_2d', 'constraint_values', and metadata
+        - ``'analytical_transform'``: Transform from :math:`(u,v)` coordinates with analytic bounds
+        - ``'rejection_sampling'``: Random sampling with constraint rejection
+        - ``'grid_filtering'``: Grid-based approach with constraint filtering
+
+    Returns
+    -------
+    dict
+        Dictionary containing:
+        
+        - ``'points_2d'`` (torch.Tensor): Generated 2D points of shape :math:`(N, 2)`
+        - ``'constraint_values'`` (torch.Tensor): Constraint check values :math:`[x, y, x-y]`
+        - ``'method'`` (str): Method used for generation
+        - Additional metadata depending on method (success_rate, acceptance_rate, etc.)
     """
     sqrt2_inv = 1.0 / np.sqrt(2)
     
@@ -674,20 +777,33 @@ def generate_constrained_2d_points(num_points=50, method='analytical_transform')
 
 def classify_equilibrium_type(positions, tolerance=1e-3):
     """
-    Classify equilibrium type based on how many agents share similar positions,
-    distinguishing between different spatial arrangements.
+    Classify equilibrium type based on spatial grouping of agents.
     
-    Args:
-        positions: Array of agent positions
-        tolerance: Tolerance for considering positions as equal
-    
-    Returns:
+    Groups agents whose positions are within tolerance and returns a classification string
+    describing the group sizes in spatial order (left to right).
+
+    Parameters
+    ----------
+    positions : array_like
+        Array of agent positions (supports both NumPy arrays and torch tensors).
+    tolerance : float, optional
+        Tolerance for considering positions as equal, by default 1e-3.
+
+    Returns
+    -------
+    str
         String describing equilibrium type with groups in spatial order:
-        - '(n)' : All agents together
-        - '(n-1,1)' : n-1 agents grouped at lower position, 1 isolated higher
-        - '(1,n-1)' : 1 agent isolated at lower position, n-1 grouped higher
-        - '(2,1,1,2)' : Groups listed left to right by position
-        - etc.
+        
+        - ``'(n)'``: All :math:`n` agents at the same position
+        - ``'(n-1,1)'``: :math:`n-1` agents grouped at lower position, 1 isolated higher
+        - ``'(1,n-1)'``: 1 agent isolated at lower position, :math:`n-1` grouped higher
+        - ``'(2,1,1,2)'``: Groups listed left to right by position
+        
+    Examples
+    --------
+    >>> positions = np.array([0.2, 0.2, 0.5, 0.8, 0.8])
+    >>> classify_equilibrium_type(positions)
+    '(2,1,2)'
     """
     # Convert to numpy array, handling torch tensors
     if hasattr(positions, 'numpy'):
@@ -728,9 +844,29 @@ def classify_equilibrium_type(positions, tolerance=1e-3):
     else:
         return f'({",".join(map(str, groups))})'
 
-def _type_dict_helper(matrix, reach_parameters,tolerance):
+def _type_dict_helper(matrix, reach_parameters, tolerance):
     """
-    Handles the output from InflGame.one_utils.classify_equilibrium_type
+    Helper function to create classification dictionary from equilibrium matrix.
+    
+    Processes the output from :func:`classify_equilibrium_type` for each equilibrium configuration
+    in the matrix and associates it with the corresponding reach parameter.
+
+    Parameters
+    ----------
+    matrix : array_like
+        Matrix of equilibrium positions for different parameter values.
+    reach_parameters : array_like
+        Array of reach parameter values corresponding to each row in the matrix.
+    tolerance : float
+        Tolerance for position grouping in equilibrium classification.
+
+    Returns
+    -------
+    dict
+        Dictionary mapping item IDs to classification information:
+        
+        - ``'classification'`` (str): Equilibrium type string
+        - ``'reach_parameter'`` (float): Associated reach parameter value
     """
     classification_dict={}
     for item_id in range(len(matrix)):
@@ -740,7 +876,24 @@ def _type_dict_helper(matrix, reach_parameters,tolerance):
 
 def _find_bifurcation_split(classification_dict):
     """
-    Here we look for bifurcations. 
+    Identify bifurcation points where equilibrium classification changes.
+    
+    Scans through the classification dictionary in reverse order to detect transitions
+    in equilibrium structure as the reach parameter varies.
+
+    Parameters
+    ----------
+    classification_dict : dict
+        Dictionary mapping item IDs to classification and reach parameter information.
+
+    Returns
+    -------
+    dict
+        Dictionary of bifurcation points, where each key maps to:
+        
+        - ``'classification_old'`` (str): Equilibrium type before bifurcation
+        - ``'classification_new'`` (str): Equilibrium type after bifurcation
+        - ``'reach_parameter'`` (float): Reach parameter value at bifurcation
     """
     #we find where the classification changes as reach varies
     classification=classification_dict[str(len(classification_dict)-1)]['classification']
@@ -752,15 +905,39 @@ def _find_bifurcation_split(classification_dict):
             classification=classification_new
     return bifurcations
 
-def bifurcation_type_helper(matrix,reach_parameters,tolerance=1e-2):
+def bifurcation_type_helper(matrix, reach_parameters, tolerance=1e-2):
     """
-    The goal of this function is to classify the bifurcations found in find_bifurcation_split.
+    Classify bifurcation types based on equilibrium structure transitions.
     
-    There are two types of bifurcations we might be interested in:
-    1. The reach value where the local symmetric equilibrium becomes unstable and splits into asymmetric equilibria.
-    2. The reach value where the basins of attraction shift the local grouping.
+    Identifies two types of bifurcations:
     
-    The classification_new field shows the new equilibrium structure after bifurcation.
+    1. **Type 1 (Symmetry-breaking)**: Local symmetric equilibrium becomes unstable and splits 
+       into asymmetric equilibria (number of groups increases)
+    2. **Type 2 (Basin shift)**: Basins of attraction shift local grouping without increasing 
+       group count (number of groups stays same or decreases)
+
+    Parameters
+    ----------
+    matrix : dict
+        Dictionary containing equilibrium position matrix under key ``'max'``.
+    reach_parameters : array_like
+        Array of reach parameter values corresponding to equilibrium configurations.
+    tolerance : float, optional
+        Tolerance for position grouping in equilibrium classification, by default 1e-2.
+
+    Returns
+    -------
+    dict
+        Dictionary of classified bifurcations, where each key maps to:
+        
+        - ``'reach_parameter'`` (float): Reach parameter value at bifurcation
+        - ``'type'`` (str): Bifurcation type (``'1'`` or ``'2'``)
+        - ``'classification_new'`` (str): New equilibrium structure after bifurcation
+        
+    Notes
+    -----
+    The ``classification_new`` field shows the equilibrium structure after bifurcation occurs.
+    Type 1 bifurcations indicate structural instability, while Type 2 indicate basin reorganization.
     """
     bifurcations=_find_bifurcation_split(_type_dict_helper(matrix['max'],reach_parameters=reach_parameters,tolerance=tolerance))
     # A type 1 bifurcation can only occur if there are less groups in the old classification than in the new classification. While a type 2 bifurcation occurs when the number of groups remains the same or decreases.

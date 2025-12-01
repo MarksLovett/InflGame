@@ -4,6 +4,104 @@ import InflGame.utils.general as general
 from typing import Union, List
 from scipy.special import polygamma as psi
 
+"""
+.. module:: jacobian
+   :synopsis: Optimized Jacobian matrix computation for adaptive dynamics in influencer games.
+
+
+Jacobian Matrix Computation Module
+===================================
+
+This module provides highly optimized functions for computing Jacobian matrices in adaptive dynamics
+using vectorized PyTorch operations and JIT compilation. The Jacobian matrix is essential for stability
+analysis of Nash equilibria in influencer games.
+
+**Key Features:**
+
+- JIT-compiled core computations for maximum performance
+- Vectorized operations using PyTorch broadcasting instead of nested loops
+- Pre-allocated tensors to avoid dynamic memory allocation
+- Consistent tensor dtypes (float32) for optimal GPU/CPU performance
+- Elimination of unnecessary tensor conversions
+
+**Mathematical Background:**
+
+The Jacobian matrix :math:`J` captures the first-order sensitivity of agent payoffs to position changes.
+For agent :math:`i`, the utility function is:
+
+.. math::
+    u_i(x) = \sum_{k=1}^{K} G_{i,k}(x, b_k) B(b_k)
+
+where :math:`G_{i,k}` is the probability of agent :math:`i` influencing bin :math:`k`, and :math:`B(b_k)`
+is the resource value at that bin.
+
+The Jacobian elements are:
+
+.. math::
+    J_{ij} = \frac{\partial^2 u_i}{\partial x_i \partial x_j}
+
+Diagonal elements (:math:`i=j`) represent how an agent's gradient changes with its own position,
+while off-diagonal elements capture strategic interactions between agents.
+
+**Performance Optimizations:**
+
+1. **JIT Compilation**: Critical functions are decorated with ``@torch.jit.script`` for compilation
+2. **Vectorization**: Broadcasting eliminates explicit loops over bin points
+3. **Memory Efficiency**: Pre-allocated output tensors reduce garbage collection overhead
+4. **Type Consistency**: All tensors use float32 to avoid implicit conversions
+
+Dependencies:
+-------------
+- torch (PyTorch for tensor operations and JIT compilation)
+- numpy (for array conversions)
+- scipy.special (for polygamma function in beta kernel derivatives)
+- InflGame.utils.general (for utility functions)
+
+Usage:
+------
+The primary entry point is :func:`jacobian_matrix`, which computes the full Jacobian.
+For convenience, :func:`compute_jacobian_optimized` provides a high-level interface.
+
+Example:
+--------
+
+.. code-block:: python
+
+    import torch
+    from InflGame.adaptive.jacobian import jacobian_matrix
+    
+    # Assume we have an adaptive environment set up
+    jacobian = jacobian_matrix(
+        num_agents=3,
+        parameters=torch.tensor([0.2, 0.2, 0.2]),
+        agents_pos=torch.tensor([0.3, 0.5, 0.7]),
+        bin_points=torch.linspace(0, 1, 100),
+        resource_distribution=torch.ones(100),
+        infl_type='gaussian',
+        infl_fshift=False,
+        Q=0.0,
+        infl_matrix=infl_mat,
+        prob_matrix=prob_mat,
+        d_lnf_matrix=d_lnf_mat
+    )
+    
+    # Check stability
+    eigenvalues = torch.linalg.eigvals(jacobian)
+    is_stable = torch.all(eigenvalues.real < 0)
+
+See Also:
+---------
+- :mod:`InflGame.adaptive.grad_func_env` : Gradient ascent dynamics
+- :mod:`InflGame.adaptive.bifurcation_analysis` : Bifurcation analysis tools
+- :mod:`InflGame.adaptive.visualization` : Visualization of stability regions
+"""
+
+import numpy as np
+import torch
+import InflGame.utils.general as general
+from typing import Union, List
+from scipy.special import polygamma as psi
+
 # JIT-compiled helper functions for optimal performance
 @torch.jit.script
 def _shift_matrix_jacobian_core(
@@ -16,15 +114,27 @@ def _shift_matrix_jacobian_core(
     """
     JIT-compiled core computation for shift matrix Jacobian.
     
-    Args:
-        agents_pos: Agent positions tensor (N,)
-        bin_points: Bin points tensor (K,)
-        num_agents: Number of agents
-        Q: Scaling factor
-        denom: Denominator tensor from influence matrix sum (K,)
+    This internal function computes the first-order partial derivatives of the shift function
+    with respect to agent positions. Used for computing off-diagonal Jacobian elements when
+    influence function shifts are enabled.
     
-    Returns:
-        torch.Tensor: Shift matrix (N, K)
+    :param agents_pos: Agent positions tensor of shape (N,).
+    :type agents_pos: torch.Tensor
+    :param bin_points: Bin points tensor of shape (K,).
+    :type bin_points: torch.Tensor
+    :param num_agents: Number of agents in the system.
+    :type num_agents: int
+    :param Q: Scaling factor for the shift function.
+    :type Q: float
+    :param denom: Denominator tensor from influence matrix sum, shape (K,).
+    :type denom: torch.Tensor
+    
+    :return: Shift matrix of shape (N, K).
+    :rtype: torch.Tensor
+    
+    .. note::
+        This function is JIT-compiled and should not be called directly.
+        Use :func:`shift_matrix_jacobian` instead.
     """
     diff = bin_points.unsqueeze(0) - agents_pos.unsqueeze(1)
     shift_matrix = -2.0 * Q * torch.pow(diff, 2 * num_agents - 1)
@@ -41,15 +151,27 @@ def _shift_matrix_jacobian_ii_core(
     """
     JIT-compiled core computation for second-order shift matrix Jacobian.
     
-    Args:
-        agents_pos: Agent positions tensor (N,)
-        bin_points: Bin points tensor (K,)
-        num_agents: Number of agents
-        Q: Scaling factor
-        denom: Denominator tensor from influence matrix sum (K,)
+    This internal function computes the second-order partial derivatives of the shift function
+    with respect to an agent's own position. Used for computing diagonal Jacobian elements when
+    influence function shifts are enabled.
     
-    Returns:
-        torch.Tensor: Second-order shift matrix (N, K)
+    :param agents_pos: Agent positions tensor of shape (N,).
+    :type agents_pos: torch.Tensor
+    :param bin_points: Bin points tensor of shape (K,).
+    :type bin_points: torch.Tensor
+    :param num_agents: Number of agents in the system.
+    :type num_agents: int
+    :param Q: Scaling factor for the shift function.
+    :type Q: float
+    :param denom: Denominator tensor from influence matrix sum, shape (K,).
+    :type denom: torch.Tensor
+    
+    :return: Second-order shift matrix of shape (N, K).
+    :rtype: torch.Tensor
+    
+    .. note::
+        This function is JIT-compiled and should not be called directly.
+        Use :func:`shift_matrix_jacobian_ii` instead.
     """
     diff = bin_points.unsqueeze(0) - agents_pos.unsqueeze(1)
     shift_matrix = 2.0 * Q * torch.pow(diff, 2 * num_agents - 2)
@@ -66,15 +188,27 @@ def _shift_matrix_jacobian_ij_core(
     """
     JIT-compiled core computation for mixed partial derivative shift matrix Jacobian.
     
-    Args:
-        agents_pos: Agent positions tensor (N,)
-        bin_points: Bin points tensor (K,)
-        num_agents: Number of agents
-        Q: Scaling factor
-        denom: Denominator tensor from influence matrix sum (K,)
+    This internal function computes the mixed second-order partial derivatives of the shift
+    function with respect to positions of two different agents. Used for computing
+    off-diagonal Jacobian elements when influence function shifts are enabled.
     
-    Returns:
-        torch.Tensor: Mixed partial derivative shift matrix (N, K)
+    :param agents_pos: Agent positions tensor of shape (N,).
+    :type agents_pos: torch.Tensor
+    :param bin_points: Bin points tensor of shape (K,).
+    :type bin_points: torch.Tensor
+    :param num_agents: Number of agents in the system.
+    :type num_agents: int
+    :param Q: Scaling factor for the shift function.
+    :type Q: float
+    :param denom: Denominator tensor from influence matrix sum, shape (K,).
+    :type denom: torch.Tensor
+    
+    :return: Mixed partial derivative shift matrix of shape (N, K).
+    :rtype: torch.Tensor
+    
+    .. note::
+        This function is JIT-compiled and should not be called directly.
+        Use :func:`shift_matrix_jacobian_ij` instead.
     """
     diff = bin_points.unsqueeze(0) - agents_pos.unsqueeze(1)
     shift_matrix = 4.0 * Q * torch.pow(diff, 2 * num_agents - 2)
@@ -95,19 +229,35 @@ def _jacobian_off_diag_core(
     """
     JIT-compiled core computation for off-diagonal Jacobian elements.
     
-    Args:
-        resource_distribution: Resource distribution tensor (K,)
-        infl_fshift: Whether to include functional shifts
-        di: First derivative for agent i (K,)
-        pi: Probability for agent i (K,)
-        dj: First derivative for agent j (K,)
-        pj: Probability for agent j (K,)
-        shift_i: Shift for agent i (K,)
-        shift_j: Shift for agent j (K,)
-        shift_ij: Mixed shift for agents i and j (K,)
+    Computes :math:`J_{ij}` where :math:`i \neq j`, representing how agent :math:`i`'s
+    utility gradient changes with respect to agent :math:`j`'s position. This captures
+    strategic interactions between agents.
     
-    Returns:
-        torch.Tensor: Off-diagonal Jacobian element (scalar)
+    :param resource_distribution: Resource distribution tensor of shape (K,).
+    :type resource_distribution: torch.Tensor
+    :param infl_fshift: Whether to include influence function shifts in computation.
+    :type infl_fshift: bool
+    :param di: First derivative of log-influence for agent i, shape (K,).
+    :type di: torch.Tensor
+    :param pi: Probability distribution for agent i, shape (K,).
+    :type pi: torch.Tensor
+    :param dj: First derivative of log-influence for agent j, shape (K,).
+    :type dj: torch.Tensor
+    :param pj: Probability distribution for agent j, shape (K,).
+    :type pj: torch.Tensor
+    :param shift_i: Shift function values for agent i, shape (K,).
+    :type shift_i: torch.Tensor
+    :param shift_j: Shift function values for agent j, shape (K,).
+    :type shift_j: torch.Tensor
+    :param shift_ij: Mixed shift function values for agents i and j, shape (K,).
+    :type shift_ij: torch.Tensor
+    
+    :return: Single scalar value representing the off-diagonal Jacobian element.
+    :rtype: torch.Tensor
+    
+    .. note::
+        This function is JIT-compiled and should not be called directly.
+        Use :func:`jacobian_off_diag` instead.
     """
     # Base computation
     j_elm = di * dj * (-pi * pj * (1.0 - pi) + pi * pi * pj) * resource_distribution
@@ -131,17 +281,31 @@ def _jacobian_diag_core(
     """
     JIT-compiled core computation for diagonal Jacobian elements.
     
-    Args:
-        resource_distribution: Resource distribution tensor (K,)
-        infl_fshift: Whether to include functional shifts
-        dd_i: Second derivative for agent i (scalar)
-        di: First derivative for agent i (K,)
-        pi: Probability for agent i (K,)
-        shift_i: Shift for agent i (K,)
-        shift_ii: Second-order shift for agent i (K,)
+    Computes :math:`J_{ii}`, representing how agent :math:`i`'s utility gradient changes
+    with respect to its own position. This determines the agent's local stability and
+    convergence behavior.
     
-    Returns:
-        torch.Tensor: Diagonal Jacobian element (scalar)
+    :param resource_distribution: Resource distribution tensor of shape (K,).
+    :type resource_distribution: torch.Tensor
+    :param infl_fshift: Whether to include influence function shifts in computation.
+    :type infl_fshift: bool
+    :param dd_i: Second derivative of log-influence for agent i (scalar).
+    :type dd_i: torch.Tensor
+    :param di: First derivative of log-influence for agent i, shape (K,).
+    :type di: torch.Tensor
+    :param pi: Probability distribution for agent i, shape (K,).
+    :type pi: torch.Tensor
+    :param shift_i: Shift function values for agent i, shape (K,).
+    :type shift_i: torch.Tensor
+    :param shift_ii: Second-order shift function values for agent i, shape (K,).
+    :type shift_ii: torch.Tensor
+    
+    :return: Single scalar value representing the diagonal Jacobian element.
+    :rtype: torch.Tensor
+    
+    .. note::
+        This function is JIT-compiled and should not be called directly.
+        Use :func:`jacobian_diag` instead.
     """
     # Base computation
     pi_comp = 1.0 - pi  # Complementary probability
@@ -173,21 +337,31 @@ def shift_matrix_jacobian(num_agents: int,
                           infl_matrix: torch.Tensor,
                           ) -> torch.Tensor:
     r"""
-    JIT-optimized function. Computes the shift matrix Jacobian for the given agents and bin points using vectorized operations.
+    Compute the shift matrix Jacobian using JIT-optimized vectorized operations.
+    
+    This function calculates the first-order partial derivatives of the shift function
+    :math:`S_i(x_i, b_k)` with respect to agent positions. The shift function modifies
+    the influence kernel to account for boundary effects or strategic considerations.
+    
+    The shift Jacobian is used in computing off-diagonal elements of the full Jacobian matrix.
 
-
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the system.
     :type num_agents: int
-    :param agents_pos: Positions of the agents.
+    :param agents_pos: Positions of the agents (can be list, numpy array, or tensor).
     :type agents_pos: Union[List[float], np.ndarray, torch.Tensor]
-    :param bin_points: Bin points.
+    :param bin_points: Discretized domain points (can be list, numpy array, or tensor).
     :type bin_points: Union[List[float], np.ndarray, torch.Tensor]
-    :param Q: Scaling factor.
+    :param Q: Scaling factor for the shift function magnitude.
     :type Q: float
-    :param infl_matrix: Influence matrix.
+    :param infl_matrix: Pre-computed influence matrix of shape (N, K).
     :type infl_matrix: torch.Tensor
-    :return: The computed shift matrix Jacobian.
+    
+    :return: Shift matrix Jacobian of shape (N, K) where N is number of agents and K is number of bins.
     :rtype: torch.Tensor
+    
+    .. note::
+        Input types are automatically converted to torch.float32 tensors for consistency.
+        This function uses JIT compilation for optimal performance.
     """
     # Convert inputs to tensors with consistent dtype
     agents_pos = torch.as_tensor(agents_pos, dtype=torch.float32)
@@ -205,20 +379,29 @@ def shift_matrix_jacobian_ii(num_agents: int,
                              infl_matrix: torch.Tensor,
                              ) -> torch.Tensor:
     r"""
-    JIT-optimized function. Computes the diagonal elements of the shift matrix Jacobian (second order derivatives) for the given agents and bin points using vectorized operations.
+    Compute second-order shift matrix Jacobian using JIT-optimized vectorized operations.
+    
+    This function calculates the second-order partial derivatives
+    :math:`\frac{\partial^2 S_i}{\partial x_i^2}` of the shift function with respect to
+    an agent's own position. These derivatives contribute to the diagonal elements of the
+    full Jacobian matrix.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the system.
     :type num_agents: int
-    :param agents_pos: Positions of the agents.
+    :param agents_pos: Positions of the agents (can be list, numpy array, or tensor).
     :type agents_pos: Union[List[float], np.ndarray, torch.Tensor]
-    :param bin_points: Bin points.
+    :param bin_points: Discretized domain points (can be list, numpy array, or tensor).
     :type bin_points: Union[List[float], np.ndarray, torch.Tensor]
-    :param Q: Scaling factor.
+    :param Q: Scaling factor for the shift function magnitude.
     :type Q: float
-    :param infl_matrix: Influence matrix.
+    :param infl_matrix: Pre-computed influence matrix of shape (N, K).
     :type infl_matrix: torch.Tensor
-    :return: The computed second-order shift matrix Jacobian.
+    
+    :return: Second-order shift matrix Jacobian of shape (N, K).
     :rtype: torch.Tensor
+    
+    .. note::
+        Input types are automatically converted to torch.float32 tensors for consistency.
     """
     # Convert inputs to tensors with consistent dtype
     agents_pos = torch.as_tensor(agents_pos, dtype=torch.float32)
@@ -236,20 +419,29 @@ def shift_matrix_jacobian_ij(num_agents: int,
                              infl_matrix: torch.Tensor,
                              ) -> torch.Tensor:
     r"""
-    JIT-optimized function. Computes the mixed partial derivative shift matrix Jacobian (off diagonal) for the given agents and bin points using vectorized operations.
+    Compute mixed partial derivative shift matrix Jacobian using JIT-optimized vectorized operations.
+    
+    This function calculates the mixed second-order partial derivatives
+    :math:`\frac{\partial^2 S_i}{\partial x_i \partial x_j}` of the shift function with
+    respect to positions of two different agents. These derivatives contribute to the
+    off-diagonal elements of the full Jacobian matrix.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the system.
     :type num_agents: int
-    :param agents_pos: Positions of the agents.
+    :param agents_pos: Positions of the agents (can be list, numpy array, or tensor).
     :type agents_pos: Union[List[float], np.ndarray, torch.Tensor]
-    :param bin_points: Bin points.
+    :param bin_points: Discretized domain points (can be list, numpy array, or tensor).
     :type bin_points: Union[List[float], np.ndarray, torch.Tensor]
-    :param Q: Scaling factor.
+    :param Q: Scaling factor for the shift function magnitude.
     :type Q: float
-    :param infl_matrix: Influence matrix.
+    :param infl_matrix: Pre-computed influence matrix of shape (N, K).
     :type infl_matrix: torch.Tensor
-    :return: The computed mixed partial derivative shift matrix Jacobian.
+    
+    :return: Mixed partial derivative shift matrix Jacobian of shape (N, K).
     :rtype: torch.Tensor
+    
+    .. note::
+        Input types are automatically converted to torch.float32 tensors for consistency.
     """
     # Convert inputs to tensors with consistent dtype
     agents_pos = torch.as_tensor(agents_pos, dtype=torch.float32)
@@ -266,16 +458,34 @@ def dd_lnf_matrix(agent_id: int,
                   x: Union[float, torch.Tensor]= None,
                   ) -> torch.Tensor:
     r"""
-    Optimized function. Calculates the second derivative of the natural logarithm of the influence function :math:`\frac{\partial^2}{\partial x_i^2} \ln(f_{i,k})`.
-
-    :param agent_id: ID of the agent.
+    Calculate the second derivative of the log-influence function.
+    
+    Computes :math:`\frac{\partial^2}{\partial x_i^2} \ln(f_i(x_i, b_k))` where :math:`f_i`
+    is the influence kernel for agent :math:`i`. This second derivative is needed for
+    computing diagonal elements of the Jacobian matrix.
+    
+    **Supported Influence Types:**
+    
+    - **'gaussian'**: Returns :math:`-1/\sigma_i^2` where :math:`\sigma_i` is the reach parameter
+    - **'beta'**: Uses polygamma function to compute beta distribution second derivatives
+    
+    :param agent_id: Index of the agent (0 to N-1).
     :type agent_id: int
-    :param parameter_instance: Parameters unique to the influence function.
+    :param parameter_instance: Parameters for the influence function (e.g., reach/sigma values).
     :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-    :param infl_type: Type of influence function (e.g., 'gaussian').
+    :param infl_type: Type of influence kernel ('gaussian', 'beta', etc.).
     :type infl_type: str
-    :return: The second derivative of the natural logarithm of the influence function.
+    :param x: Agent positions (required for beta kernel, optional otherwise).
+    :type x: Union[float, torch.Tensor], optional
+    
+    :return: Second derivative value as a scalar tensor.
     :rtype: torch.Tensor
+    
+    :raises ValueError: If influence type is not recognized.
+    
+    .. note::
+        For beta kernels, the computation uses scipy's polygamma function which requires
+        scalar inputs, so tensor values are converted to float.
     """
     # Convert to tensor with consistent dtype
     parameter_instance = torch.as_tensor(parameter_instance, dtype=torch.float32)
@@ -315,28 +525,36 @@ def jacobian_off_diag(resource_distribution: Union[List[float], np.ndarray, torc
                       shift_ij: Union[float, torch.Tensor] = 0,
                       ) -> torch.Tensor:
     """
-    JIT-optimized function. Computes the off-diagonal elements of the Jacobian matrix using vectorized operations.
+    Compute off-diagonal Jacobian matrix elements using JIT-optimized vectorized operations.
+    
+    Calculates :math:`J_{ij}` for :math:`i \neq j`, representing the cross-derivative of
+    agent :math:`i`'s utility with respect to agent :math:`j`'s position. This captures
+    how agents strategically respond to each other's positions.
 
-    :param resource_distribution: Resource distribution.
+    :param resource_distribution: Resource values at each bin point.
     :type resource_distribution: Union[List[float], np.ndarray, torch.Tensor]
-    :param infl_fshift: Whether to include influence function shifts.
+    :param infl_fshift: Whether to include influence function shift corrections.
     :type infl_fshift: bool
-    :param di: First derivative of the influence function for agent i.
+    :param di: First derivative of log-influence :math:`\partial \ln(f_i)/\partial x_i` for agent i.
     :type di: torch.Tensor
-    :param pi: Probability for agent i.
+    :param pi: Probability distribution for agent i across bins.
     :type pi: torch.Tensor
-    :param dj: First derivative of the influence function for agent j.
+    :param dj: First derivative of log-influence :math:`\partial \ln(f_j)/\partial x_j` for agent j.
     :type dj: torch.Tensor
-    :param pj: Probability for agent j.
+    :param pj: Probability distribution for agent j across bins.
     :type pj: torch.Tensor
-    :param shift_i: Shift for agent i. Defaults to 0.
+    :param shift_i: Shift function correction for agent i (used if infl_fshift=True).
     :type shift_i: Union[float, torch.Tensor]
-    :param shift_j: Shift for agent j. Defaults to 0.
+    :param shift_j: Shift function correction for agent j (used if infl_fshift=True).
     :type shift_j: Union[float, torch.Tensor]
-    :param shift_ij: Mixed shift for agents i and j. Defaults to 0.
+    :param shift_ij: Mixed shift function correction for agents i and j (used if infl_fshift=True).
     :type shift_ij: Union[float, torch.Tensor]
-    :return: The computed off-diagonal element of the Jacobian matrix.
+    
+    :return: Scalar Jacobian element :math:`J_{ij}`.
     :rtype: torch.Tensor
+    
+    .. note::
+        All tensor inputs are automatically converted to float32 for consistency.
     """
     # Convert inputs to tensors with consistent dtype
     resource_distribution = torch.as_tensor(resource_distribution, dtype=torch.float32)
@@ -359,24 +577,32 @@ def jacobian_diag(resource_distribution: Union[List[float], np.ndarray, torch.Te
                   shift_ii: Union[float, torch.Tensor] = 0,
                   ) -> torch.Tensor:
     """
-    JIT-optimized function. Computes the diagonal elements of the Jacobian matrix using vectorized operations.
+    Compute diagonal Jacobian matrix elements using JIT-optimized vectorized operations.
+    
+    Calculates :math:`J_{ii}`, representing the second derivative of agent :math:`i`'s
+    utility with respect to its own position. This determines local stability and
+    convergence rate for the agent.
 
-    :param resource_distribution: Resource distribution.
+    :param resource_distribution: Resource values at each bin point.
     :type resource_distribution: Union[List[float], np.ndarray, torch.Tensor]
-    :param infl_fshift: Whether to include influence function shifts.
+    :param infl_fshift: Whether to include influence function shift corrections.
     :type infl_fshift: bool
-    :param dd_i: Second derivative of the influence function for agent i.
+    :param dd_i: Second derivative of log-influence :math:`\partial^2 \ln(f_i)/\partial x_i^2` for agent i.
     :type dd_i: Union[float, torch.Tensor]
-    :param di: First derivative of the influence function for agent i.
+    :param di: First derivative of log-influence :math:`\partial \ln(f_i)/\partial x_i` for agent i.
     :type di: torch.Tensor
-    :param pi: Probability for agent i.
+    :param pi: Probability distribution for agent i across bins.
     :type pi: torch.Tensor
-    :param shift_i: Shift for agent i. Defaults to 0.
+    :param shift_i: Shift function correction for agent i (used if infl_fshift=True).
     :type shift_i: Union[float, torch.Tensor]
-    :param shift_ii: Second-order shift for agent i. Defaults to 0.
+    :param shift_ii: Second-order shift function correction for agent i (used if infl_fshift=True).
     :type shift_ii: Union[float, torch.Tensor]
-    :return: The computed diagonal element of the Jacobian matrix.
+    
+    :return: Scalar Jacobian element :math:`J_{ii}`.
     :rtype: torch.Tensor
+    
+    .. note::
+        All tensor inputs are automatically converted to float32 for consistency.
     """
     # Convert inputs to tensors with consistent dtype
     resource_distribution = torch.as_tensor(resource_distribution, dtype=torch.float32)
@@ -404,33 +630,65 @@ def jacobian_matrix(num_agents: int,
                     d_lnf_matrix: torch.Tensor,
                     x: Union[float, torch.Tensor]= None,
                     ) -> torch.Tensor:
-    """
-    Optimized function. Computes the Jacobian matrix for the given agents and parameters using vectorized operations.
+    r"""
+    Compute the full Jacobian matrix for multi-agent adaptive dynamics using optimized vectorized operations.
+    
+    The Jacobian matrix :math:`J` is an :math:`N \times N` matrix where element :math:`J_{ij}` represents
+    the partial derivative of agent :math:`i`'s utility gradient with respect to agent :math:`j`'s position.
+    
+    **Mathematical Formulation:**
+    
+    For agent :math:`i` with utility:
+    
+    .. math::
+        u_i(x) = \sum_{k=1}^{K} G_{i,k}(x, b_k) B(b_k)
+    
+    The Jacobian elements are:
+    
+    .. math::
+        J_{ij} = \frac{\partial^2 u_i}{\partial x_i \partial x_j}
+    
+    **Stability Analysis:**
+    
+    The eigenvalues of :math:`J` determine equilibrium stability:
+    - All eigenvalues with negative real parts → stable equilibrium
+    - Any eigenvalue with positive real part → unstable equilibrium
+    - Zero real parts → marginal stability (further analysis needed)
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the system.
     :type num_agents: int
-    :param parameters: Parameters unique to the influence function.
+    :param parameters: Influence function parameters (e.g., reach/sigma values for each agent).
     :type parameters: Union[List[float], np.ndarray, torch.Tensor]
-    :param agents_pos: Positions of the agents.
+    :param agents_pos: Current positions of all agents.
     :type agents_pos: Union[List[float], np.ndarray, torch.Tensor]
-    :param bin_points: Bin points.
+    :param bin_points: Discretized domain points for resource distribution.
     :type bin_points: Union[List[float], np.ndarray, torch.Tensor]
-    :param resource_distribution: Resource distribution.
+    :param resource_distribution: Resource values at each bin point.
     :type resource_distribution: Union[List[float], np.ndarray, torch.Tensor]
-    :param infl_type: Type of influence function (e.g., 'gaussian').
+    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
     :type infl_type: str
-    :param infl_fshift: Whether to include influence function shifts.
+    :param infl_fshift: Whether to include influence function shift corrections.
     :type infl_fshift: bool
-    :param Q: Scaling factor.
+    :param Q: Scaling factor for shift functions (relevant if infl_fshift=True).
     :type Q: float
-    :param infl_matrix: Influence matrix.
+    :param infl_matrix: Pre-computed influence matrix of shape (N, K).
     :type infl_matrix: torch.Tensor
-    :param prob_matrix: Probability matrix.
+    :param prob_matrix: Pre-computed probability matrix of shape (N, K).
     :type prob_matrix: torch.Tensor
-    :param d_lnf_matrix: First derivatives of the natural logarithm of the influence function.
+    :param d_lnf_matrix: Pre-computed first derivatives of log-influence, shape (N, K).
     :type d_lnf_matrix: torch.Tensor
-    :return: The computed Jacobian matrix.
+    :param x: Agent positions (used for beta kernel second derivatives, optional).
+    :type x: Union[float, torch.Tensor], optional
+    
+    :return: Jacobian matrix of shape (N, N).
     :rtype: torch.Tensor
+    
+    .. note::
+        This is the primary function for Jacobian computation. It pre-computes shift matrices
+        and second derivatives before assembling the full Jacobian using vectorized operations.
+        
+    .. seealso::
+        :func:`compute_jacobian_optimized` - Convenience wrapper for use with AdaptiveEnv objects.
     """
     # Convert inputs to tensors with consistent dtype
     parameters = torch.as_tensor(parameters, dtype=torch.float32)
@@ -490,16 +748,46 @@ def compute_jacobian_optimized(adaptive_env,
                               device: str = 'cpu',
                               ) -> torch.Tensor:
     """
-    Convenience function to compute the Jacobian matrix with optimized tensor operations.
+    Convenience function to compute the Jacobian matrix from an AdaptiveEnv object.
     
-    :param adaptive_env: The adaptive environment containing all necessary data.
+    This high-level wrapper extracts all necessary data from an adaptive environment instance
+    and computes the Jacobian matrix. It handles device placement and automatically computes
+    required intermediate matrices (influence, probability, derivatives).
+    
+    **Usage Example:**
+    
+    .. code-block:: python
+    
+        from InflGame.adaptive.grad_func_env import AdaptiveEnv
+        from InflGame.adaptive.jacobian import compute_jacobian_optimized
+        
+        # Create and set up environment
+        env = AdaptiveEnv(...)
+        env.gradient_ascent()
+        
+        # Compute Jacobian at final positions
+        jacobian = compute_jacobian_optimized(env, env.agents_pos)
+        
+        # Check stability
+        eigenvalues = torch.linalg.eigvals(jacobian)
+        is_stable = torch.all(eigenvalues.real < 0)
+    
+    :param adaptive_env: The adaptive environment containing agent configuration and dynamics.
     :type adaptive_env: AdaptiveEnv
-    :param infl_fshift: Whether to include influence function shifts.
+    :param position: Agent positions at which to evaluate the Jacobian.
+    :type position: torch.Tensor
+    :param infl_fshift: Whether to include influence function shift corrections.
     :type infl_fshift: bool
-    :param device: Device to perform computations on ('cpu' or 'cuda').
+    :param device: Device for tensor computations ('cpu' or 'cuda').
     :type device: str
-    :return: The computed Jacobian matrix.
+    
+    :return: Jacobian matrix of shape (N, N) on the specified device.
     :rtype: torch.Tensor
+    
+    .. note::
+        This function automatically computes influence_matrix, prob_matrix, and d_lnf_matrix
+        from the environment. For repeated Jacobian evaluations at the same position, consider
+        caching these intermediate matrices.
     """
     # Extract necessary data from adaptive environment
     num_agents = adaptive_env.num_agents

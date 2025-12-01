@@ -16,4 +16,7 @@ Module contents
    :glob:
 
    InflGame.utils.general
-   InflGame.utils.data_management 
+   InflGame.utils.data_management
+   InflGame.utils.plot_utils
+   InflGame.utils.validation
+   InflGame.utils.smoothing

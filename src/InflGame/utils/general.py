@@ -3,12 +3,17 @@
    :synopsis: Provides general utility functions for influencer games.
 
 General Utilities Module
-========================
+=========================
 
 This module provides general utility functions for influencer games. It includes functions for matrix operations, 
 learning rate calculations, resource parameter setups, agent position setups, and statistical computations. 
 These utilities are used across various components of the influencer games framework.
 
+Dependencies:
+-------------
+- NumPy
+- PyTorch
+- Matplotlib
 
 Usage:
 ------
@@ -16,6 +21,30 @@ The `matrix_builder` function is used to build or append rows to a matrix, while
 learning rates based on iteration and type. The `agent_position_setup` function initializes agent positions in 
 different domains, and the `discrete_mean` function computes the mean of a discrete distribution.
 
+Example:
+--------
+
+.. code-block:: python
+    
+    from InflGame.utils.general import matrix_builder, learning_rate, discrete_mean
+    import torch
+    import numpy as np
+    
+    # Build a matrix incrementally
+    row1 = torch.tensor([1.0, 2.0, 3.0])
+    matrix = matrix_builder(row_id=0, row=row1)
+    
+    # Calculate learning rate with cosine annealing
+    lr = learning_rate(
+        iter=10,
+        learning_rate_type='cosine_annealing',
+        learning_rate=[0.0001, 0.01, 100]
+    )
+    
+    # Compute discrete mean
+    bin_points = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
+    resources = torch.tensor([1.0, 2.0, 3.0, 2.0, 1.0])
+    mean = discrete_mean(bin_points, resources)
 
 """
 
@@ -26,13 +55,23 @@ from pathlib import Path
 from typing import Union, List, Optional,Dict
 import matplotlib.pyplot as plt
 
-def flatten_list(xss):
-
+def flatten_list(xss: list) -> list:
     """
     Flattens a list of lists into a single list.
-
+    
+    This function takes a nested list structure and returns a single-level list
+    containing all elements from the sublists in order.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        nested = [[1, 2], [3, 4], [5]]
+        result = flatten_list(nested)
+        # Returns: [1, 2, 3, 4, 5]
+    
     :param xss: A list containing sublists.
-    :type xss: list of lists
+    :type xss: list
     :return: A single flattened list containing all elements from the sublists.
     :rtype: list
     """
@@ -348,10 +387,21 @@ def agent_parameter_setup(num_agents: int,
 def organize_array(arr: list) -> list:
     """
     Organizes an array by alternating elements from the start and end.
-
+    
+    This function reorders the input array by alternating between elements from
+    the beginning and end of the array, moving towards the center.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        arr = [1, 2, 3, 4, 5]
+        result = organize_array(arr)
+        # Returns: [1, 5, 2, 4, 3]
+    
     :param arr: Input array.
     :type arr: list
-    :return: Organized array.
+    :return: Organized array with alternating elements.
     :rtype: list
     """
     result = []
@@ -375,13 +425,43 @@ def agent_position_setup(num_agents: int,
                           domain_bounds: np.ndarray,
                           dimensions: int = None,
                           bound_lower: float = 0.1,
-                          bound_upper: float = 0.9):
+                          bound_upper: float = 0.9) -> Union[np.ndarray, torch.Tensor]:
     """
     Sets up agent/player positions based on the specified domain and setup type.
-
+    
+    This function initializes agent positions within the specified domain bounds.
+    It supports various domain types including 1D line segments, 2D rectangles,
+    and simplex domains with barycentric coordinates.
+    
+    **Domain Types**:
+    
+    - ``'1d'``: Positions agents along a line segment
+    - ``'2d'``: Positions agents in a rectangular domain
+    - ``'simplex'``: Positions agents in a simplex with barycentric coordinates
+    
+    **Setup Types**:
+    
+    - ``'initial_symmetric_setup'``: Distributes agents symmetrically
+    - ``'paper_default'``: Uses default positions from published work
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        import numpy as np
+        from InflGame.utils.general import agent_position_setup
+        
+        # Setup 3 agents in 1D domain
+        positions = agent_position_setup(
+            num_agents=3,
+            setup_type='initial_symmetric_setup',
+            domain_type='1d',
+            domain_bounds=np.array([0, 1])
+        )
+    
     :param num_agents: Number of agents.
     :type num_agents: int
-    :param setup_type: Setup type ('initial_symmetric_setup').
+    :param setup_type: Setup type ('initial_symmetric_setup' or 'paper_default').
     :type setup_type: str
     :param domain_type: Domain type ('1d', '2d', or 'simplex').
     :type domain_type: str
@@ -393,8 +473,8 @@ def agent_position_setup(num_agents: int,
     :type bound_lower: float
     :param bound_upper: Upper bound for positions. Defaults to 0.9.
     :type bound_upper: float
-    :return: agent/player positions.
-    :rtype: np.ndarray or list
+    :return: Agent/player positions as tensor.
+    :rtype: Union[np.ndarray, torch.Tensor]
     """
     if setup_type=="initial_symmetric_setup":
         
@@ -465,22 +545,43 @@ def agent_optimal_position_setup(num_agents: int,
                                   infl_type: str,
                                   mean: float,
                                   domain_type: str,
-                                  ids: list[int]):
+                                  ids: List[int]) -> np.ndarray:
     """
     Sets up optimal agent/player positions based on influence type and domain.
-
+    
+    This function computes optimal positions for agents given the influence
+    function type and domain constraints. Some agents can retain their current
+    positions while others are optimized.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        import numpy as np
+        from InflGame.utils.general import agent_optimal_position_setup
+        
+        current_pos = np.array([0.2, 0.5, 0.8])
+        optimal_pos = agent_optimal_position_setup(
+            num_agents=3,
+            agents_pos=current_pos,
+            infl_type='gaussian',
+            mean=0.5,
+            domain_type='1d',
+            ids=[0]  # Keep first agent fixed
+        )
+    
     :param num_agents: Number of agents.
     :type num_agents: int
     :param agents_pos: Current positions of agents.
     :type agents_pos: np.ndarray
-    :param infl_type: Influence type.
+    :param infl_type: Influence type ('gaussian', 'dirichlet', etc.).
     :type infl_type: str
     :param mean: Mean position for non-specified agents.
     :type mean: float
-    :param domain_type: Domain type.
+    :param domain_type: Domain type ('1d', '2d', or 'simplex').
     :type domain_type: str
     :param ids: List of agent IDs to retain their positions.
-    :type ids: list[int]
+    :type ids: List[int]
     :return: Optimal agent/player positions.
     :rtype: np.ndarray
     """
@@ -494,13 +595,26 @@ def agent_optimal_position_setup(num_agents: int,
         agent_pos=np.array(agent_pos)
     return agent_pos
 
-def figure_directory(fig_parameters: list,
+def figure_directory(fig_parameters: List,
                      alt_name: bool) -> str:
     """
     Creates a directory structure for saving figures.
-
-    :param fig_parameters: Parameters for the figure.
-    :type fig_parameters: list
+    
+    This function generates a hierarchical directory structure based on the
+    provided figure parameters, ensuring the necessary folders exist for
+    organizing saved visualizations.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        from InflGame.utils.general import figure_directory
+        
+        fig_params = ['section_A', 'bifurcation', 3]
+        dir_path = figure_directory(fig_params, alt_name=False)
+    
+    :param fig_parameters: Parameters for the figure (section, type, number of players).
+    :type fig_parameters: List
     :param alt_name: Whether to use an alternative naming scheme.
     :type alt_name: bool
     :return: Path to the final directory.
@@ -529,20 +643,36 @@ def figure_directory(fig_parameters: list,
     
     return file_name
         
-def figure_name(fig_parameters: list,
-                name_ads: list[float],
-                save_types: list[float]) -> list[float]:
+def figure_name(fig_parameters: List,
+                name_ads: List[str],
+                save_types: List[str]) -> List[str]:
     """
     Generates figure names based on parameters and save types.
-
+    
+    This function creates descriptive filenames for saved figures based on
+    the figure type and optional additional naming components.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        from InflGame.utils.general import figure_name
+        
+        fig_params = ['section_A', 'equilibrium_bifurcation', 3]
+        names = figure_name(
+            fig_params,
+            name_ads=['alpha_0.5'],
+            save_types=['.png', '.svg']
+        )
+    
     :param fig_parameters: Parameters for the figure.
-    :type fig_parameters: list
+    :type fig_parameters: List
     :param name_ads: Additional names to append.
-    :type name_ads: list[float]
+    :type name_ads: List[str]
     :param save_types: File extensions for saving.
-    :type save_types: list[float]
+    :type save_types: List[str]
     :return: List of figure names with extensions.
-    :rtype: list[float]
+    :rtype: List[str]
     """
     plt_type=fig_parameters[1]
     fig_names=[]
@@ -562,20 +692,36 @@ def figure_name(fig_parameters: list,
         fig_names.append(fig_name+save_type)
     return fig_names
 
-def figure_final_name(fig_parameters: list,
-                      name_ads: list[float],
-                      save_types: list[float]) -> list[float]:
+def figure_final_name(fig_parameters: List,
+                      name_ads: List[str],
+                      save_types: List[str]) -> List[str]:
     """
     Generates final file paths for figures.
-
+    
+    This function combines directory paths and filenames to create complete
+    file paths for saving figures.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        from InflGame.utils.general import figure_final_name
+        
+        fig_params = ['section_A', 'equilibrium_bifurcation', 3]
+        paths = figure_final_name(
+            fig_params,
+            name_ads=['run_1'],
+            save_types=['.png', '.svg']
+        )
+    
     :param fig_parameters: Parameters for the figure.
-    :type fig_parameters: list
+    :type fig_parameters: List
     :param name_ads: Additional names to append.
-    :type name_ads: list[float]
+    :type name_ads: List[str]
     :param save_types: File extensions for saving.
-    :type save_types: list[float]
+    :type save_types: List[str]
     :return: List of full file paths for the figures.
-    :rtype: list
+    :rtype: List[str]
     """
     if fig_parameters[1] in ['nothingrn']:
         alt=True
@@ -619,9 +765,9 @@ def discrete_mean(bin_points: Union[np.ndarray, torch.Tensor],
     mean = torch.dot(bin_points_tensor, resource_distribution_tensor) / torch.sum(resource_distribution_tensor)
     return mean
 
-def discrete_variance(bin_points: np.ndarray,
-                      resource_distribution: np.ndarray,
-                      mean: float) -> float:
+def discrete_variance(bin_points: Union[np.ndarray, torch.Tensor],
+                      resource_distribution: Union[np.ndarray, torch.Tensor],
+                      mean: float) -> torch.Tensor:
     r"""
     Computes the variance of a discrete distribution.
 
@@ -633,27 +779,38 @@ def discrete_variance(bin_points: np.ndarray,
         - :math:`\mathbb{B}` is the set of bin points.
         - :math:`B(b)` is the resource value at the bin point :math:`b`.
         - :math:`\mu` is the mean of the distribution.
-
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        import torch
+        from InflGame.utils.general import discrete_mean, discrete_variance
+        
+        bins = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
+        resources = torch.tensor([1.0, 2.0, 3.0, 2.0, 1.0])
+        mean = discrete_mean(bins, resources)
+        variance = discrete_variance(bins, resources, mean)
 
     :param bin_points: Bin points.
-    :type bin_points: np.ndarray
+    :type bin_points: Union[np.ndarray, torch.Tensor]
     :param resource_distribution: Resource distribution.
-    :type resource_distribution: np.ndarray
+    :type resource_distribution: Union[np.ndarray, torch.Tensor]
     :param mean: Mean of the distribution.
     :type mean: float
     :return: Variance of the distribution.
-    :rtype: float
+    :rtype: torch.Tensor
     """
     variance=torch.dot(bin_points**2,resource_distribution)/torch.sum(resource_distribution)-mean**2
     return variance
 
-def discrete_covariance(bin_points_1: np.ndarray,
-                        bin_points_2: np.ndarray,
-                        resource_distribution: np.ndarray,
+def discrete_covariance(bin_points_1: Union[np.ndarray, torch.Tensor],
+                        bin_points_2: Union[np.ndarray, torch.Tensor],
+                        resource_distribution: Union[np.ndarray, torch.Tensor],
                         mean_1: float,
-                        mean_2: float) -> float:
+                        mean_2: float) -> torch.Tensor:
     r"""
-     Computes the covariance of a discrete 2d distribution.
+    Computes the covariance of a discrete 2D distribution.
 
     .. math::
         \text{Cov}(b_1, b_2) = \frac{\sum_{b \in \mathbb{B}} b_1 \cdot b_2 \cdot B(b)}{\sum_{b \in \mathbb{B}} B(b)} - \mu_1 \cdot \mu_2
@@ -663,20 +820,31 @@ def discrete_covariance(bin_points_1: np.ndarray,
         - :math:`\mathbb{B}` is the set of bin points.
         - :math:`B(b)` is the resource value at the bin point :math:`b`.
         - :math:`\mu_1` and :math:`\mu_2` are the means of the two distributions.
-
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        import torch
+        from InflGame.utils.general import discrete_covariance
+        
+        bins_x = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
+        bins_y = torch.tensor([0.2, 0.4, 0.5, 0.6, 0.8])
+        resources = torch.tensor([1.0, 2.0, 3.0, 2.0, 1.0])
+        cov = discrete_covariance(bins_x, bins_y, resources, 0.5, 0.5)
 
     :param bin_points_1: First set of bin points.
-    :type bin_points_1: np.ndarray
+    :type bin_points_1: Union[np.ndarray, torch.Tensor]
     :param bin_points_2: Second set of bin points.
-    :type bin_points_2: np.ndarray
+    :type bin_points_2: Union[np.ndarray, torch.Tensor]
     :param resource_distribution: Resource distribution.
-    :type resource_distribution: np.ndarray
+    :type resource_distribution: Union[np.ndarray, torch.Tensor]
     :param mean_1: Mean of the first distribution.
     :type mean_1: float
     :param mean_2: Mean of the second distribution.
     :type mean_2: float
     :return: Covariance of the distribution.
-    :rtype: float
+    :rtype: torch.Tensor
     """
     covariance=torch.dot(bin_points_1*bin_points_2,resource_distribution)/torch.sum(resource_distribution)-mean_1*mean_2
     return covariance
@@ -739,10 +907,30 @@ def split_favor_bottom(num_agents: int,
     
     return total
 
-def _to_tensor(value, name: str, expected_shape: Optional[tuple] = None, dtype=torch.float32) -> torch.Tensor:
-        """Helper function to convert inputs to tensors with validation."""
-        if value is None:
-            raise ValueError(f"{name} cannot be None")
+def _to_tensor(value,
+               name: str,
+               expected_shape: Optional[tuple] = None,
+               dtype=torch.float32) -> torch.Tensor:
+    """
+    Helper function to convert inputs to tensors with validation.
+    
+    This internal utility ensures consistent tensor conversion across the module,
+    with optional shape validation.
+    
+    :param value: Input value to convert to tensor.
+    :type value: Union[list, np.ndarray, torch.Tensor]
+    :param name: Name of the parameter for error messages.
+    :type name: str
+    :param expected_shape: Expected shape of the tensor. Defaults to None.
+    :type expected_shape: Optional[tuple]
+    :param dtype: Desired data type of the tensor.
+    :type dtype: torch.dtype
+    :return: Converted and validated tensor.
+    :rtype: torch.Tensor
+    :raises ValueError: If value is None or shape doesn't match expected_shape.
+    """
+    if value is None:
+        raise ValueError(f"{name} cannot be None")
         
         if isinstance(value, (list, np.ndarray)):
             tensor = torch.tensor(value, dtype=dtype)
@@ -760,11 +948,35 @@ def _to_tensor(value, name: str, expected_shape: Optional[tuple] = None, dtype=t
 
 def get_color_by_index(index: int, color_scheme: str = 'default') -> str:
     """
-    Return a color based on an integer input.
+    Return a color based on an integer index.
+    
+    This function provides consistent color mapping for visualization purposes.
+    Colors cycle through the selected scheme if the index exceeds available colors.
+    
+    **Available Color Schemes**:
+    
+    - ``'default'``: Standard color palette
+    - ``'matplotlib'``: Matplotlib tab10 colors
+    - ``'bright'``: High-contrast bright colors
+    - ``'pastel'``: Soft pastel colors
+    - ``'colormap'``: Viridis colormap
+    - ``'Greys'``: Grayscale colors
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        from InflGame.utils.general import get_color_by_index
+        
+        # Get the first color in default scheme
+        color = get_color_by_index(0, 'default')
+        
+        # Get colors for multiple agents
+        colors = [get_color_by_index(i, 'bright') for i in range(3)]
     
     :param index: Integer index to determine color.
     :type index: int
-    :param color_scheme: Color scheme to use ('default', 'matplotlib', 'bright', 'pastel').
+    :param color_scheme: Color scheme to use.
     :type color_scheme: str
     :return: Hex color code or matplotlib color name.
     :rtype: str
@@ -860,16 +1072,32 @@ def get_color_by_index(index: int, color_scheme: str = 'default') -> str:
         raise ValueError(f"Unsupported color_scheme: {color_scheme}. "
                         f"Choose from 'default', 'matplotlib', 'bright', 'pastel', 'colormap'")
 
-def generate_color_palette(num_colors: int, color_scheme: str = 'default') -> list:
+def generate_color_palette(num_colors: int, color_scheme: str = 'default') -> List[str]:
     """
     Generate a list of colors for a given number of items.
+    
+    This function creates a color palette suitable for distinguishing multiple
+    agents or data series in visualizations.
+    
+    **Example**:
+    
+    .. code-block:: python
+        
+        from InflGame.utils.general import generate_color_palette
+        
+        # Generate 5 colors from bright scheme
+        palette = generate_color_palette(5, 'bright')
+        
+        # Use in plotting
+        for i, color in enumerate(palette):
+            plt.plot(data[i], color=color, label=f'Agent {i}')
     
     :param num_colors: Number of colors to generate.
     :type num_colors: int
     :param color_scheme: Color scheme to use.
     :type color_scheme: str
     :return: List of color codes.
-    :rtype: list
+    :rtype: List[str]
     :raises ValueError: If num_colors is not positive.
     """
     if not isinstance(num_colors, int) or num_colors <= 0:
@@ -878,35 +1106,49 @@ def generate_color_palette(num_colors: int, color_scheme: str = 'default') -> li
     return [get_color_by_index(i, color_scheme) for i in range(num_colors)]
 
 
-def smoothing_zeros(tensor, fill_value=None, inplace=False):
+def smoothing_zeros(tensor: torch.Tensor,
+                    fill_value: Optional[float] = None,
+                    inplace: bool = False) -> torch.Tensor:
     """
     Optimized function to smooth zeros at the beginning and end of a 1D tensor.
     
     Fills leading zeros with the first non-zero value and trailing zeros 
-    with the last non-zero value. Handles various edge cases efficiently.
+    with the last non-zero value. This is useful for cleaning up time series
+    data or trajectory data with missing values at the boundaries.
     
-    Args:
-        tensor (torch.Tensor): Input 1D tensor to smooth
-        fill_value (float, optional): Value to use if tensor is all zeros. 
-                                    If None, returns original tensor unchanged.
-        inplace (bool): If True, modifies the tensor in place. Default False.
+    **Edge Cases Handled**:
     
-    Returns:
-        torch.Tensor: Smoothed tensor
+    - Empty tensor: returns empty tensor
+    - All-zero tensor: fills with fill_value or returns unchanged
+    - Single non-zero element: fills entire tensor with that value
+    - No leading/trailing zeros: returns original tensor
+    - Single element tensor: returns unchanged
+    
+    **Examples**:
+    
+    .. code-block:: python
         
-    Edge cases handled:
-        - Empty tensor: returns empty tensor
-        - All-zero tensor: fills with fill_value or returns unchanged
-        - Single non-zero element: fills entire tensor with that value
-        - No leading/trailing zeros: returns original tensor
-        - Single element tensor: returns unchanged
-    
-    Examples:
-        >>> smoothing_zeros(torch.tensor([0, 3, 2, 0]))
-        tensor([3, 3, 2, 2])
+        import torch
+        from InflGame.utils.general import smoothing_zeros
         
-        >>> smoothing_zeros(torch.tensor([0, 0, 0, 0]), fill_value=1.0)
-        tensor([1., 1., 1., 1.])
+        # Basic smoothing
+        result = smoothing_zeros(torch.tensor([0, 3, 2, 0]))
+        # Returns: tensor([3, 3, 2, 2])
+        
+        # All-zero tensor with fill value
+        result = smoothing_zeros(torch.tensor([0, 0, 0, 0]), fill_value=1.0)
+        # Returns: tensor([1., 1., 1., 1.])
+    
+    :param tensor: Input 1D tensor to smooth.
+    :type tensor: torch.Tensor
+    :param fill_value: Value to use if tensor is all zeros. If None, returns original tensor unchanged.
+    :type fill_value: Optional[float]
+    :param inplace: If True, modifies the tensor in place. Default False.
+    :type inplace: bool
+    :return: Smoothed tensor.
+    :rtype: torch.Tensor
+    :raises TypeError: If tensor is not a torch.Tensor.
+    :raises ValueError: If tensor is not 1D.
     """
     
     # Input validation
@@ -960,17 +1202,41 @@ def smoothing_zeros(tensor, fill_value=None, inplace=False):
     
     return result
 
-def smoothing_zeros_batch(tensor_batch, fill_value=None, inplace=False):
+def smoothing_zeros_batch(tensor_batch: torch.Tensor,
+                          fill_value: Optional[float] = None,
+                          inplace: bool = False) -> torch.Tensor:
     """
     Batch version of smoothing_zeros for processing multiple 1D tensors efficiently.
     
-    Args:
-        tensor_batch (torch.Tensor): 2D tensor where each row is a 1D tensor to smooth
-        fill_value (float, optional): Value to use for all-zero tensors
-        inplace (bool): If True, modifies tensors in place
+    This function applies zero smoothing to multiple tensors simultaneously,
+    which is more efficient than processing them individually. It's particularly
+    useful for processing batches of agent trajectories or time series data.
     
-    Returns:
-        torch.Tensor: Batch of smoothed tensors
+    **Example**:
+    
+    .. code-block:: python
+        
+        import torch
+        from InflGame.utils.general import smoothing_zeros_batch
+        
+        # Batch of 3 trajectories
+        batch = torch.tensor([
+            [0, 1, 2, 0],
+            [0, 0, 3, 0],
+            [1, 2, 3, 4]
+        ])
+        
+        result = smoothing_zeros_batch(batch)
+    
+    :param tensor_batch: 2D tensor where each row is a 1D tensor to smooth.
+    :type tensor_batch: torch.Tensor
+    :param fill_value: Value to use for all-zero tensors.
+    :type fill_value: Optional[float]
+    :param inplace: If True, modifies tensors in place.
+    :type inplace: bool
+    :return: Batch of smoothed tensors.
+    :rtype: torch.Tensor
+    :raises TypeError: If tensor_batch is not a torch.Tensor.
     """
     
     if not isinstance(tensor_batch, torch.Tensor):

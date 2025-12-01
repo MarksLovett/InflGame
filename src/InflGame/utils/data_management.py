@@ -1,19 +1,38 @@
 """
 .. module:: data_management
-   :synopsis: Provides utilities for managing and organizing data in influencer games.
+   :synopsis: Provides utilities for managing and organizing data files in influencer games experiments.
 
 Data Management Utilities Module
 ================================
 
-This module provides utility functions for managing and organizing data in influencer games. It includes functions 
-for loading Q-tables, extracting data parameters, creating directory structures, and generating file names for saving 
-and retrieving data.
+This module provides comprehensive utility functions for managing and organizing data in influencer games research.
+It handles Q-table loading, data parameter extraction, hierarchical directory structure creation, and standardized
+file naming conventions for saving and retrieving experimental results.
+
+The module supports multiple data types including Q-tables, configuration files, reward matrices, position data,
+and mean absolute deviation (MAD) metrics. It automatically creates organized directory hierarchies based on
+experiment parameters such as number of agents, influence reach, resource types, and state discretization.
+
+Dependencies:
+-------------
+- numpy: Array operations
+- hickle: HDF5-based serialization for Python objects
+- pathlib: Object-oriented filesystem paths
+- typing: Type hints support
+
+Key Functions:
+--------------
+- q_table_data_load: Load Q-tables and configurations from standardized paths
+- data_parameters: Extract and format data parameters from configuration dictionaries
+- data_directory: Create hierarchical directory structures for data organization
+- data_name: Generate standardized file names based on experiment parameters
+- data_final_name: Combine directory paths and file names for complete file paths
 
 Usage:
 ------
-The `q_table_data_load` function loads Q-tables and configuration data, while the `data_directory` function creates 
-directory structures based on data parameters. The `data_final_name` function generates full file paths for saving 
-data.
+The typical workflow involves defining experiment options, loading existing data, extracting parameters,
+and generating standardized paths for saving new results. The module enforces consistent naming conventions
+across all influencer games experiments.
 
 Example:
 --------
@@ -21,32 +40,34 @@ Example:
 .. code-block:: python
 
     from InflGame.utils.data_management import q_table_data_load, data_final_name
+    import hickle as hkl
 
-    # Define options for loading Q-tables
+    # Load existing Q-tables and configurations
     options = {
         "agents": 3,
         "reach": "small",
         "modes": 2,
         "density": True
     }
-
-    # Load Q-table and configurations
     q_table, configs = q_table_data_load(options=options)
-    print("Q-table loaded:", q_table)
-    print("Configurations loaded:", configs)
-
-    # Define data parameters
-    data_parameters = {
+    print(f"Q-table shape: {q_table.shape}")
+    
+    # Generate standardized file paths for saving new data
+    data_params = {
         "num_agents": "3_agents",
         "data_type": "q_tables",
         "reach": "sig_50",
         "resource_type": "gaussian",
         "steps": "100_states"
     }
-
-    # Generate final file names
-    file_names = data_final_name(data_parameters=data_parameters, name_ads=["experiment1"], save_types=[".hkl"])
-    print("Generated file names:", file_names)
+    file_paths = data_final_name(
+        data_parameters=data_params,
+        name_ads=["experiment1", "trial1"],
+        save_types=[".hkl", ".npy"]
+    )
+    
+    # Save data using generated paths
+    hkl.dump(q_table, file_paths[0])
 
 """
 
@@ -61,20 +82,77 @@ from typing import Dict, List, Union, Optional
 def q_table_data_load(options: Dict[str, Union[str, int, bool]]
                       ) -> Dict[str, Union[dict, list]]:
     """
-    Reads the Q-table and configuration data from specified paths.
-
-    :param options: A dictionary containing the following keys:
-        - ``agents`` (str): Number of agents.
-        - ``reach`` (str): Reach type ('small' or 'large').
-        - ``modes`` (str): Modes of operation.
-        - ``density`` (bool): Whether the data is dense.
-    :type options: dict
-    :return: A tuple containing the Q-table and configuration data.
-    :rtype: dict
+    Load Q-table and configuration data from standardized file paths.
+    
+    This function constructs file paths based on experiment options and loads
+    pre-computed Q-tables and configuration dictionaries from HDF5-based hickle files.
+    The path structure follows the convention: ``data/{agents}/{folder}/q_tables.hkl``
+    where folder is constructed from agent count, reach parameter, modes, and density.
+    
+    Parameters
+    ----------
+    options : Dict[str, Union[str, int, bool]]
+        Dictionary containing experiment configuration with required keys:
+        
+        - ``agents`` : int
+            Number of agents in the multi-agent system
+        - ``reach`` : str
+            Influence reach parameter, either ``'small'`` or ``'large'``
+        - ``modes`` : int
+            Number of operational modes in the environment
+        - ``density`` : bool
+            Whether the resource distribution is dense
+    
+    Returns
+    -------
+    Tuple[dict, dict]
+        A tuple containing:
+        
+        - **q_table** : dict
+            Loaded Q-table data structure mapping states to action values
+        - **configs** : dict
+            Configuration dictionary containing environment parameters
+    
+    Raises
+    ------
+    FileNotFoundError
+        If Q-table or configuration files do not exist at constructed paths
+    ValueError
+        If ``reach`` parameter is not ``'small'`` or ``'large'``
+    
+    Notes
+    -----
+    The function maps reach values to sigma parameters:
+    
+    - ``'small'`` → ``'small_sigma'``
+    - ``'large'`` → ``'large_sigma'``
+    
+    File naming convention follows the pattern:
+    ``{agents}_agents_{sigma}_{modes}m_{density}/q_tables.hkl``
+    
+    Examples
+    --------
+    Load Q-tables for a 3-agent system with small reach:
+    
+    >>> options = {
+    ...     "agents": 3,
+    ...     "reach": "small",
+    ...     "modes": 2,
+    ...     "density": True
+    ... }
+    >>> q_table, configs = q_table_data_load(options=options)
+    >>> print(f"Loaded Q-table type: {type(q_table)}")
+    Loaded Q-table type: <class 'dict'>
+    
+    Load data for large reach parameter:
+    
+    >>> options = {"agents": 5, "reach": "large", "modes": 3, "density": False}
+    >>> q_table, configs = q_table_data_load(options)
+    
     """
-    agents=str(options['agents'])+'_agent'
-    reach=options['reach']
-    if reach=='small':
+    agents = str(options['agents']) + '_agent'
+    reach = options['reach']
+    if reach == 'small':
         sigma='small_sigma'
     elif reach=='large':
         sigma='large_sigma'
@@ -107,18 +185,87 @@ def data_parameters(configs: Dict[str, dict],
                    resource_type: str
                    ) -> Optional[Dict[str, str]]:
     """
-    Extracts data parameters from the configuration file.
-
-    :param configs: Configuration dictionary.
-    :type configs: dict
-    :param data_type: Type of data ('q_tables' or 'configs').
-    :type data_type: str
-    :param resource_type: Type of resource.
-    :type resource_type: str
-    :return: A dictionary containing data parameters.
-    :rtype: dict
+    Extract and format data parameters from configuration dictionary.
+    
+    This function parses experiment configurations and extracts key parameters including
+    agent count, influence reach, resource type, and state discretization. It formats
+    these parameters into a standardized dictionary suitable for file naming and directory
+    structure generation.
+    
+    Parameters
+    ----------
+    configs : Dict[str, dict]
+        Configuration dictionary containing experiment parameters. Must have an
+        ``'env_config_main'`` key with nested parameters including:
+        
+        - ``'num_agents'`` : int
+            Number of agents in the system
+        - ``'parameters'`` : list or array
+            Influence parameters (first element used for reach)
+        - ``'step_size'`` : float
+            State discretization step size
+    
+    data_type : str
+        Type of data being processed. Supported values:
+        
+        - ``'q_tables'`` : Q-learning tables
+        - ``'configs'`` : Configuration files
+        - ``'final_mad'`` : Final mean absolute deviation
+        - ``'final_positions'`` : Final agent positions
+    
+    resource_type : str
+        Type of resource distribution (e.g., ``'gaussian'``, ``'uniform'``, ``'beta'``)
+    
+    Returns
+    -------
+    Optional[Dict[str, str]]
+        Dictionary containing formatted parameters with keys:
+        
+        - ``'num_agents'`` : str
+            Formatted as ``'{N}_agents'``
+        - ``'data_type'`` : str
+            The input data type
+        - ``'reach'`` : str
+            Formatted as ``'sig_{value}'`` where value is :math:`100 \\times \\sigma`
+        - ``'resource_type'`` : str
+            The input resource type
+        - ``'steps'`` : str
+            Number of discrete states, formatted as ``'{N}_states'``
+        
+        Returns ``None`` if ``data_type`` is not in supported types.
+    
+    Notes
+    -----
+    The reach parameter is computed as:
+    
+    .. math::
+        \\text{reach} = \\lfloor 100 \\times \\sigma \\rfloor
+    
+    where :math:`\\sigma` is the first element of ``configs['env_config_main']['parameters']``.
+    
+    The number of states is computed as:
+    
+    .. math::
+        \\text{states} = \\lfloor 1 / \\text{step_size} \\rfloor
+    
+    Examples
+    --------
+    Extract parameters from a standard configuration:
+    
+    >>> configs = {
+    ...     'env_config_main': {
+    ...         'num_agents': 3,
+    ...         'parameters': [0.5, 0.3],
+    ...         'step_size': 0.01
+    ...     }
+    ... }
+    >>> params = data_parameters(configs, 'q_tables', 'gaussian')
+    >>> print(params)
+    {'num_agents': '3_agents', 'data_type': 'q_tables', 'reach': 'sig_50', 
+     'resource_type': 'gaussian', 'steps': '100_states'}
+    
     """
-    if data_type in ['q_tables','configs',"final_mad","final_positions"]:
+    if data_type in ['q_tables', 'configs', "final_mad", "final_positions"]:
        data_parameter={'num_agents':str(configs['env_config_main']['num_agents'])+'_agents',
                       'data_type':data_type,
                       'reach':'sig_'+str(int(configs['env_config_main']['parameters'][0]*100)),
@@ -134,14 +281,81 @@ def data_directory(data_parameters: Dict[str, str],
                    paper_figure: bool = False
                    ) -> str:
     """
-    Creates a directory structure based on data parameters.
-
-    :param data_parameters: Dictionary containing data parameters.
-    :type data_parameters: dict
-    :param alt_name: Whether to use an alternative name.
-    :type alt_name: bool
-    :return: The final directory path.
-    :rtype: str
+    Create hierarchical directory structure for organized data storage.
+    
+    This function builds a nested directory hierarchy based on experiment parameters,
+    automatically creating all necessary parent directories. It supports different
+    organizational schemes for research data, plots, and publication-ready figures.
+    
+    Parameters
+    ----------
+    data_parameters : Dict[str, str]
+        Dictionary containing organizational parameters. Required keys vary by ``data_type``:
+        
+        - For plots: ``'data_type'``, ``'section'``, ``'figure_id'`` (if paper_figure=True)
+        - For data: ``'data_type'``, ``'num_agents'``, ``'reach'``, ``'resource_type'``, ``'steps'``
+    
+    alt_name : bool
+        Whether to use alternative naming scheme (currently unused, reserved for future use)
+    
+    paper_figure : bool, optional
+        If ``True``, creates directory structure for publication figures organized by
+        section and figure ID. Default is ``False``.
+    
+    Returns
+    -------
+    str
+        Absolute path to the created directory with Windows path separators (``\\``)
+    
+    Notes
+    -----
+    Directory structure patterns:
+    
+    **For paper figures** (``paper_figure=True``):
+    
+    .. code-block:: text
+    
+        {module_path}/paper_plots/{section}/{figure_id}/
+    
+    **For regular plots** (``data_type='plot'``):
+    
+    .. code-block:: text
+    
+        {module_path}/plots/{domain_type}/{param1}/{param2}/...
+    
+    **For data files**:
+    
+    .. code-block:: text
+    
+        {module_path}/data/{num_agents}/{param1}/{param2}/...
+    
+    All intermediate directories are created automatically using ``pathlib.Path.mkdir(exist_ok=True)``.
+    
+    Examples
+    --------
+    Create directory for paper figure:
+    
+    >>> params = {
+    ...     'data_type': 'plot',
+    ...     'section': 'results',
+    ...     'figure_id': 'fig_1'
+    ... }
+    >>> path = data_directory(params, alt_name=False, paper_figure=True)
+    >>> print(path)
+    C:\\...\\paper_plots\\results\\fig_1
+    
+    Create directory for Q-table data:
+    
+    >>> params = {
+    ...     'data_type': 'q_tables',
+    ...     'num_agents': '3_agents',
+    ...     'reach': 'sig_50',
+    ...     'resource_type': 'gaussian'
+    ... }
+    >>> path = data_directory(params, alt_name=False)
+    >>> print(path)
+    C:\\...\\data\\3_agents\\sig_50\\gaussian
+    
     """
     if data_parameters['data_type'] in ["plot"]:
         if paper_figure==True:
@@ -214,18 +428,89 @@ def data_name(data_parameters: Dict[str, str],
               paper_figure: bool = False
               ) -> List[str]:
     """
-    Generates data file names based on parameters and additional names.
-
-    :param data_parameters: Dictionary containing data parameters.
-    :type data_parameters: dict
-    :param name_ads: List of additional name components.
-    :type name_ads: list
-    :param save_types: List of file extensions.
-    :type save_types: list
-    :return: A list of generated file names.
-    :rtype: list
+    Generate standardized file names based on data type and parameters.
+    
+    This function creates descriptive file names following consistent naming conventions
+    for different data types. It supports multiple file formats and allows appending
+    custom suffixes for experiment versioning and identification.
+    
+    Parameters
+    ----------
+    data_parameters : Dict[str, str]
+        Dictionary containing data parameters. Required keys:
+        
+        - ``'data_type'`` : str
+            Type of data (``'q_tables'``, ``'configs'``, ``'plot'``, etc.)
+        
+        For plots, additional keys:
+        
+        - ``'plot_type'`` : str
+            Type of plot visualization
+        - ``'domain_type'`` : str
+            Domain type (``'1d'``, ``'2d'``, ``'simplex'``)
+        - ``'num_agents'`` : str
+            Number of agents (if ``paper_figure=True``)
+    
+    name_ads : List[str]
+        List of additional name components to append (e.g., experiment IDs, trial numbers).
+        Components are joined with underscores.
+    
+    save_types : List[str]
+        List of file extensions including the dot (e.g., ``['.hkl', '.npy', '.png']``)
+    
+    paper_figure : bool, optional
+        If ``True``, uses publication naming format for plots. Default is ``False``.
+    
+    Returns
+    -------
+    List[str]
+        List of complete file names, one for each save type. Each name combines
+        the base name, additional components, and file extension.
+    
+    Raises
+    ------
+    ValueError
+        If ``data_type`` is not recognized
+    
+    Notes
+    -----
+    Base name mapping by data type:
+    
+    - ``'q_tables'`` → ``'q_table'``
+    - ``'configs'`` → ``'configs'``
+    - ``'reward_matrix'`` → ``'reward_matrix'``
+    - ``'mean_positions'`` → ``'mean_positions'``
+    - ``'MAD'`` → ``'MAD'``
+    - ``'final_positions'`` → ``'final_positions'``
+    - ``'final_mad'`` → ``'final_mad'``
+    - ``'plot'`` → custom format based on plot parameters
+    
+    For paper figures, plot names follow:
+    ``{domain_type}_{plot_type}_{num_agents}_agents``
+    
+    Examples
+    --------
+    Generate Q-table file names with multiple formats:
+    
+    >>> params = {'data_type': 'q_tables'}
+    >>> names = data_name(params, name_ads=['exp1', 'v2'], save_types=['.hkl', '.npy'])
+    >>> print(names)
+    ['q_table_exp1_v2.hkl', 'q_table_exp1_v2.npy']
+    
+    Generate paper figure name:
+    
+    >>> params = {
+    ...     'data_type': 'plot',
+    ...     'domain_type': '2d',
+    ...     'plot_type': 'bifurcation',
+    ...     'num_agents': '3'
+    ... }
+    >>> names = data_name(params, name_ads=[], save_types=['.png'], paper_figure=True)
+    >>> print(names)
+    ['2d_bifurcation_3_agents.png']
+    
     """
-    data_type=data_parameters['data_type']
+    data_type = data_parameters['data_type']
     data_names=[]
     if data_type=='q_tables':
         data_name='q_table'
@@ -267,16 +552,77 @@ def data_final_name(data_parameters: Dict[str, str],
                     paper_figure: bool = False
                     ) -> List[str]:
     """
-    Generates the final file names with directory paths.
-
-    :param data_parameters: Dictionary containing data parameters.
-    :type data_parameters: dict
-    :param name_ads: List of additional name components.
-    :type name_ads: list
-    :param save_types: List of file extensions (default is ['.hkl']).
-    :type save_types: list
-    :return: A list of full file paths.
-    :rtype: list
+    Generate complete file paths combining directory structure and file names.
+    
+    This function is the primary interface for generating standardized file paths in the
+    influencer games framework. It combines directory creation (via ``data_directory``)
+    and file naming (via ``data_name``) into complete absolute paths ready for saving
+    or loading data.
+    
+    Parameters
+    ----------
+    data_parameters : Dict[str, str]
+        Dictionary containing all necessary parameters for path construction.
+        Required keys depend on ``data_type`` (see ``data_directory`` and ``data_name``
+        for specific requirements).
+    
+    name_ads : List[str]
+        List of additional descriptive components to append to file names.
+        Useful for experiment versioning, trial IDs, or custom identifiers.
+    
+    save_types : List[str], optional
+        List of file extensions including dots. Default is ``['.hkl']`` (hickle format).
+        Common options: ``['.hkl', '.npy', '.pkl', '.png', '.svg']``
+    
+    paper_figure : bool, optional
+        If ``True``, generates paths for publication-ready figures with special
+        directory organization. Default is ``False``.
+    
+    Returns
+    -------
+    List[str]
+        List of complete absolute file paths, one for each save type.
+        Paths use Windows separators (``\\``) and include all directory components.
+    
+    Notes
+    -----
+    This function ensures all necessary directories exist before returning paths.
+    The directory creation is handled internally by ``data_directory``.
+    
+    Path structure follows:
+    
+    .. code-block:: text
+    
+        {base_dir}/{param1}/{param2}/.../{base_name}_{ad1}_{ad2}{ext}
+    
+    Examples
+    --------
+    Generate paths for Q-table storage:
+    
+    >>> params = {
+    ...     'num_agents': '3_agents',
+    ...     'data_type': 'q_tables',
+    ...     'reach': 'sig_50',
+    ...     'resource_type': 'gaussian',
+    ...     'steps': '100_states'
+    ... }
+    >>> paths = data_final_name(params, name_ads=['exp1'], save_types=['.hkl'])
+    >>> print(paths[0])
+    C:\\...\\data\\3_agents\\sig_50\\gaussian\\100_states\\q_table_exp1.hkl
+    
+    Generate multiple format paths for plots:
+    
+    >>> params = {
+    ...     'data_type': 'plot',
+    ...     'plot_type': 'bifurcation',
+    ...     'domain_type': '1d',
+    ...     'num_agents': '3'
+    ... }
+    >>> paths = data_final_name(params, name_ads=['trial1'], 
+    ...                         save_types=['.png', '.svg'])
+    >>> len(paths)
+    2
+    
     """
     if data_parameters['data_type'] in ['nothingrn']:
         alt=True

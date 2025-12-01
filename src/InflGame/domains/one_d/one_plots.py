@@ -3,41 +3,47 @@
    :synopsis: Provides 1D visualization tools for analyzing agent dynamics and resource distributions in influencer games.
 
 1D Visualization Module
-=======================
+========================
 
-This module provides visualization tools for analyzing and understanding the dynamics of agents and resource distributions in 1D domains for influencer games.
-It includes utilities for plotti        # Create discrete colormap for agent count
-        max_agents = int(density_matrix.max())
-        if max_agents > 0:
-            # Define discrete levels based on agent count
-            levels = np.arange(0, max_agents + 2, 1)  # 0, 1, 2, ..., max_agents+1
-            norm = mpl.colors.BoundaryNorm(levels, ncolors=256)
-            
-            # Create the heatmap with discrete colormap
-            im = ax.imshow(density_matrix, aspect='auto', cmap='viridis', norm=norm, origin='lower',
-                        extent=[reach_parameters[0], reach_parameters[-1], 
-                                position_bins[0], position_bins[-1]],
-                        interpolation='nearest')  # Use 'nearest' for discrete appearance
-        else:
-            # Fallback for empty data
-            im = ax.imshow(density_matrix, aspect='auto', cmap='viridis', origin='lower',
-                        extent=[reach_parameters[0], reach_parameters[-1], 
-                                position_bins[0], position_bins[-1]],
-                        interpolation='nearest')ent positions, gradients, influence distributions, and bifurcation dynamics in 1D domains.
+This module provides visualization tools for analyzing and understanding the dynamics of agents 
+and resource distributions in 1D domains for influencer games. It includes utilities for plotting 
+agent positions, gradients, influence distributions, and bifurcation dynamics in 1D domains.
 
-The module is designed to work with the `InflGame.adaptive` package and supports creating visual representations of agent behaviors and resource distributions in 1D environments.
+The module is designed to work with the :mod:`InflGame.adaptive` package and supports creating 
+visual representations of agent behaviors and resource distributions in 1D environments.
 
 Dependencies:
 -------------
+- matplotlib
+- NumPy
+- PyTorch
 - InflGame.utils
 - InflGame.domains
 
 Usage:
 ------
-The functions in this module can be used to visualize agent dynamics and resource distributions in 1D domains. For example, the `pos_plot_1d` function
-can be used to plot agent positions over time, while the `dist_and_pos_plot_1d` function can visualize both agent positions and influence distributions.
+The functions in this module can be used to visualize agent dynamics and resource distributions 
+in 1D domains. For example, the :func:`pos_plot_1d` function can be used to plot agent positions 
+over time, while the :func:`dist_and_pos_plot_1d` function can visualize both agent positions 
+and influence distributions.
 
+Example:
+--------
 
+.. code-block:: python
+
+    from InflGame.domains.one_d.one_plots import pos_plot_1d, equilibrium_bifurcation_plot_1d
+    import torch
+    import numpy as np
+    
+    # Plot agent positions over time
+    fig = pos_plot_1d(
+        num_agents=3,
+        pos_matrix=torch.randn(100, 3),
+        domain_bounds=(0, 1),
+        title_ads=['Example Plot']
+    )
+    fig.show()
 """
 
 import numpy as np
@@ -62,17 +68,25 @@ def pos_plot_1d(num_agents: int,
                 axis_return: Optional[bool] = False
                 ) -> matplotlib.figure.Figure:
     """
-    Plots the positions of agents over time in a 1D domain.
+    Plot agent positions over time in a 1D domain.
+    
+    Creates a line plot showing how agent positions change over gradient ascent iterations.
+    Each agent's trajectory is plotted as a separate line with a distinct color.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param pos_matrix: Matrix of agent positions over time.
+    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents]).
     :type pos_matrix: torch.Tensor
-    :param domain_bounds: Bounds of the domain (min, max).
+    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
     :type domain_bounds: Tuple[float, float]
-    :param title_ads: Additional strings to append to the plot title, defaults to [].
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :param title_ads: Additional strings to append to the plot title.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: Optional[bool]
+    
+    :return: The generated matplotlib figure or axes object.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -112,15 +126,21 @@ def gradient_plot_1d(num_agents: int,
                      font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12,'font_family': 'sans-serif'}
                      ) -> matplotlib.figure.Figure:
     """
-    Plots the gradients of agents over time in a 1D domain.
+    Plot agent gradients over time in a 1D domain.
+    
+    Creates a line plot showing how the gradient values for each agent change over gradient
+    ascent iterations. Each agent's gradient trajectory is plotted as a separate line.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param grad_matrix: Matrix of agent gradients over time.
+    :param grad_matrix: Matrix of agent gradients over time (shape: [time_steps, num_agents]).
     :type grad_matrix: torch.Tensor
-    :param title_ads: Additional strings to append to the plot title, defaults to [].
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :param title_ads: Additional strings to append to the plot title.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    
+    :return: The generated matplotlib figure.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -159,24 +179,35 @@ def prob_plot_1d(num_agents: int,
                  title_ads: Optional[List[str]],
                  font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12,'font_family': 'sans-serif'}
                  ) -> matplotlib.figure.Figure:
-    """
-    Plots the probability distribution of influence for agents in a 1D domain.
+    r"""
+    Plot probability distribution of agent influence in a 1D domain.
+    
+    Visualizes the probability that each agent influences each bin/resource point via their
+    relative influence. The probability is computed as:
+    
+    .. math::
+        G_{i,k}(\mathbf{x},b_k) = \frac{f_i(x_i, b_k)}{\sum_{j=1}^N f_j(x_j, b_k)}
+    
+    where :math:`f_i(x_i, b_k)` is the influence of agent :math:`i` at bin point :math:`b_k`.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param agents_pos: List of agent positions.
-    :type agents_pos: list
-    :param bin_points: Points defining the bins for the probability distribution.
-    :type bin_points: numpy.ndarray
-    :param domain_bounds: Bounds of the domain (min, max).
-    :type domain_bounds: list[float, float]
-    :param prob: Probability distributions for each agent.
-    :type prob: list
-    :param voting_configs: Configuration for voting types.
-    :type voting_configs: dict
+    :param agents_pos: Current positions of all agents.
+    :type agents_pos: List[float]
+    :param bin_points: Discretized points defining resource allocation regions.
+    :type bin_points: np.ndarray
+    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
+    :type domain_bounds: List[float]
+    :param prob: Probability distributions for each agent (one array per agent).
+    :type prob: List[np.ndarray]
+    :param voting_configs: Configuration dictionary with keys 'fixed_party' and 'abstain' for voting behavior.
+    :type voting_configs: Dict[str, bool]
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    
+    :return: The generated matplotlib figure.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -227,15 +258,24 @@ def three_agent_dynamics(pos_matrix: np.ndarray,
                           axis_return: Optional[bool] = False
                           ) -> matplotlib.figure.Figure:
     """
-    Plots the dynamics of three players in a 3D space.
+    Visualize three-agent dynamics in 3D trajectory space.
+    
+    Creates a 3D plot where each axis represents one agent's position over time, demonstrating
+    the instability and complex dynamics of three-player influencer games in 1D domains.
+    Only applicable for exactly 3 agents with 1D strategy spaces.
 
-    :param pos_matrix: Matrix of player positions over time.
-    :type pos_matrix: numpy.ndarray
-    :param x_star: Reference point (e.g., mean position).
+    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, 3]).
+    :type pos_matrix: np.ndarray
+    :param x_star: Equilibrium or reference position (e.g., symmetric Nash equilibrium).
     :type x_star: float
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list
-    :return: The generated plot figure.
+    :type title_ads: List[str]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: Optional[bool]
+    
+    :return: The generated matplotlib figure or axes object.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -278,15 +318,23 @@ def vector_plot_1d(ids: List[int],
                    **kwargs
                    ) -> matplotlib.figure.Figure:
     """
-    Plots a vector field for two players in a 1D domain.
+    Plot vector field of gradients for two agents in a 1D domain.
+    
+    Creates a streamplot showing the gradient vector field for a two-agent system, where
+    each axis represents one agent's position. The vectors indicate the direction and
+    magnitude of gradient ascent at each point in the position space.
 
-    :param ids: List of player IDs.
-    :type ids: list
-    :param gradient: Gradient matrix for the vector field.
+    :param ids: Agent IDs to include in the vector field (must be exactly 2 agents).
+    :type ids: List[int]
+    :param gradient: Gradient matrix for the vector field (shape: [grid_points, 2]).
     :type gradient: torch.Tensor
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    :param **kwargs: Additional keyword arguments passed to matplotlib streamplot function.
+    
+    :return: The generated matplotlib figure.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -348,27 +396,38 @@ def dist_and_pos_plot_1d(num_agents: int,
                          font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12,'font_family': 'sans-serif'}
                          ) -> matplotlib.figure.Figure:
     """
-    Plots the resource distribution and agent positions over time in a 1D domain.
+    Plot agent influence distributions and positions over time in a 1D domain.
+    
+    Creates a side-by-side visualization with:
+    
+    - Left panel: Influence distributions for each agent overlaid with resource distribution
+    - Right panel: Agent positions changing over gradient ascent iterations
+    
+    This provides comprehensive insight into both the spatial influence patterns and
+    the temporal evolution of agent positions.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param bin_points: Points defining the bins for the resource distribution.
-    :type bin_points: numpy.ndarray
-    :param resource_distribution: Resource distribution across the domain.
-    :type resource_distribution: numpy.ndarray
-    :param pos_matrix: Matrix of agent positions over time.
+    :param bin_points: Discretized points defining resource allocation regions.
+    :type bin_points: np.ndarray
+    :param resource_distribution: Resource values at each bin point.
+    :type resource_distribution: np.ndarray
+    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents]).
     :type pos_matrix: torch.Tensor
-    :param len_grad_matrix: Length of the gradient matrix.
+    :param len_grad_matrix: Number of time steps for x-axis scaling.
     :type len_grad_matrix: int
-    :param infl_dist: Influence distributions for each agent.
-    :type infl_dist: list
-    :param cm: Colormap for plotting.
-    :type cm: matplotlib.colors.Colormap
-    :param NUM_COLORS: Number of colors to use in the colormap.
+    :param infl_dist: Influence distribution arrays for each agent.
+    :type infl_dist: List[torch.Tensor]
+    :param cm: Matplotlib colormap for agent colors.
+    :type cm: mpl.colors.Colormap
+    :param NUM_COLORS: Total number of colors in the colormap (typically num_agents + 1).
     :type NUM_COLORS: int
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    
+    :return: The generated matplotlib figure.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -434,30 +493,59 @@ def equilibrium_bifurcation_plot_1d(num_agents: int,
                                     show_pred: bool = False,
                                     optional_vline: List[float] = None
                                     ) -> matplotlib.figure.Figure:
-    """
-    Plots the equilibrium bifurcation for agents in a 1D domain.
+    r"""
+    Plot equilibrium bifurcation diagram for agents in a 1D domain.
+    
+    Visualizes how equilibrium positions change as a function of the reach parameter
+    (e.g., variance :math:`\sigma` for Gaussian influence kernels). As :math:`\sigma`
+    decreases, agents bifurcate from symmetric positions to asymmetric equilibria.
+    
+    Each agent has a vector of final positions :math:`X_i = [x_1, x_2, \dots, x_A]`
+    where :math:`A` is the number of test parameters and :math:`x_i` is the equilibrium
+    position at parameter value :math:`i`.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param bin_points: Points defining the bins for the resource distribution.
-    :type bin_points: numpy.ndarray
-    :param resource_distribution: Resource distribution across the domain.
-    :type resource_distribution: numpy.ndarray
-    :param infl_type: Type of influence (e.g., 'gaussian').
+    :param bin_points: Discretized points defining resource allocation regions.
+    :type bin_points: np.ndarray
+    :param resource_distribution: Resource values at each bin point.
+    :type resource_distribution: np.ndarray
+    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
     :type infl_type: str
-    :param reach_parameters: Parameters defining the reach of influence.
-    :type reach_parameters: list
-    :param final_pos_matrix: Final positions of agents.
-    :type final_pos_matrix: numpy.ndarray
-    :param reach_start: Start of the reach parameter range.
+    :param reach_parameters: Array of reach parameter values to test.
+    :type reach_parameters: List[float]
+    :param final_pos_matrix: Matrix of final equilibrium positions (shape: [num_params, num_agents]).
+    :type final_pos_matrix: np.ndarray
+    :param reach_start: Starting value of reach parameter range.
     :type reach_start: float
-    :param reach_end: End of the reach parameter range.
+    :param reach_end: Ending value of reach parameter range.
     :type reach_end: float
-    :param refinements: Number of refinements for critical value calculations.
+    :param refinements: Number of refinements for critical value estimation.
     :type refinements: int
+    :param plot_type: Type of plot ('line' or 'heat').
+    :type plot_type: str
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :type title_ads: Optional[List[str]]
+    :param short_title: Use abbreviated title format.
+    :type short_title: bool
+    :param norm: Normalize heatmap values.
+    :type norm: bool
+    :param infl_cshift: Whether influence uses center shift.
+    :type infl_cshift: bool
+    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit'.
+    :type cmaps: dict
+    :param font: Font configuration dictionary.
+    :type font: dict
+    :param cbar_config: Colorbar configuration dictionary.
+    :type cbar_config: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: bool
+    :param show_pred: Show predicted critical values (only for Gaussian kernels).
+    :type show_pred: bool
+    :param optional_vline: Optional vertical lines to add to plot.
+    :type optional_vline: Optional[List[float]]
+    
+    :return: The generated matplotlib figure or axes object.
     :rtype: matplotlib.figure.Figure
     """
     
@@ -690,13 +778,59 @@ def equilibrium_bifurcation_envelope_plot_1d(num_agents: int,
                                     optional_vline: List[float] = None,
                                     envelope_alpha: float = 0.3
                                     ) -> matplotlib.figure.Figure:
-    """
-    Plots the equilibrium bifurcation envelope for agents in a 1D domain using extreme positions.
-
-    This function creates an envelope plot showing the maximum and minimum positions achieved 
-    by agents across different reach parameters, providing insight into the spread of equilibria.
+    r"""
+    Plot equilibrium bifurcation envelope showing extreme agent positions in a 1D domain.
     
-    Following project patterns for state management and proper tensor/array conversion.
+    Creates an envelope plot showing the maximum and minimum positions achieved by agents
+    across different reach parameters, providing insight into the spread and stability of
+    equilibria. The envelope reveals the range of positions agents explore as the influence
+    parameter varies.
+
+    :param num_agents: Number of agents in the simulation.
+    :type num_agents: int
+    :param bin_points: Discretized points defining resource allocation regions.
+    :type bin_points: np.ndarray
+    :param resource_distribution: Resource values at each bin point.
+    :type resource_distribution: np.ndarray
+    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
+    :type infl_type: str
+    :param reach_parameters: Array of reach parameter values to test.
+    :type reach_parameters: List[float]
+    :param extreme_positions: Dictionary with 'max' and 'min' keys containing extreme position tensors.
+    :type extreme_positions: Dict[str, torch.Tensor]
+    :param reach_start: Starting value of reach parameter range.
+    :type reach_start: float
+    :param reach_end: Ending value of reach parameter range.
+    :type reach_end: float
+    :param refinements: Number of refinements for critical value estimation.
+    :type refinements: int
+    :param plot_type: Type of plot ('line', 'envelope', or 'heat').
+    :type plot_type: str
+    :param title_ads: Additional strings to append to the plot title.
+    :type title_ads: Optional[List[str]]
+    :param short_title: Use abbreviated title format.
+    :type short_title: bool
+    :param norm: Normalize heatmap values.
+    :type norm: bool
+    :param infl_cshift: Whether influence uses center shift.
+    :type infl_cshift: bool
+    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
+    :type cmaps: dict
+    :param font: Font configuration dictionary.
+    :type font: dict
+    :param cbar_config: Colorbar configuration dictionary.
+    :type cbar_config: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: bool
+    :param show_pred: Show predicted critical values (only for Gaussian kernels).
+    :type show_pred: bool
+    :param optional_vline: Optional vertical lines to add to plot.
+    :type optional_vline: Optional[List[float]]
+    :param envelope_alpha: Transparency level for envelope fill (0-1).
+    :type envelope_alpha: float
+    
+    :return: The generated matplotlib figure or axes object.
+    :rtype: matplotlib.figure.Figure
     """
     
     crit_cmap = cmaps.get('crit', 'Greys')
@@ -1513,9 +1647,58 @@ def equilibrium_bifurcation_envelope_plot_1d_COMPLETE(num_agents: int,
                                     optional_vline: List[float] = None,
                                     envelope_alpha: float = 0.3
                                     ) -> matplotlib.figure.Figure:
-    """
-    Plots the equilibrium bifurcation envelope for agents in a 1D domain using extreme positions.
-    Following project patterns for state management and proper tensor/array conversion.
+    r"""
+    Plot complete equilibrium bifurcation envelope with multiple trajectory data in a 1D domain.
+    
+    Advanced version that combines envelope data with multiple position matrices to create
+    a comprehensive visualization showing both the envelope of extreme positions and detailed
+    trajectory evolution. Includes density heatmap generation from multiple equilibrium searches.
+
+    :param num_agents: Number of agents in the simulation.
+    :type num_agents: int
+    :param bin_points: Discretized points defining resource allocation regions.
+    :type bin_points: np.ndarray
+    :param resource_distribution: Resource values at each bin point.
+    :type resource_distribution: np.ndarray
+    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
+    :type infl_type: str
+    :param reach_parameters: Array of reach parameter values to test.
+    :type reach_parameters: List[float]
+    :param matrix_list: Dictionary containing multiple position matrices and envelope data.
+    :type matrix_list: Dict[str, torch.Tensor]
+    :param reach_start: Starting value of reach parameter range.
+    :type reach_start: float
+    :param reach_end: Ending value of reach parameter range.
+    :type reach_end: float
+    :param refinements: Number of refinements for critical value estimation.
+    :type refinements: int
+    :param plot_type: Type of plot ('line', 'envelope', or 'heat').
+    :type plot_type: str
+    :param title_ads: Additional strings to append to the plot title.
+    :type title_ads: Optional[List[str]]
+    :param short_title: Use abbreviated title format.
+    :type short_title: bool
+    :param norm: Normalize heatmap values.
+    :type norm: bool
+    :param infl_cshift: Whether influence uses center shift.
+    :type infl_cshift: bool
+    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
+    :type cmaps: dict
+    :param font: Font configuration dictionary.
+    :type font: dict
+    :param cbar_config: Colorbar configuration dictionary.
+    :type cbar_config: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: bool
+    :param show_pred: Show predicted critical values (only for Gaussian kernels).
+    :type show_pred: bool
+    :param optional_vline: Optional vertical lines to add to plot.
+    :type optional_vline: Optional[List[float]]
+    :param envelope_alpha: Transparency level for envelope fill (0-1).
+    :type envelope_alpha: float
+    
+    :return: The generated matplotlib figure or axes object.
+    :rtype: matplotlib.figure.Figure
     """
     
     # Extract configuration values following project patterns
@@ -1840,22 +2023,29 @@ def final_position_histogram_1d(num_agents: int,
                                 title_ads: Optional[List[str]],
                                 font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12,'font_family': 'sans-serif'}
                                 ) -> matplotlib.figure.Figure:
-    """
-    Plots a histogram of the final positions of agents in a 1D domain.
+    r"""
+    Plot histogram of agent final positions at equilibrium in a 1D domain.
+    
+    Creates a histogram showing the distribution of agent equilibrium positions for
+    a specific reach parameter and resource configuration. Useful for analyzing
+    clustering patterns and position distributions at equilibrium.
 
-    :param num_agents: Number of agents.
+    :param num_agents: Number of agents in the simulation.
     :type num_agents: int
-    :param domain_bounds: Bounds of the domain (min, max).
+    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
     :type domain_bounds: Tuple[float, float]
-    :param current_alpha: Current alpha parameter.
+    :param current_alpha: Current resource parameter value (e.g., mode separation :math:`\\alpha`).
     :type current_alpha: float
-    :param reach_parameter: Current reach parameter.
+    :param reach_parameter: Influence reach parameter value (e.g., :math:`\\sigma`).
     :type reach_parameter: float
-    :param final_pos_vector: Final positions of agents.
-    :type final_pos_vector: numpy.ndarray
+    :param final_pos_vector: Vector of final equilibrium positions for all agents.
+    :type final_pos_vector: np.ndarray
     :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list, optional
-    :return: The generated plot figure.
+    :type title_ads: Optional[List[str]]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    
+    :return: The generated matplotlib figure.
     :rtype: matplotlib.figure.Figure
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -1884,17 +2074,39 @@ def final_position_histogram_1d(num_agents: int,
 
 
 
-#do not use , kept a legacy
+#do not use , kept as legacy
 def create_gradient_vector_field_plot_clipped(vis, grid_resolution=20, figsize=(24, 12), 
                                             max_magnitude=None, normalize_arrows=True):
-    """
-    Create a gradient vector field plot with clipped magnitudes for better visualization.
+    r"""
+    Create gradient vector field plot with clipped magnitudes for 1D domain visualization.
+    
+    .. deprecated::
+       This function is kept as legacy code and should not be used in new development.
+    
+    Generates a 2D vector field plot showing gradient directions and magnitudes at grid points
+    in the projected 2D plane. Includes magnitude clipping for better visualization of large
+    gradients and optional normalization to show pure direction information.
     
     Following Influencer Games patterns:
+    
     - Use torch tensor operations for autograd compatibility
     - Preserve original state using .clone()
     - Handle 1d domain type properly
     - Return matplotlib figure for visualization
+
+    :param vis: Visualization Shell instance containing the field and parameters.
+    :type vis: Shell
+    :param grid_resolution: Number of grid points per dimension (default: 20).
+    :type grid_resolution: int
+    :param figsize: Figure size as (width, height) in inches (default: (24, 12)).
+    :type figsize: tuple
+    :param max_magnitude: Maximum gradient magnitude for clipping; if None, auto-clips at 95th percentile.
+    :type max_magnitude: Optional[float]
+    :param normalize_arrows: If True, normalize all arrows to same length for direction visualization.
+    :type normalize_arrows: bool
+    
+    :return: Tuple of (matplotlib figure, dictionary with computed data including positions, gradients, statistics).
+    :rtype: Tuple[matplotlib.figure.Figure, Dict]
     """
     # Preserve original state following project patterns
     original_pos = vis.field.agents_pos.clone()
@@ -1910,7 +2122,7 @@ def create_gradient_vector_field_plot_clipped(vis, grid_resolution=20, figsize=(
     x_coords = torch.linspace(-sqrt2_inv, sqrt2_inv, grid_resolution, dtype=torch.float32)
     Y, X = torch.meshgrid(y_coords, x_coords, indexing='ij')  # This matches your mgrid order
     
-    # Flatten to match your a1, a2 assignment pattern
+    # Flatten to match  a1, a2 assignment pattern
     a1 = X.flatten()  # x coordinates
     a2 = Y.flatten()  # y coordinates
     

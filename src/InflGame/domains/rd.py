@@ -69,199 +69,310 @@ def resource_distribution_choice(bin_points: np.ndarray,
                                  resource_type: str,
                                  resource_parameters: list | np.ndarray):
     """
+    Select and compute a resource distribution based on the specified type and parameters.
     
-    .. rubric:: Selects and computes a resource distribution based on the specified type and parameters.
+    This function serves as the main entry point for creating resource distributions in influencer games.
+    It dispatches to the appropriate distribution function based on the resource_type parameter.
 
-    There are several included resource distributions in the InflGame package. 
+    Parameters
+    ----------
+    bin_points : np.ndarray
+        Points where the resource distribution is evaluated. For 1D distributions, this is a 1D array.
+        For 2D distributions, this is an :math:`(N, 2)` array of coordinate pairs.
+    resource_type : str
+        Type of resource distribution to compute. Available options:
         
-        -"beta": A 1D beta distribution on the 2-simplex i.e. (0,1); see :func:`beta_distribution` . 
-        -"dirichlet_distribution": Dirichlet Distribution for resources on a probability 3-simplex; see :func:`dirichlet_distribution` .
-        -"multi_modal_gaussian_distribution_1D": A 1D mixture of Gaussian kernels; see :func:`multi_modal_gaussian_distribution_1D` .
-        -"multi_modal_gaussian_distribution_2D": A 2D mixture of multi-variate Gaussian kernels; see :func:`multi_modal_gaussian_distribution_2D` .
+        - ``'beta'``: 1D beta distribution on the interval (0,1); see :func:`beta_distribution`
+        - ``'dirichlet_distribution'``: Dirichlet distribution for resources on a probability 3-simplex; see :func:`dirichlet_distribution`
+        - ``'multi_modal_gaussian_distribution_1D'``: 1D mixture of Gaussian kernels; see :func:`multi_modal_gaussian_distribution_1D`
+        - ``'multi_modal_gaussian_distribution_2D'``: 2D mixture of multivariate Gaussian kernels; see :func:`multi_modal_gaussian_distribution_2D`
+        - ``'multi_modal_gaussian_distribution_2D_triangle'``: Alias for 2D multivariate Gaussian on triangular domain
+        - ``'multi_modal_gaussian_distribution_2D_square'``: Alias for 2D multivariate Gaussian on rectangular domain
+    resource_parameters : list | np.ndarray
+        Parameters for the specified resource distribution. Format depends on resource_type:
+        
+        - For ``'beta'``: ``[alpha, beta]``
+        - For ``'dirichlet_distribution'``: ``[alpha_1, alpha_2, ..., alpha_k]``
+        - For ``'multi_modal_gaussian_distribution_1D'``: ``[stds, means, mode_factors]``
+        - For ``'multi_modal_gaussian_distribution_2D'``: ``[covariance_matrices, means]``
 
-    :param bin_points: Points where the resource distribution is evaluated.
-    :type bin_points: np.ndarray
-    :param resource_type: Type of resource distribution (e.g., "beta", "dirichlet_distribution",
-                          "multi_modal_gaussian_distribution_1D", "multi_modal_gaussian_distribution_2D_triangle",
-                          "multi_modal_gaussian_distribution_2D_square").
-    :type resource_type: str
-    :param resource_parameters: Parameters for the specified resource distribution.
-    :type resource_parameters: list | np.ndarray
-    :return: Computed resource distribution values.
-    :rtype: np.ndarray
+    Returns
+    -------
+    np.ndarray
+        Computed resource distribution values at the specified bin_points.
+        
+    Raises
+    ------
+    str
+        Returns error message string if resource_type is not recognized.
+    
+    Examples
+    --------
+    >>> bin_points = np.linspace(0, 1, 100)
+    >>> resources = resource_distribution_choice(bin_points, 'beta', [2, 5])
+    >>> resources.shape
+    (100,)
     """
     
-    if resource_type=="multi_modal_gaussian_distribution_1D":
-        resources=multi_modal_gaussian_distribution_1D(bin_points, stds=resource_parameters[0], means=resource_parameters[1] , mode_factors=resource_parameters[2])
-    elif resource_type=="beta":
-        resources=beta_distribution(bin_points,resource_parameters[0],resource_parameters[1])
-    elif resource_type in ["multi_modal_gaussian_distribution_2D","multi_modal_gaussian_distribution_2D_triangle","multi_modal_gaussian_distribution_2D_square"] :
-        resources=multi_modal_gaussian_distribution_2D(bin_points,resource_parameters[0],resource_parameters[1])
-    elif resource_type =="dirichlet_distribution" :
-        resources=dirichlet_distribution(bin_points,resource_parameters)
+    if resource_type == "multi_modal_gaussian_distribution_1D":
+        resources = multi_modal_gaussian_distribution_1D(bin_points, stds=resource_parameters[0], means=resource_parameters[1], mode_factors=resource_parameters[2])
+    elif resource_type == "beta":
+        resources = beta_distribution(bin_points, resource_parameters[0], resource_parameters[1])
+    elif resource_type in ["multi_modal_gaussian_distribution_2D", "multi_modal_gaussian_distribution_2D_triangle", "multi_modal_gaussian_distribution_2D_square"]:
+        resources = multi_modal_gaussian_distribution_2D(bin_points, resource_parameters[0], resource_parameters[1])
+    elif resource_type == "dirichlet_distribution":
+        resources = dirichlet_distribution(bin_points, resource_parameters)
     else: 
-        return "No known type "+resource_type
+        return "No known type " + resource_type
     return resources
 
 def multi_modal_gaussian_distribution_1D(bin_points: np.ndarray | torch.Tensor,
                                          stds: list[float] = [.1, .1],
                                          means: list[float] = [.5, .5],
-                                         mode_factors=[1, 1]) -> np.ndarray:
+                                         mode_factors: list[float] = [1, 1]) -> np.ndarray:
     r"""
-    .. rubric:: Computes a 1D multi-modal Gaussian mixture distribution for resources.
+    Compute a 1D multi-modal Gaussian mixture distribution for resources.
     
-    A 1D mixture of Gaussian kernels is used to model the resource distribution.
-    The distribution is defined as a weighted sum of Gaussian functions, each with its own mean, standard deviation, and weight.
-    I.e. 
+    Creates a resource distribution as a weighted sum of Gaussian kernels, each with its own
+    mean, standard deviation, and scaling factor. This allows modeling of complex multi-modal
+    resource landscapes.
 
-        .. math::
-            R(b) = \sum_{i=1}^{k} \alpha_i \cdot \exp\left(-\frac{(b - \mu_i)^2}{2\sigma_i^2}\right)
+    The distribution is defined as:
+    
+    .. math::
+        R(b) = \sum_{i=1}^{k} \alpha_i \cdot \exp\left(-\frac{(b - \mu_i)^2}{2\sigma_i^2}\right)
     
     where :math:`k` is the number of modes, :math:`\alpha_i` is the scaling factor for mode :math:`i`,
     :math:`\mu_i` is the mean of mode :math:`i`, and :math:`\sigma_i` is the standard deviation of mode :math:`i`.
 
+    Parameters
+    ----------
+    bin_points : np.ndarray | torch.Tensor
+        Points where the distribution is evaluated, typically on the interval [0, 1].
+    stds : list[float], optional
+        Standard deviations :math:`\sigma_i` for each Gaussian mode, by default [.1, .1].
+    means : list[float], optional
+        Mean values :math:`\mu_i` for each Gaussian mode, by default [.5, .5].
+    mode_factors : list[float], optional
+        Scaling factors :math:`\alpha_i` for each mode, by default [1, 1].
 
-    :param bin_points: Points where the distribution is evaluated.
-    :type bin_points: np.ndarray | torch.Tensor
-    :param stds: Standard deviations for each mode.
-    :type stds: list[float]
-    :param means: Means for each mode.
-    :type means: list[float]
-    :param mode_factors: Scaling factors for each mode.
-    :type mode_factors: list
-    :return: Computed resource distribution values.
-    :rtype: np.ndarray
+    Returns
+    -------
+    np.ndarray
+        Computed resource distribution values at the specified bin_points.
+        
+    Notes
+    -----
+    All three parameter lists (stds, means, mode_factors) must have the same length,
+    corresponding to the number of modes :math:`k` in the mixture.
+    
+    Examples
+    --------
+    >>> bin_points = np.linspace(0, 1, 100)
+    >>> resources = multi_modal_gaussian_distribution_1D(
+    ...     bin_points, stds=[0.1, 0.15], means=[0.3, 0.7], mode_factors=[1, 1.5]
+    ... )
     """
     
-    resource_modes=[]
+    resource_modes = []
     for mode_id in range(len(stds)):
-        mean=means[mode_id]
-        std=stds[mode_id]
-        mode_factor=mode_factors[mode_id]
-        mode=mode_factor*np.exp(-(bin_points-mean)**2/(2*(std)**2))
+        mean = means[mode_id]
+        std = stds[mode_id]
+        mode_factor = mode_factors[mode_id]
+        mode = mode_factor * np.exp(-(bin_points - mean)**2 / (2 * (std)**2))
         resource_modes.append(mode)
-    resource_modes=np.array(resource_modes)
-    resources=np.sum(resource_modes,axis=0)
+    resource_modes = np.array(resource_modes)
+    resources = np.sum(resource_modes, axis=0)
     
     return resources
 
 def multi_modal_gaussian_distribution_2D(bin_points: np.ndarray | torch.Tensor,
-                                         stds: torch.Tensor = torch.tensor([[[.1, 0], [0, .1]], [[.1, 0], [0, .1]], [[.1, 0], [0, .1]]]),
+                                         covariance_matrices: torch.Tensor = torch.tensor([[[.1, 0], [0, .1]], [[.1, 0], [0, .1]], [[.1, 0], [0, .1]]]),
                                          means: torch.Tensor = torch.tensor([[0, 0], [1, 0], [0.5000, 0.8660]])) -> np.ndarray:
     r"""
-    .. rubric:: Computes a 2D multi-modal Gaussian mixture distribution for resources.
+    Compute a 2D multi-modal Gaussian mixture distribution for resources.
 
-    A 2d multi-modal Gaussian mixture distribution is used to model the resource distribution.
-    The distribution is defined as a weighted sum of Gaussian functions, each with its own mean and covariance matrix.
-    I.e.
+    Creates a resource distribution as a weighted sum of multivariate Gaussian kernels, each with its own
+    mean vector and covariance matrix. This enables modeling of complex spatial resource patterns in 2D domains.
+
+    The distribution is defined as:
     
-        .. math::
-            R(b) = \sum_{i=1}^{k} \alpha_i \cdot \exp\left(-\frac{1}{2}(b - \mu_i)^T \Sigma_i^{-1} (b - \mu_i)\right)
+    .. math::
+        R(\mathbf{b}) = \sum_{i=1}^{k} \exp\left(-\frac{1}{2}(\mathbf{b} - \boldsymbol{\mu}_i)^T \boldsymbol{\Sigma}_i^{-1} (\mathbf{b} - \boldsymbol{\mu}_i)\right)
     
-    where :math:`k` is the number of modes, :math:`\alpha_i` is the scaling factor for mode :math:`i`,
-    :math:`\mu_i` is the mean of mode :math:`i`, and :math:`\Sigma_i` is the covariance matrix of mode :math:`i`.
+    where :math:`k` is the number of modes, :math:`\boldsymbol{\mu}_i` is the mean vector for mode :math:`i`,
+    and :math:`\boldsymbol{\Sigma}_i` is the covariance matrix for mode :math:`i`.
 
+    Parameters
+    ----------
+    bin_points : np.ndarray | torch.Tensor
+        Points where the distribution is evaluated, shape :math:`(N, 2)` for :math:`N` 2D coordinates.
+    covariance_matrices : torch.Tensor, optional
+        Covariance matrices :math:`\boldsymbol{\Sigma}_i` for each Gaussian mode, shape :math:`(k, 2, 2)`
+        where :math:`k` is the number of modes. By default creates 3 isotropic modes with variance 0.1.
+    means : torch.Tensor, optional
+        Mean vectors :math:`\boldsymbol{\mu}_i` for each Gaussian mode, shape :math:`(k, 2)`.
+        By default creates 3 modes at the vertices of an equilateral triangle.
 
-    :param bin_points: Points where the distribution is evaluated.
-    :type bin_points: np.ndarray | torch.Tensor
-    :param stds: Covariance matrices for each mode.
-    :type stds: torch.Tensor
-    :param means: Means for each mode.
-    :type means: torch.Tensor
-    :return: Computed resource distribution values.
-    :rtype: np.ndarray
+    Returns
+    -------
+    np.ndarray
+        Computed resource distribution values at the specified bin_points, shape :math:`(N,)`.
+        
+    Notes
+    -----
+    The number of modes :math:`k` is determined by the length of the means tensor.
+    The covariance_matrices tensor must have the same number of modes.
+    
+    Examples
+    --------
+    >>> bin_points = np.random.rand(100, 2)
+    >>> means = torch.tensor([[0.3, 0.3], [0.7, 0.7]])
+    >>> covs = torch.tensor([[[0.05, 0], [0, 0.05]], [[0.08, 0], [0, 0.08]]])
+    >>> resources = multi_modal_gaussian_distribution_2D(bin_points, covs, means)
     """
     
-
-    resource_modes=[]
-    for mode_id in range(len(stds)):
-        mean=means[mode_id]
-        std=stds[mode_id]
-        x_vec=torch.tensor((bin_points-mean.numpy())).float()
-        sigma_inv=torch.inverse(std)
-        distribution_values=[]
+    resource_modes = []
+    for mode_id in range(len(covariance_matrices)):
+        mean = means[mode_id]
+        covariance = covariance_matrices[mode_id]
+        x_vec = torch.tensor((bin_points - mean.numpy())).float()
+        sigma_inv = torch.inverse(covariance)
+        distribution_values = []
         for i in range(len(bin_points)):
-            distribution_value=torch.exp(-1/2*x_vec[i,:]@sigma_inv@x_vec.T[:,i])
+            distribution_value = torch.exp(-1/2 * x_vec[i, :] @ sigma_inv @ x_vec.T[:, i])
             distribution_values.append(distribution_value.item())
-        mode=np.array(distribution_values)
+        mode = np.array(distribution_values)
         resource_modes.append(mode)
-    resource_modes=np.array(resource_modes)
-    resources=np.sum(resource_modes,axis=0)
+    resource_modes = np.array(resource_modes)
+    resources = np.sum(resource_modes, axis=0)
     
     return resources
 
 def beta_distribution(bin_points: np.ndarray | torch.Tensor,
                       alpha_value: float,
-                      beta_value: float):
+                      beta_value: float) -> np.ndarray:
     r"""
-    .. rubric:: Computes a beta distribution for resources on the 2 simplex.
+    Compute a beta distribution for resources on the unit interval.
 
-    A 1D beta distribution is used to model the resource distribution.
-    The distribution is defined as a beta function, which is a continuous probability distribution defined on the interval (0, 1).
-    I.e.
+    Uses the beta probability density function to model resource distribution on the interval (0, 1).
+    The beta distribution is useful for modeling bounded resources with various shapes controlled
+    by the alpha and beta parameters.
 
-        .. math::
-            R(b) = \frac{b^{\alpha-1}(1-b)^{\beta-1}}{B(\alpha, \beta)}
+    The distribution is defined as:
+    
+    .. math::
+        R(b) = \frac{b^{\alpha-1}(1-b)^{\beta-1}}{B(\alpha, \beta)}
+    
+    where :math:`B(\alpha, \beta)` is the beta function:
+    
+    .. math::
+        B(\alpha, \beta) = \int_0^1 t^{\alpha-1}(1-t)^{\beta-1} dt = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}
 
+    Parameters
+    ----------
+    bin_points : np.ndarray | torch.Tensor
+        Points where the distribution is evaluated, typically on the interval (0, 1).
+    alpha_value : float
+        Alpha parameter :math:`\alpha` of the beta distribution. Must be positive.
+        Controls the shape of the distribution at :math:`b=0`.
+    beta_value : float
+        Beta parameter :math:`\beta` of the beta distribution. Must be positive.
+        Controls the shape of the distribution at :math:`b=1`.
 
-
-    :param bin_points: Points where the distribution is evaluated.
-    :type bin_points: np.ndarray | torch.Tensor
-    :param alpha_value: Alpha parameter of the beta distribution.
-    :type alpha_value: float
-    :param beta_value: Beta parameter of the beta distribution.
-    :type beta_value: float
-    :return: Computed resource distribution values.
-    :rtype: np.ndarray
+    Returns
+    -------
+    np.ndarray
+        Computed resource distribution values (probability density) at the specified bin_points.
+        
+    Notes
+    -----
+    - When :math:`\alpha = \beta = 1`, the distribution is uniform
+    - When :math:`\alpha > 1` and :math:`\beta > 1`, the distribution is unimodal
+    - When :math:`\alpha < 1` and :math:`\beta < 1`, the distribution is bimodal (U-shaped)
+    
+    Examples
+    --------
+    >>> bin_points = np.linspace(0.01, 0.99, 100)
+    >>> resources = beta_distribution(bin_points, alpha_value=2, beta_value=5)
     """
    
-    f=lambda x: beta.pdf(x, a=alpha_value, b=beta_value)
-    resources=f(bin_points)
+    f = lambda x: beta.pdf(x, a=alpha_value, b=beta_value)
+    resources = f(bin_points)
     return resources
 
 def dirichlet_distribution(bin_points: np.ndarray | torch.Tensor,
-                           alphas: list | np.ndarray):
+                           alphas: list | np.ndarray) -> np.ndarray:
     r"""
-    .. rubric:: Computes a Dirichlet distribution.
+    Compute a Dirichlet distribution for resources on the probability simplex.
 
-    A Dirichlet distribution is used to model the resource distribution.
-    The distribution is defined as a multivariate generalization of the beta distribution.
-    I.e.
+    Uses the Dirichlet probability density function to model resource distribution on a simplex.
+    The Dirichlet distribution is a multivariate generalization of the beta distribution and is
+    particularly useful for modeling resources in simplex domains.
 
-        .. math::
-            R(b) = \frac{1}{B(\alpha)} \prod_{i=1}^{k} b_i^{\alpha_i-1}
+    The distribution is defined as:
+    
+    .. math::
+        R(\mathbf{b}) = \frac{1}{B(\boldsymbol{\alpha})} \prod_{i=1}^{k} b_i^{\alpha_i-1}
+    
+    where :math:`B(\boldsymbol{\alpha})` is the multivariate beta function:
+    
+    .. math::
+        B(\boldsymbol{\alpha}) = \frac{\prod_{i=1}^{k} \Gamma(\alpha_i)}{\Gamma(\sum_{i=1}^{k} \alpha_i)}
+    
+    and :math:`\mathbf{b} = (b_1, b_2, \ldots, b_k)` with :math:`\sum_{i=1}^{k} b_i = 1` and :math:`b_i \geq 0`.
 
+    Parameters
+    ----------
+    bin_points : np.ndarray | torch.Tensor
+        Points on the simplex where the distribution is evaluated, shape :math:`(N, k)` where
+        :math:`k` is the dimension of the simplex. Each point must satisfy simplex constraints.
+    alphas : list | np.ndarray
+        Concentration parameters :math:`\boldsymbol{\alpha} = (\alpha_1, \alpha_2, \ldots, \alpha_k)`
+        of the Dirichlet distribution. All values must be positive.
 
-
-    :param bin_points: Points where the distribution is evaluated.
-    :type bin_points: np.ndarray | torch.Tensor
-    :param alphas: Parameters of the Dirichlet distribution.
-    :type alphas: list | np.ndarray
-    :return: Computed resource distribution values.
-    :rtype: np.ndarray
+    Returns
+    -------
+    np.ndarray
+        Computed resource distribution values (probability density) at the specified bin_points.
+        
+    Notes
+    -----
+    This function handles edge cases where bin_points fall outside or on the boundary of the simplex
+    by applying small corrections to ensure valid simplex coordinates before evaluation.
+    
+    - Points with any coordinate :math:`\leq 0` are projected onto the simplex
+    - Points with coordinates exactly 0 or 1 are adjusted by small epsilon values to avoid
+      numerical issues with the Dirichlet PDF
+    
+    Examples
+    --------
+    >>> # 3D simplex points (must sum to 1)
+    >>> bin_points = np.array([[0.33, 0.33, 0.34], [0.1, 0.2, 0.7]])
+    >>> resources = dirichlet_distribution(bin_points, alphas=[2, 2, 2])
     """
    
-    resources=[]
+    resources = []
     for bin_point in bin_points:
-        if any(x<=0 for x in bin_point):
-            bin_point=simplex_utils.projection_onto_simplex(torch.tensor(bin_point)).numpy()[0]
-            if any(x==1 for x in bin_point):
-                i=np.where(bin_point==1)[0][0]
-                bin_point[i]-=.001
-                bin_point[i-1]+=.0005
-                if i==2:
-                    bin_point[i-2]+=.0005
+        if any(x <= 0 for x in bin_point):
+            bin_point = simplex_utils.projection_onto_simplex(torch.tensor(bin_point)).numpy()[0]
+            if any(x == 1 for x in bin_point):
+                i = np.where(bin_point == 1)[0][0]
+                bin_point[i] -= .001
+                bin_point[i - 1] += .0005
+                if i == 2:
+                    bin_point[i - 2] += .0005
                 else:
-                    bin_point[i+1]+=.0005
+                    bin_point[i + 1] += .0005
                 resources.append(dirichlet.pdf(bin_point, alphas))
-            elif any(x==0 for x in bin_point):
-                i=np.where(bin_point==0)[0][0]
-                bin_point[i]+=.001
-                bin_point[i-1]-=.0005
-                if i==2:
-                    bin_point[i-2]-=.0005
+            elif any(x == 0 for x in bin_point):
+                i = np.where(bin_point == 0)[0][0]
+                bin_point[i] += .001
+                bin_point[i - 1] -= .0005
+                if i == 2:
+                    bin_point[i - 2] -= .0005
                 else:
-                    bin_point[i+1]-=.0005
+                    bin_point[i + 1] -= .0005
                 resources.append(dirichlet.pdf(bin_point, alphas))
         else:
             resources.append(dirichlet.pdf(bin_point, alphas))

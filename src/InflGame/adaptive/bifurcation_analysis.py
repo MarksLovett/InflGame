@@ -1,41 +1,43 @@
 """
-.. module:: selfualization
-   :synopsis: Provides selfualization tools for analyzing and understanding the dynamics of adaptive environments and agent interactions for influencer games.
+.. module:: bifurcation_analysis
+   :synopsis: Provides bifurcation analysis tools for studying equilibrium dynamics and stability transitions in adaptive environments for influencer games.
 
 
-Visualization Module
-====================
+Bifurcation Analysis Module
+============================
 
+This module provides comprehensive bifurcation analysis tools for studying equilibrium dynamics, stability transitions,
+and parameter-dependent behaviors in adaptive environments for influencer games. It includes methods for computing
+equilibrium positions across parameter ranges, detecting bifurcation points, and analyzing stability properties.
 
-
-This module provides selfualization tools for analyzing and understanding the dynamics of adaptive environments and agent interactions for influencer games.
-It includes plotting utilities for various domains (1D, 2D, and simplex) and supports selfualizing agent positions, gradients, 
-influence distributions, and bifurcation dynamics.
-
-The module is designed to work with the `AdaptiveEnv` class and provides a framework for creating selfual representations of agent behaviors 
-in influencer game environments.
+The module is designed to work with the `AdaptiveEnv` class and provides a framework for understanding how agent
+behaviors and equilibrium configurations change as system parameters vary.
 
 Dependencies:
 -------------
+- InflGame.adaptive.grad_func_env
+- InflGame.adaptive.jacobian
 - InflGame.utils
 - InflGame.kernels
 - InflGame.domains
 
 Usage:
 ------
-The `Shell` class can be used to selfualize the results of simulations performed using the `AdaptiveEnv` class. It supports various selfualization types, including position plots, gradient plots, probability plots, and bifurcation plots.
+The `BifurcationEnv` class can be used to analyze bifurcations and equilibrium dynamics in simulations performed 
+using the `AdaptiveEnv` class. It supports various analysis types, including equilibrium bifurcation diagrams,
+stability analysis, and multi-order bifurcation detection.
 
 Example:
 --------
 
 .. code-block:: python
     
-    from InflGame.adaptive.selfualization import Shell
+    from InflGame.adaptive.bifurcation_analysis import BifurcationEnv
     import torch
     import numpy as np
 
-    # Initialize the Shell
-    shell = Shell(
+    # Initialize the BifurcationEnv
+    bif_env = BifurcationEnv(
         num_agents=3,
         agents_pos=np.array([0.2, 0.5, 0.8]),
         parameters=torch.tensor([1.0, 1.0, 1.0]),
@@ -50,11 +52,14 @@ Example:
     )
 
     # Set up the adaptive environment
-    shell.setup_adaptive_env()
+    bif_env.setup_adaptive_env()
 
-    # Plot agent positions
-    fig = shell.pos_plot()
-    fig.show()
+    # Compute equilibrium bifurcation diagram
+    equilibria = bif_env.equilibrium_bifurcation_complete(
+        reach_start=0.1,
+        reach_end=1.0,
+        reach_num_points=50
+    )
 """
 
 import numpy as np
@@ -134,9 +139,16 @@ import InflGame.adaptive.jacobian as jc
 
 class BifurcationEnv:
     """
-    The bif class provides a framework for simulating and selfualizing adaptive dynamics
-    in various domains (1D, 2D, and simplex). It supports gradient ascent, influence distribution
-    calculations, and plotting utilities for analyzing agent behaviors in resource distribution environments.
+    Bifurcation analysis environment for studying equilibrium dynamics and stability transitions.
+    
+    The BifurcationEnv class provides a comprehensive framework for analyzing bifurcation phenomena
+    in adaptive dynamics across various domains (1D, 2D, and simplex). It supports computing equilibrium
+    positions over parameter ranges, detecting bifurcation points of multiple orders, and analyzing
+    stability properties through Jacobian analysis.
+    
+    This class is designed to work in conjunction with the AdaptiveEnv class and provides specialized
+    methods for understanding how system behavior changes as parameters vary, including identifying
+    critical parameter values where qualitative changes in dynamics occur.
     """
 
     def __init__(self,
@@ -162,52 +174,52 @@ class BifurcationEnv:
                  tolerated_agents: Optional[int] = None,
                  ignore_zero_infl: bool = False) -> None:
         """
-        Initialize the Shell class with simulation parameters.
+        Initialize the BifurcationEnv with configuration parameters.
 
-        :param num_agents: Number of agents in the simulation.
+        :param num_agents: Number of agents in the environment.
         :type num_agents: int
         :param agents_pos: Initial positions of agents.
         :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for the influence function.
+        :param parameters: Parameters for the influence kernel (e.g., reach, variance).
         :type parameters: torch.Tensor
-        :param resource_distribution: Resource distribution over the domain.
+        :param resource_distribution: Distribution of resources across the domain.
         :type resource_distribution: torch.Tensor
-        :param bin_points: Discretized points in the domain.
+        :param bin_points: Bin points defining resource allocation regions.
         :type bin_points: Union[List[float], np.ndarray]
-        :param mean: Mean value for certain influence functions.
-        :type mean: Optional[int]
-        :param infl_configs: Configuration for influence kernels.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "custom").
-            - ``custom_influence`` (callable): Function for a custom influence (see guides).
+        :param infl_configs: Configuration dictionary for influence kernel type and parameters.
+            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "dirichlet", "beta", "custom").
+            - ``custom_influence`` (callable): Function for a custom influence kernel (see custom kernel guides).
         :type infl_configs: Dict[str, str]
-        :param learning_rate_type: Learning rate type (e.g., 'cosine_annealing').
+        :param learning_rate_type: Type of learning rate schedule (e.g., 'cosine_annealing').
         :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters.
+        :param learning_rate: Learning rate parameters [min_lr, max_lr, annealing_period].
         :type learning_rate: List[float]
-        :param time_steps: Number of gradient ascent steps.
+        :param time_steps: Maximum number of gradient ascent iterations.
         :type time_steps: int
-        :param fp: Fixed parameter for influence function.
-        :type fp: int
-        :param infl_cshift: Whether to apply a center shift to influence.
+        :param fp: Whether to use fixed point analysis.
+        :type fp: bool
+        :param infl_cshift: Whether to apply constant shift to influence.
         :type infl_cshift: bool
-        :param cshift: Center shift tensor.
-        :type cshift: Optional[torch.Tensor]
-        :param infl_fshift: Whether to apply a fixed shift to influence.
+        :param cshift: Constant shift value or tensor.
+        :type cshift: float
+        :param infl_fshift: Whether to apply frequency shift to influence.
         :type infl_fshift: bool
-        :param Q: Additional parameter for influence function.
-        :type Q: Optional[int]
+        :param Q: Covariance matrix for multivariate Gaussian kernels.
+        :type Q: torch.Tensor
         :param domain_type: Type of domain ('1d', '2d', or 'simplex').
         :type domain_type: str
         :param domain_bounds: Bounds of the domain.
         :type domain_bounds: Union[List[float], torch.Tensor]
         :param resource_type: Type of resource distribution.
         :type resource_type: float
-        :param domain_refinement: Refinement level for 2D domains.
+        :param domain_refinement: Refinement level for 2D domains (number of grid points).
         :type domain_refinement: int
-        :param tolerance: Tolerance for convergence.
+        :param tolerance: Convergence tolerance for gradient ascent.
         :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
+        :param tolerated_agents: Number of agents allowed to violate tolerance before convergence.
         :type tolerated_agents: Optional[int]
+        :param ignore_zero_infl: Whether to ignore agents with zero influence.
+        :type ignore_zero_infl: bool
         """
         validated=validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -263,8 +275,13 @@ class BifurcationEnv:
 
     def setup_adaptive_env(self) -> None:
         """
-        Set up the adaptive environment for the simulation. This initializes the
-        gradient function environment with the provided parameters.
+        Set up the adaptive environment for bifurcation analysis.
+        
+        This method initializes the gradient function environment with the provided parameters,
+        creating an :class:`InflGame.adaptive.grad_func_env.AdaptiveEnv` instance that will be
+        used for equilibrium computations and bifurcation analysis.
+        
+        :return: None
         """
         self.field=grad_func_env.AdaptiveEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
@@ -280,35 +297,55 @@ class BifurcationEnv:
                            batch_size: Optional[int] = None,
                            time_steps: Optional[int] = None) -> torch.Tensor:
         """
-        Calculate the final positions of agents over a range of reach parameters via repeated initiations of 
-        :func:`InflGame.adaptive.grad_func_env.gradient_ascent` over a group of parameters.
+        Calculate final equilibrium positions of agents over a range of reach parameters.
         
-        This method has been optimized with:
+        This method computes the final positions of agents by running gradient ascent via
+        :func:`InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent` for each parameter
+        value in the provided range. The results form the basis for bifurcation diagrams.
+        
+        The method has been optimized with:
+        
         - Vectorized operations where possible
-        - Parallel processing support
-        - Comprehensive error handling
-        - Input validation
-        - Progress logging
+        - Parallel processing support via multiprocessing
+        - Comprehensive error handling and input validation
+        - Progress logging for long-running computations
+        - Proper state preservation and restoration
 
-        :param reach_parameters: Reach parameters to iterate over
+        :param reach_parameters: Array of reach/influence parameter values to iterate over.
         :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Tolerance for convergence
+        :param tolerance: Convergence tolerance for gradient ascent at each parameter value.
         :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations
+        :param tolerated_agents: Number of agents allowed to violate tolerance before declaring convergence.
         :type tolerated_agents: int
-        :param parallel: Whether to use parallel processing
+        :param parallel: Whether to use parallel processing for parameter sweep.
         :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count)
+        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
         :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None)
+        :param batch_size: Batch size for parallel processing (auto-calculated if None).
         :type batch_size: Optional[int]
+        :param time_steps: Maximum iterations for gradient ascent (uses instance default if None).
+        :type time_steps: Optional[int]
 
-        :return: The final positions of agents for each parameter
+        :return: Matrix of final agent positions for each parameter value (shape: len(reach_parameters) x num_agents).
         :rtype: torch.Tensor
         
-        :raises ValueError: If input parameters are invalid
-        :raises RuntimeError: If computation fails
+        :raises ValueError: If input parameters are invalid (empty arrays, negative values, etc.).
+        :raises RuntimeError: If computation fails during gradient ascent.
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            reach_params = np.linspace(0.1, 1.0, 50)
+            equilibria = bif_env.final_pos_over_reach(
+                reach_parameters=reach_params,
+                tolerance=1e-5,
+                tolerated_agents=1,
+                parallel=True
+            )
         """
+
         # Input validation
         if not isinstance(reach_parameters, (list, np.ndarray, torch.Tensor)):
             raise ValueError(f"reach_parameters must be list, numpy array, or torch tensor, got {type(reach_parameters)}")
@@ -515,15 +552,30 @@ class BifurcationEnv:
     
     def _compute_single_parameter(self, parameter_data: Dict) -> Tuple[int, torch.Tensor]:
         """
-        Helper function to compute final position for a single parameter.
-        Designed to be used with multiprocessing.
+        Compute final equilibrium position for a single parameter value.
         
-        :param parameter_data: Dictionary containing parameter data and configuration
+        This is a helper function designed to be used with multiprocessing in parameter sweeps.
+        It creates a temporary AdaptiveEnv instance, runs gradient ascent to convergence, and
+        returns the final agent positions.
+        
+        :param parameter_data: Dictionary containing all necessary data for computation, including:
+                              - parameter_id: Index of parameter in sweep
+                              - reach_param: Parameter value
+                              - og_pos: Original agent positions
+                              - tolerance: Convergence tolerance
+                              - tolerated_agents: Convergence agent tolerance
+                              - domain_type: Type of domain
+                              - total_params: Total number of parameters in sweep
+                              - time_steps: Maximum gradient ascent iterations
         :type parameter_data: Dict
         
-        :return: Tuple of parameter_id and final position row
+        :return: Tuple of (parameter_id, final_position_row) where final_position_row contains
+                 the converged positions of all agents.
         :rtype: Tuple[int, torch.Tensor]
+        
+        :raises RuntimeError: If gradient ascent fails to compute equilibrium.
         """
+
         try:
             parameter_id = parameter_data['parameter_id']
             reach_param = parameter_data['reach_param']
@@ -610,41 +662,66 @@ class BifurcationEnv:
                                 time_steps: Optional[int] = None,
                                 learning_rate:Optional[List] = None) -> Dict[str, torch.Tensor]:
         """
-        Calculate both the extreme (maximum and minimum) positions of agents over a range of reach parameters 
-        via repeated initiations of :func:`InflGame.adaptive.grad_func_env.gradient_ascent` over a group of parameters.
+        Calculate the envelope of equilibrium positions over a parameter range.
         
-        This method tracks the extreme positions achieved during the specified percentage of gradient ascent iterations,
-        but ONLY when the dynamics did not converge. If convergence is achieved, the final position is returned instead.
+        This method explores the envelope of possible equilibria by computing both maximum and minimum
+        final agent positions across multiple initial conditions for each reach parameter value. This is
+        useful for identifying regions of multistability and bifurcations where multiple equilibria coexist.
         
-        This method has been optimized with:
+        The method runs gradient ascent via :func:`InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent`
+        from multiple initial positions (generated by perturbing the central position) and tracks the
+        extreme positions reached. If convergence is not achieved, the method tracks extreme positions
+        during the specified percentage of iterations.
+        
+        **Optimizations:**
+        
+        - Parallel processing via multiprocessing
         - Vectorized operations where possible
-        - Parallel processing support
-        - Comprehensive error handling
-        - Input validation
-        - Progress logging
+        - Memory efficient computation and state management
+        - Progress tracking for long-running computations
 
-        :param reach_parameters: Reach parameters to iterate over
+        :param reach_parameters: Array of reach/influence parameter values to iterate over.
         :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Tolerance for convergence
+        :param tolerance: Convergence tolerance for gradient ascent at each parameter value.
         :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations
+        :param tolerated_agents: Number of agents allowed to violate tolerance before declaring convergence.
         :type tolerated_agents: int
-        :param percentage: Percentage of trajectory to analyze (0.0-1.0, e.g., 0.5 for last 50%, 1.0 for entire trajectory)
+        :param percentage: Percentage of trajectory to analyze (0.0-1.0, e.g., 0.5 for last 50%, 1.0 for entire trajectory).
+                          Controls which portion of gradient ascent history is examined for extreme values.
         :type percentage: float
-        :param parallel: Whether to use parallel processing
+        :param parallel: Whether to use parallel processing for parameter sweep.
         :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count)
+        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
         :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None)
+        :param batch_size: Batch size for parallel processing (auto-calculated if None).
         :type batch_size: Optional[int]
-        :param time_steps: Maximum number of gradient ascent steps
+        :param time_steps: Maximum iterations for gradient ascent (uses instance default if None).
         :type time_steps: Optional[int]
+        :param learning_rate: Custom learning rate schedule (uses instance default if None).
+        :type learning_rate: Optional[List]
 
-        :return: Dictionary containing 'max' and 'min' extreme positions for each parameter
+        :return: Dictionary containing 'max' and 'min' matrices of extreme positions for each parameter.
+                 Each matrix has shape (len(reach_parameters) x num_agents).
         :rtype: Dict[str, torch.Tensor]
         
-        :raises ValueError: If input parameters are invalid
-        :raises RuntimeError: If computation fails
+        :raises ValueError: If input parameters are invalid (empty arrays, invalid percentage range, etc.).
+        :raises RuntimeError: If computation fails during gradient ascent.
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            reach_params = np.linspace(0.1, 1.0, 50)
+            result = bif_env.final_pos_over_reach_envelope(
+                reach_parameters=reach_params,
+                tolerance=1e-5,
+                tolerated_agents=1,
+                percentage=0.5,
+                parallel=True
+            )
+            max_positions = result['max']
+            min_positions = result['min']
         """
         # Input validation
         if tolerance == None:
@@ -1052,15 +1129,72 @@ class BifurcationEnv:
                                         verbose: bool = True
                                         ) -> Union[torch.Tensor, List[torch.Tensor]]:
         """
-        Optimized equilibrium bifurcation plot computation following project patterns.
+        Compute complete equilibrium bifurcation diagram over a parameter range.
         
-        Key optimizations:
-        - Proper state management with restoration
-        - Memory efficient matrix clearing
-        - Better parameter validation
-        - Following project's torch tensor conventions
-        - Optimized position generation logic
+        This method generates a comprehensive bifurcation diagram by computing equilibrium positions
+        across a range of reach parameter values, testing multiple initial position configurations
+        to capture all stable equilibria. This is the primary method for creating bifurcation diagrams
+        that visualize how equilibrium configurations change as parameters vary.
+        
+        **Key Features:**
+        
+        - Proper state management with restoration after computation
+        - Memory efficient matrix clearing between computations
+        - Parameter validation and sensible defaults
+        - Support for both single and envelope (max/min) equilibria
+        - Optimized position generation for exploring initial condition space
+        - Parallel processing support for large parameter sweeps
+        
+        :param reach_start: Starting value of reach parameter range.
+        :type reach_start: float
+        :param reach_end: Ending value of reach parameter range.
+        :type reach_end: float
+        :param reach_num_points: Number of parameter values to sample in the range.
+        :type reach_num_points: int
+        :param time_steps: Maximum iterations for gradient ascent at each parameter value.
+        :type time_steps: int
+        :param initial_pos: Initial agent positions (defaults to current instance positions if None).
+        :type initial_pos: Union[List[float], torch.Tensor]
+        :param tolerance: Convergence tolerance (defaults to instance tolerance if None).
+        :type tolerance: Optional[float]
+        :param tolerated_agents: Convergence agent tolerance (defaults to instance value if None).
+        :type tolerated_agents: Optional[int]
+        :param parallel_configs: Dictionary with parallel processing configuration:
+                                {'parallel': bool, 'max_workers': int, 'batch_size': int}.
+                                Defaults to {'parallel': True, 'max_workers': 4, 'batch_size': 2}.
+        :type parallel_configs: Dict[str, Union[bool, int]]
+        :param envelope: Whether to compute envelope (max/min) of equilibria across initial conditions.
+        :type envelope: bool
+        :param verbose: Whether to print progress information during computation.
+        :type verbose: bool
+        
+        :return: For envelope=False: torch.Tensor of shape (num_variants, num_params, num_agents).
+                 For envelope=True: List of [max_matrix, min_matrix] each of shape (num_params, num_agents).
+        :rtype: Union[torch.Tensor, List[torch.Tensor]]
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            # Compute standard bifurcation diagram
+            equilibria = bif_env.equilibrium_bifurcation_complete(
+                reach_start=0.1,
+                reach_end=1.0,
+                reach_num_points=100,
+                time_steps=200,
+                parallel_configs={'parallel': True, 'max_workers': 8}
+            )
+            
+            # Compute envelope diagram
+            max_eq, min_eq = bif_env.equilibrium_bifurcation_complete(
+                reach_start=0.1,
+                reach_end=1.0,
+                reach_num_points=100,
+                envelope=True
+            )
         """
+
         
         # Preserve original state following project patterns
         og_time_steps = self.time_steps
@@ -1210,12 +1344,23 @@ class BifurcationEnv:
                                     reach_parameters: torch.Tensor,
                                     tolerance: float = 1e-6) -> Dict[str, torch.Tensor]:
         """
-        Find parameter values where agent positions converge across different variants.
+        Find parameter values where agent positions converge across different position variants.
         
-        Following project patterns:
-        - Use torch tensors for compatibility
-        - Proper error handling
-        - Return structured results
+        This static method analyzes a list of equilibrium position matrices (each from different
+        initial conditions) to identify parameter values where the equilibria from different
+        trajectories converge to the same position within a specified tolerance. These convergence
+        points often indicate bifurcation boundaries or transitions between different equilibrium basins.
+        
+        :param matrix_list: List of position matrices, each of shape (num_params, num_agents).
+        :type matrix_list: List[torch.Tensor]
+        :param reach_parameters: Array of parameter values corresponding to matrix rows.
+        :type reach_parameters: torch.Tensor
+        :param tolerance: Distance threshold for considering positions as converged.
+        :type tolerance: float
+        
+        :return: Dictionary containing 'convergence_points' (parameter values where convergence occurs)
+                 and 'parameter_indices' (indices in reach_parameters array).
+        :rtype: Dict[str, torch.Tensor]
         """
         if len(matrix_list) < 2:
             return {'convergence_points': torch.empty(0), 'parameter_indices': torch.empty(0)}
@@ -1258,12 +1403,21 @@ class BifurcationEnv:
 
     def learning_rate_large_end(self,resource_parameter,second_run=False,high_end=False)-> float:
         """
-        Determine a large learning rate based on the resource parameter.
+        Determine appropriate learning rate upper bound for bifurcation analysis.
         
-        :param resource_parameter: Resource parameter value
+        This method computes an appropriate maximum learning rate for gradient ascent based on
+        the resource parameter value, with adjustments for refinement runs. The learning rate
+        is scaled to ensure convergence while maintaining computational efficiency across
+        different parameter regimes.
+        
+        :param resource_parameter: Current value of the resource/reach parameter.
         :type resource_parameter: float
+        :param second_run: Whether this is a refinement run (uses larger learning rate if True).
+        :type second_run: bool
+        :param high_end: Whether this is for high parameter values (further increases learning rate).
+        :type high_end: bool
         
-        :return: Calculated large learning rate
+        :return: Computed maximum learning rate value.
         :rtype: float
         """
         if second_run:
@@ -1308,36 +1462,72 @@ class BifurcationEnv:
                         num_points: int = 100,
                         direct_method: bool = True) -> Dict[str, List]:
         """
-        Find second-order bifurcation points using parallel processing. Note that this function is only applicable to 1-1-1 equalbiria for 3 players.
+        Detect second-order (pitchfork or transcritical) bifurcation points.
         
-        :param num_agents: Number of agents in the system
-        :type num_agents: int
-        :param bin_points: Discretization points for the domain
+        This method identifies parameter values where second-order bifurcations occur by analyzing
+        equilibrium behavior as a resource distribution parameter varies. The method is specifically
+        designed for three-player systems exhibiting 1-1-1 equilibrium patterns (each player at a
+        distinct resource peak).
+        
+        The algorithm systematically varies a parameter (such as mean or standard deviation of resource
+        distribution) and identifies critical values where equilibrium structure changes qualitatively,
+        using either direct numerical methods or root-finding approaches.
+        
+        **Note:** This function is currently applicable only to 1-1-1 equilibria for 3 players.
+        
+        :param bin_points: Discretization points defining the domain grid.
         :type bin_points: Union[List[float], np.ndarray]
-        :param fixed_parameters_lst: Fixed parameters for resource distribution
+        :param fixed_parameters_lst: Fixed parameters for resource distribution (e.g., means, standard deviations).
         :type fixed_parameters_lst: List[List[float]]
-        :param resource_distribution_type: Type of resource distribution
+        :param agents_pos: Initial agent positions (defaults to instance positions if None).
+        :type agents_pos: Optional[Union[List[float], np.ndarray, torch.Tensor]]
+        :param resource_distribution_type: Type of resource distribution function.
         :type resource_distribution_type: str
-        :param alpha_st: Starting alpha value
+        :param alpha_st: Starting value of the varying parameter.
         :type alpha_st: float
-        :param alpha_end: Ending alpha value
+        :param alpha_end: Ending value of the varying parameter.
         :type alpha_end: float
-        :param varying_parameter_type: Type of parameter variation
+        :param varying_parameter_type: Which parameter to vary ('mean', 'std', etc.).
         :type varying_parameter_type: str
-        :param learning_rate_p: Learning rate parameters [start, end, decay]
+        :param learning_rate_p: Learning rate parameters [min_lr, max_lr, annealing_period].
         :type learning_rate_p: List[float]
-        :param parallel: Whether to use parallel processing
+        :param parallel: Whether to use parallel processing.
         :type parallel: bool
-        :param max_workers: Maximum number of parallel workers
+        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
         :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing
+        :param batch_size: Batch size for parallel processing (auto-calculated if None).
         :type batch_size: Optional[int]
-        :param time_steps: Maximum time steps for gradient ascent
+        :param time_steps: Maximum iterations for gradient ascent.
         :type time_steps: int
-        :param direct_method: If True, uses direct gradient=0 solving with symmetric split at 0.5. If False, uses gradient ascent method.
+        :param second_run: Whether this is a refinement run with adjusted learning rates.
+        :type second_run: bool
+        :param data: Pre-computed equilibrium data to refine (used in refinement runs).
+        :type data: Optional[Union[List[float], np.ndarray, torch.Tensor]]
+        :param num_points: Number of parameter values to sample in the search range.
+        :type num_points: int
+        :param direct_method: If True, uses direct gradient=0 solving with symmetric split at 0.5. 
+                             If False, uses gradient ascent method to find equilibria.
         :type direct_method: bool
-        :return: Dictionary containing sigma_star and final_parameters lists
+        
+        :return: Dictionary containing 'sigma_star' (bifurcation parameter values) and 
+                 'final_parameters' (corresponding equilibrium parameters) lists.
         :rtype: Dict[str, List]
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            result = bif_env.find_second_order_bifs(
+                bin_points=np.linspace(0, 1, 100),
+                fixed_parameters_lst=[[0.25, 0.75], [0.1, 0.1]],
+                alpha_st=0.0,
+                alpha_end=0.5,
+                varying_parameter_type='mean',
+                num_points=100,
+                direct_method=True
+            )
+            bifurcation_points = result['sigma_star']
         """
         
         
@@ -1835,55 +2025,98 @@ class BifurcationEnv:
                                               time_steps: int = 5000,
                                               verbose: bool = True) -> List[torch.Tensor]:
         """
-        Find third-order bifurcation parameters using optimized parallel processing.
+        Detect third-order (subcritical or supercritical) bifurcation points with iterative refinement.
         
-        This method processes multiple resource parameters in parallel to find cycle ends
-        for third-order bifurcation analysis. Optimized following project patterns with:
-        - Parallel processing support using ProcessPoolExecutor
+        This method identifies parameter values where higher-order bifurcations occur by analyzing
+        the appearance and disappearance of equilibria as a resource distribution parameter varies.
+        It uses an iterative refinement approach to precisely locate bifurcation points, building
+        upon second-order bifurcation data.
+        
+        The refined algorithm processes multiple resource parameters in parallel and iteratively
+        refines bifurcation point estimates through:
+        
+        1. Starting from second-order bifurcation estimates
+        2. Using gradient ascent from strategic initial positions
+        3. Tracking stability changes via Jacobian analysis
+        4. Iteratively refining estimates to desired precision
+        
+        **Optimizations:**
+        
+        - Parallel processing using ProcessPoolExecutor
         - Proper state management and error handling
-        - Memory efficient processing with batch support
+        - Memory efficient batch processing
         - Comprehensive logging and progress tracking
         
-        :param int_position: Initial position for agents
+        :param int_position: Initial position for agents.
         :type int_position: torch.Tensor
-        :param second_order_bif: Second-order bifurcation parameters for each resource parameter
+        :param second_order_bif: Second-order bifurcation parameters for each resource parameter.
         :type second_order_bif: List[torch.Tensor]
-        :param guess_distance: Distance for initial guess estimation
+        :param guess_distance: Distance parameter for initial guess estimation.
         :type guess_distance: torch.Tensor
-        :param sig_edge: Minimum sigma value constraint
+        :param sig_edge: Minimum sigma value constraint (lower bound on parameter search).
         :type sig_edge: float
-        :param num_refinements: Number of refinement iterations
+        :param num_refinements: Number of iterative refinement steps to perform.
         :type num_refinements: int
-        :param learning_rate_p: Learning rate parameters [start, end, decay]
+        :param learning_rate_p: Learning rate parameters [min_lr, max_lr, annealing_period].
         :type learning_rate_p: List[float]
-        :param resource_distribution_type: Type of resource distribution
+        :param resource_distribution_type: Type of resource distribution function.
         :type resource_distribution_type: str
-        :param varying_parameter_type: Type of parameter variation
+        :param varying_parameter_type: Which parameter to vary ('mean', 'std', etc.).
         :type varying_parameter_type: str
-        :param alpha_st: Starting alpha value
+        :param alpha_st: Starting value of the varying parameter.
         :type alpha_st: float
-        :param alpha_end: Ending alpha value
+        :param alpha_end: Ending value of the varying parameter.
         :type alpha_end: float
-        :param fixed_parameters_lst: Fixed parameters for resource distribution
+        :param alpha_num_points: Number of points to sample in the varying parameter range.
+        :type alpha_num_points: int
+        :param fixed_parameters_lst: Fixed parameters for resource distribution.
         :type fixed_parameters_lst: List[List[float]]
-        :param bin_points: Discretization points for the domain
-        :type bin_points: Union[List[float], np.ndarray]
-        :param parallel: Whether to use parallel processing
+        :param learning_rate_type: Type of learning rate schedule (uses instance default if None).
+        :type learning_rate_type: str
+        :param method_type: Search strategy ('bottom_up', 'top_down', 'top_down_n1', 'bottom_up_n1').
+        :type method_type: str
+        :param parallel: Whether to use parallel processing.
         :type parallel: bool
-        :param max_workers: Maximum number of parallel workers
+        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
         :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing
+        :param batch_size: Batch size for parallel processing (auto-calculated if None).
         :type batch_size: Optional[int]
-        :param time_steps: Maximum time steps for gradient ascent
+        :param time_steps: Maximum iterations for gradient ascent.
         :type time_steps: int
-        :param verbose: Whether to show progress information
+        :param verbose: Whether to print progress and diagnostic information.
         :type verbose: bool
         
-        :return: List of cycle end parameters for each resource parameter
+        :return: List of cycle end parameters (bifurcation points) for each resource parameter.
         :rtype: List[torch.Tensor]
         
-        :raises ValueError: If input parameters are invalid
-        :raises RuntimeError: If computation fails
+        :raises ValueError: If input parameters are invalid (negative refinements, invalid method_type, etc.).
+        :raises RuntimeError: If computation fails during bifurcation detection.
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            # First find second-order bifurcations
+            second_order_data = bif_env.find_second_order_bifs(...)
+            
+            # Then refine to find third-order bifurcations
+            third_order_bifs = bif_env.find_third_order_bifurcations_refined(
+                int_position=torch.tensor([0.2, 0.5, 0.8]),
+                second_order_bif=second_order_data['sigma_star'],
+                guess_distance=torch.tensor(0.05),
+                sig_edge=0.01,
+                num_refinements=5,
+                learning_rate_p=[0.0001, 0.01, 100],
+                resource_distribution_type="multi_modal_gaussian_distribution_1D",
+                varying_parameter_type='mean',
+                alpha_st=0.0,
+                alpha_end=0.5,
+                alpha_num_points=100,
+                fixed_parameters_lst=[[0.25, 0.75], [0.1, 0.1]],
+                method_type='bottom_up',
+                verbose=True
+            )
         """
         bin_points = self.bin_points
         if method_type not in ['bottom_up','top_down','top_down_n1','bottom_up_n1']:
@@ -2458,10 +2691,10 @@ class BifurcationEnv:
 
 
     def first_order_bifurcation_plot(self,
+                                     processed_data: dict,
                                      infl_type: str = 'gaussian',
                                      alpha_st: float = 0,
                                      alpha_end: float = 1,
-                                     processed_data = None,
                                      alpha_values = None,
                                      cutoff_index = None,
                                      title_ads: List[str] = [],
@@ -2472,52 +2705,72 @@ class BifurcationEnv:
                                      paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'bif_diag'}
                                      ) -> matplotlib.figure.Figure:
         r"""
-            Plots the first-order bifurcation for agents over a range of alpha values (resource parameters) via func:`jacobian_stability_fast`. 
-            
-            Now supports both original format (Gaussian) and new beta format with processed stability flips.
+        Generate and plot first-order bifurcation diagram with stability analysis.
+        
+        This method creates a visualization of first-order (saddle-node) bifurcations by computing
+        equilibrium positions and their stability across a parameter range. The plot shows how
+        equilibrium agent positions change as a resource parameter (alpha) varies, with stability
+        indicated through :func:`InflGame.adaptive.jacobian.jacobian_stability_fast`.
+        
+        The method supports both original format (e.g., Gaussian kernels) and processed data format
+        with pre-computed stability flips, making it flexible for different analysis workflows.
+        
+        First-order bifurcations are characterized by the creation or annihilation of equilibrium pairs,
+        typically visualized as branches that meet and disappear at critical parameter values.
 
-            **Gaussian example**
+        **Example Gaussian Bifurcation Diagram**
 
-            .. figure:: examples/first_order.png
-                :scale: 75 %
+        .. figure:: examples/first_order.png
+            :scale: 75 %
 
-                This is a first order bifurcations plot for 5 players using symmetric Gaussian influence kernels.
-                    
+            First-order bifurcation plot for 5 players using symmetric Gaussian influence kernels.
+                
 
-            :param agent_parameter_instance: Parameters for the influence function.
-            :type agent_parameter_instance: Union[List[float], np.ndarray]
-            :param resource_distribution_type: Type of resource distribution.
-            :type resource_distribution_type: str
-            :param resource_entropy: Whether to calculate resource entropy.
-            :type resource_entropy: bool
-            :param infl_entropy: Whether to calculate influence entropy.
-            :type infl_entropy: bool
-            :param alpha_current: Current alpha value.
-            :type alpha_current: float
-            :param alpha_st: Starting value of alpha.
-            :type alpha_st: float
-            :param alpha_end: Ending value of alpha.
-            :type alpha_end: float
-            :param varying_paramter_type: Type of varying parameter (e.g., 'mean').
-            :type varying_paramter_type: str
-            :param fixed_parameters_lst: List of fixed parameters.
-            :type fixed_parameters_lst: Optional[List[float]]
-            :param name_ads: Additional names for saved files.
-            :type name_ads: List[str]
-            :param title_ads: Additional titles for the plot.
-            :type title_ads: List[str]
-            :param save_types: File types to save the plot.
-            :type save_types: List[str]
-            :param processed_data: Processed test results with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'
-            :type processed_data: Optional[dict]
-            :param alpha_values: Alpha values array
-            :type alpha_values: Optional[np.ndarray]
-            :param cutoff_index: Index to cutoff the data
-            :type cutoff_index: Optional[int]
+        :param infl_type: Type of influence kernel ('gaussian', 'beta', etc.).
+        :type infl_type: str
+        :param alpha_st: Starting value of the resource parameter range.
+        :type alpha_st: float
+        :param alpha_end: Ending value of the resource parameter range.
+        :type alpha_end: float
+        :param processed_data: Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
+        :type processed_data: Optional[dict]
+        :param alpha_values: Array of alpha (parameter) values corresponding to equilibria.
+        :type alpha_values: Optional[np.ndarray]
+        :param cutoff_index: Index to truncate the data (useful for focusing on specific parameter ranges).
+        :type cutoff_index: Optional[int]
+        :param title_ads: Additional text to append to plot title.
+        :type title_ads: List[str]
+        :param save: Whether to save the plot to file.
+        :type save: bool
+        :param name_ads: Additional text for saved filename.
+        :type name_ads: List[str]
+        :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 
+                     'legend_size', 'table_size', 'label_size', 'font_family'.
+        :type font: Dict
+        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
+                            'section' (str), 'figure_id' (str).
+        :type paper_figure: dict
 
-            :return: The generated plot figure.
-            :rtype: matplotlib.figure.Figure
-            """
+        :return: The generated matplotlib figure object.
+        :rtype: matplotlib.figure.Figure
+        
+        Example:
+        --------
+        
+        .. code-block:: python
+        
+            fig = bif_env.first_order_bifurcation_plot(
+                infl_type='gaussian',
+                alpha_st=0.0,
+                alpha_end=1.0,
+                save=True,
+                name_ads=['my_bifurcation'],
+                title_ads=['3-Player System']
+            )
+            fig.show()
+        """
 
 
                                 

@@ -21,4 +21,9 @@ Subpackage contents
 
    InflGame.adaptive.grad_func_env
    InflGame.adaptive.visualization
+   InflGame.adaptive.jacobian
+   InflGame.adaptive.newton_search
+   InflGame.adaptive.monte_search
+   InflGame.adaptive.bifurcation_analysis
+
 

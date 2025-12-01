@@ -1,9 +1,67 @@
+"""
+.. module:: validation
+   :synopsis: Provides configuration validation utilities for adaptive influence models in influencer games.
+
+Validation Module
+=================
+
+This module provides comprehensive validation functions for adaptive influence game configurations.
+It ensures that all parameters for the adaptive environment are properly typed, within valid ranges,
+and mutually compatible before simulation begins.
+
+The module is designed to work with the `InflGame.adaptive` package and provides robust error checking
+with detailed error messages to help users quickly identify and fix configuration issues.
+
+Dependencies:
+-------------
+- torch
+- numpy
+- matplotlib.tri
+- InflGame.utils.general
+
+Usage:
+------
+The `validate_adaptive_config` function is the main entry point for validating all configuration
+parameters before creating an `AdaptiveEnv` instance. It performs type checking, range validation,
+and compatibility checks between related parameters.
+
+Example:
+--------
+
+.. code-block:: python
+    
+    from InflGame.utils.validation import validate_adaptive_config
+    import torch
+    import numpy as np
+
+    # Define configuration
+    config = validate_adaptive_config(
+        num_agents=3,
+        agents_pos=np.array([0.2, 0.5, 0.8]),
+        parameters=torch.tensor([1.0, 1.0, 1.0]),
+        resource_distribution=torch.tensor([10.0, 20.0, 30.0]),
+        bin_points=np.array([0.1, 0.4, 0.7]),
+        infl_configs={'infl_type': 'gaussian'},
+        learning_rate_type='cosine_annealing',
+        learning_rate=[0.0001, 0.01, 15],
+        time_steps=100,
+        domain_type='1d',
+        domain_bounds=[0, 1],
+        tolerance=1e-5
+    )
+    
+    # Use validated config to create environment
+    # env = AdaptiveEnv(**config)
+"""
+
 import warnings
 import torch
 import numpy as np
-from typing import Union, List, Optional,Dict
+from typing import Union, List, Optional, Dict
 import matplotlib.tri as tri
 from InflGame.utils.general import _to_tensor
+
+
 def validate_adaptive_config(num_agents: int,
                             agents_pos: Union[List[float], np.ndarray],
                             parameters: torch.Tensor,
@@ -23,29 +81,142 @@ def validate_adaptive_config(num_agents: int,
                             tolerance: float = 10**-5,
                             tolerated_agents: Optional[int] = None) -> dict:
     """
-    Validate the configuration of the adaptive influence model.
+    Validate the configuration of an adaptive influence model.
     
-    :param infl_type: Type of influence kernel ('gaussian', 'Jones_M', 'dirichlet', 'multi_gaussian', 'custom')
-    :param num_agents: Number of agents in the system
-    :param bin_points: Points in the domain where resources are distributed
-    :param agents_pos: Initial positions of the agents
-    :param resource_distribution: Resource distribution in the environment
-    :param domain_bounds: Bounds of the domain [min, max]
-    :param domain_type: Type of domain ('1d', '2d', 'simplex')
-    :param learning_rate_type: Type of learning rate schedule ('cosine', 'constant', 'linear')
-    :param learning_rate: Learning rate parameters [min_lr, max_lr, decay_steps]
-    :param fixed_pa: Fixed parameter for Dirichlet kernel (required if infl_type='dirichlet')
-    :param infl_cshift: Whether to apply constant shift in influence
-    :param cshift: Value of the constant shift (required if infl_cshift=True)
-    :param infl_fshift: Whether to apply functional shift in influence
-    :param Q: Scaling factor for functional shift (required if infl_fshift=True)
-    :param tolerance: Tolerance for convergence
-    :param tolerated_agents: Number of agents that need to meet tolerance before stopping
-    :param parameters: Parameters for influence kernels of each agent
-    :return: Dictionary of validated and converted parameters
-    :raises ValueError: If any configuration is invalid
-    :raises TypeError: If input types are incorrect
-    :raises NotImplementedError: If unsupported functionality is requested
+    Performs comprehensive validation of all parameters required to initialize an adaptive environment
+    for influencer games. This includes type checking, range validation, and compatibility checks
+    between related parameters. The function converts inputs to appropriate types and returns a
+    validated configuration dictionary.
+
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the system. Must be a positive integer.
+    agents_pos : Union[List[float], np.ndarray]
+        Initial positions of the agents. Length must equal ``num_agents``.
+        For 1D domains: 1D array of positions.
+        For 2D domains: :math:`(N, 2)` array of (x, y) coordinates.
+        For simplex domains: :math:`(N, k)` array of barycentric coordinates that sum to 1.
+    parameters : torch.Tensor
+        Parameters for influence kernels of each agent. Length must equal ``num_agents``.
+        Must contain finite values. For Gaussian kernels, typically positive values.
+        For beta kernels, concentration parameter :math:`\\phi > 0`.
+    resource_distribution : torch.Tensor
+        Resource distribution in the environment. Must match length of ``bin_points``.
+        Should contain non-negative finite values.
+    bin_points : Union[List[float], np.ndarray]
+        Points in the domain where resources are distributed. Must be non-empty.
+        For 1D: points on the line segment.
+        For 2D/simplex: coordinate pairs.
+    infl_configs : Dict[str, Union[str, callable]], optional
+        Influence kernel configuration dictionary, by default ``{'infl_type': 'gaussian'}``.
+        
+        - ``'infl_type'`` (str): Type of influence kernel. Valid options:
+          
+          - ``'gaussian'``: Gaussian influence kernel
+          - ``'multi_gaussian'``: Multivariate Gaussian kernel
+          - ``'dirichlet'``: Dirichlet kernel for simplex domains
+          - ``'beta'``: Beta distribution kernel
+          - ``'Jones_M'``: Jones mean kernel
+          - ``'custom'``: User-defined custom kernel
+        
+        - ``'custom_influence'`` (callable): Required when ``infl_type='custom'``.
+          Custom influence function.
+    learning_rate_type : str, optional
+        Type of learning rate schedule, by default 'cosine'. Valid options:
+        
+        - ``'cosine_annealing'``: Cosine annealing schedule
+        - ``'fixed'``: Constant learning rate
+        - ``'trust_region'``: Trust region adaptive schedule
+        - ``'gradient_magnitude'``: Magnitude-based adaptive schedule
+    learning_rate : List[float], optional
+        Learning rate parameters, by default [.0001, .01, 15].
+        For schedules: ``[min_lr, max_lr, decay_steps]``.
+        For fixed: single value ``[lr]``.
+    time_steps : int, optional
+        Maximum number of gradient ascent iterations, by default 100.
+        Must be a positive integer.
+    fp : Optional[int], optional
+        Fixed parameter index for Dirichlet kernel, by default 0.
+        Required when ``infl_type='dirichlet'``. Must be non-negative integer
+        between 0 and simplex dimension - 1.
+    infl_cshift : bool, optional
+        Whether to apply constant shift to influence function, by default False.
+    cshift : int, optional
+        Value of constant shift, by default 0. Required when ``infl_cshift=True``.
+        Must be a list, array, or tensor.
+    infl_fshift : bool, optional
+        Whether to apply functional shift to influence, by default False.
+        Not yet implemented for multi-dimensional agents.
+    Q : int, optional
+        Scaling factor for functional shift, by default 0.
+        Required when ``infl_fshift=True``. Should be non-negative.
+    domain_type : str, optional
+        Type of domain, by default '1d'. Valid options:
+        
+        - ``'1d'``: One-dimensional line segment
+        - ``'2d'``: Two-dimensional rectangular domain
+        - ``'simplex'``: Probability simplex
+    domain_bounds : Union[List[float], torch.Tensor], optional
+        Bounds of the domain, by default [0, 1].
+        
+        - For ``'1d'``: ``[min, max]``
+        - For ``'2d'``: ``[[xmin, xmax], [ymin, ymax]]``
+        - For ``'simplex'``: ``(r2, corners, triangle, trimesh)`` tuple with:
+          
+          - ``r2``: 2D reference point
+          - ``corners``: :math:`(3, 2)` array of triangle vertices
+          - ``triangle``: matplotlib Triangulation object
+          - ``trimesh``: matplotlib Triangulation mesh object
+    tolerance : float, optional
+        Convergence tolerance for position changes, by default :math:`10^{-5}`.
+        Must be a positive number.
+    tolerated_agents : Optional[int], optional
+        Number of agents that must meet tolerance before stopping, by default None.
+        If None, defaults to ``num_agents``. Must be between 1 and ``num_agents``.
+
+    Returns
+    -------
+    dict
+        Dictionary of validated and converted parameters with all inputs converted to
+        appropriate types (tensors, validated ranges, etc.). Keys match parameter names.
+
+    Raises
+    ------
+    ValueError
+        If any configuration parameter is invalid or out of range.
+    TypeError
+        If input types are incorrect.
+    NotImplementedError
+        If unsupported functionality is requested (e.g., functional shift for multi-dimensional agents).
+        
+    Warns
+    -----
+    UserWarning
+        For potentially problematic but not invalid configurations:
+        
+        - Negative parameters for Gaussian kernels
+        - Negative learning rates
+        - Non-negative resources
+        - Negative Q parameter with functional shift
+
+    Examples
+    --------
+    >>> import torch
+    >>> import numpy as np
+    >>> 
+    >>> # Validate a simple 1D configuration
+    >>> config = validate_adaptive_config(
+    ...     num_agents=2,
+    ...     agents_pos=[0.3, 0.7],
+    ...     parameters=torch.tensor([0.1, 0.15]),
+    ...     resource_distribution=torch.tensor([1.0, 2.0, 1.5]),
+    ...     bin_points=[0.0, 0.5, 1.0],
+    ...     domain_type='1d',
+    ...     domain_bounds=[0, 1]
+    ... )
+    >>> config['num_agents']
+    2
     """
     
     
@@ -70,10 +241,10 @@ def validate_adaptive_config(num_agents: int,
             raise ValueError(f"parameters must be a tensor with {num_agents} elements")
         if not torch.all(torch.isfinite(parameters)):
             raise ValueError("parameters must contain finite values (no NaN or Inf)")
-        if torch.any(parameters < 0) and infl_configs.get('infl_type') in ['gaussian', 'multi_gaussian','dirichlet']:
+        if torch.any(parameters < 0) and infl_configs.get('infl_type') in ['gaussian', 'multi_gaussian', 'dirichlet']:
             warnings.warn("Parameters with negative values detected, this may result in unpredictable behavior", UserWarning)
         # Beta distribution requires concentration parameter phi > 2 for proper mode parameterization
-        if infl_configs.get('infl_type') == 'beta' and torch.any(parameters < 0) :
+        if infl_configs.get('infl_type') == 'beta' and torch.any(parameters < 0):
             raise ValueError("Beta kernel concentration parameters (phi) must be >0 for mode parameterization")
         validated['parameters'] = parameters
     
@@ -87,7 +258,7 @@ def validate_adaptive_config(num_agents: int,
     
     # 5. Validate and convert bin_points (fifth parameter)
     bin_points = _to_tensor(bin_points, "bin_points")
-    if  len(bin_points) == 0:
+    if len(bin_points) == 0:
         raise ValueError("bin_points must be a non-empty tensor")
     if len(resource_distribution) != len(bin_points):
         raise ValueError(f"resource_distribution length ({len(resource_distribution)}) must match bin_points length ({len(bin_points)})")

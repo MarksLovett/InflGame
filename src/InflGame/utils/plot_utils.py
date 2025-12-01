@@ -1,3 +1,54 @@
+"""
+.. module:: plot_utils
+   :synopsis: Provides plotting utilities for creating and manipulating figures in influencer games visualizations.
+
+Plot Utils Module
+=================
+
+This module provides utility functions for creating and manipulating matplotlib figures, particularly
+for side-by-side plot comparisons with support for 2D plots, 3D plots, heat maps, and shared colorbars.
+
+The module is designed to work with the `InflGame` package and supports creating publication-quality
+figures with consistent styling and formatting.
+
+Dependencies:
+-------------
+- matplotlib
+- numpy
+
+Usage:
+------
+The `side_by_side_plots` function can be used to combine two existing plots into a single figure
+with optional shared colorbars and axis labels.
+
+Example:
+--------
+
+.. code-block:: python
+    
+    from InflGame.utils.plot_utils import side_by_side_plots
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Create two example plots
+    fig1, ax1 = plt.subplots()
+    ax1.plot([1, 2, 3], [1, 4, 9])
+    ax1.set_title("Plot 1")
+    
+    fig2, ax2 = plt.subplots()
+    ax2.plot([1, 2, 3], [1, 2, 3])
+    ax2.set_title("Plot 2")
+    
+    # Combine them side by side
+    combined_fig = side_by_side_plots(
+        ax1, ax2, 
+        title_main="Combined Plots",
+        cbar_params={'common_cbar': False},
+        axis_params={'common_axis': True, 'axis_xlabel': 'X-axis', 'axis_ylabel': 'Y-axis'}
+    )
+    combined_fig.show()
+"""
+
 from tkinter import font
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -12,42 +63,94 @@ def side_by_side_plots(ax1: plt.Axes,
                        ax2: plt.Axes,
                        title_main: str,
                        title_ads: list = [],
-                       cbar_params: dict = {'common_cbar': False,'cbar_title':''},
-                       axis_params: dict = {'common_axis': False,'axis_ylabel':'', 'axis_xlabel': ''},
-                       font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},):
-    """Put two plots side by side, handling 2D, 3D plots, and heat maps
+                       cbar_params: dict = {'common_cbar': False, 'cbar_title': ''},
+                       axis_params: dict = {'common_axis': False, 'axis_ylabel': '', 'axis_xlabel': ''},
+                       font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'}):
+    """
+    Create a side-by-side comparison figure from two existing plot axes.
     
-    This function copies plot elements including:
-    - Line plots
-    - Scatter plots (2D and 3D)
-    - Heat maps (imshow, contourf, pcolormesh)
-    - Contour plots
-    - Colorbars (when present)
+    This function copies plot elements from two source axes and combines them into a single figure
+    with two subplots placed side by side. It handles various plot types including line plots,
+    scatter plots (2D and 3D), heat maps, contour plots, and preserves colorbars.
+
+    The function supports:
     
-    Parameters:
-    -----------
-    ax1, ax2 : plt.Axes
-        The source axes to copy from
+    - **Line plots**: Standard 2D line plots with all styling preserved
+    - **Scatter plots**: Both 2D and 3D scatter plots with colors and sizes
+    - **Heat maps**: Image plots (imshow, contourf, pcolormesh) with discrete colorbars
+    - **Contour plots**: Filled contour plots with proper styling
+    - **3D plots**: Full 3D plot support with axis labels and limits
+    - **Colorbars**: Individual or shared colorbars with discrete levels
+
+    Parameters
+    ----------
+    ax1 : plt.Axes
+        The first source axes to copy from (left subplot in output).
+    ax2 : plt.Axes
+        The second source axes to copy from (right subplot in output).
     title_main : str
-        Main title for the combined figure
+        Main title for the combined figure.
     title_ads : list, optional
-        Additional title components to append
+        Additional title components to append to the main title, by default [].
     cbar_params : dict, optional
-        Colorbar configuration: {'common_cbar': bool, 'cbar_title': str}
-    axis_params : dict, optional
-        Axis configuration: {'common_axis': bool, 'axis_ylabel': str, 'axis_xlabel': str}
-    font : dict, optional
-        Font configuration dictionary
+        Colorbar configuration dictionary, by default ``{'common_cbar': False, 'cbar_title': ''}``.
         
-    Returns:
+        - ``'common_cbar'`` (bool): If True, create a single shared colorbar; if False, create individual colorbars
+        - ``'cbar_title'`` (str): Title/label for the colorbar
+    axis_params : dict, optional
+        Axis configuration dictionary, by default ``{'common_axis': False, 'axis_ylabel': '', 'axis_xlabel': ''}``.
+        
+        - ``'common_axis'`` (bool): If True, use shared axis labels
+        - ``'axis_ylabel'`` (str): Common y-axis label
+        - ``'axis_xlabel'`` (str): Common x-axis label
+    font : dict, optional
+        Font configuration dictionary, by default ``{'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'}``.
+        
+        - ``'default_size'`` (int): Default font size for general text
+        - ``'cbar_size'`` (int): Font size for colorbar tick labels
+        - ``'title_size'`` (int): Font size for figure title
+        - ``'legend_size'`` (int): Font size for legend text
+        - ``'axis_size'`` (int): Font size for axis labels
+        - ``'font_family'`` (str): Font family (e.g., 'sans-serif', 'serif')
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The new figure containing both plots arranged side by side.
+        
+    Notes
+    -----
+    - The function creates discrete colorbars with centered labels for heat maps
+    - 3D plots are properly detected and handled with appropriate projection settings
+    - All axis limits, tick positions, and labels are preserved from the source plots
+    - The function closes the original figures to prevent memory leaks
+    
+    Examples
     --------
-    fig : matplotlib.figure.Figure
-        The new figure with side-by-side plots
+    >>> import matplotlib.pyplot as plt
+    >>> import numpy as np
+    >>> 
+    >>> # Create two sample plots
+    >>> fig1, ax1 = plt.subplots()
+    >>> x = np.linspace(0, 10, 100)
+    >>> ax1.plot(x, np.sin(x))
+    >>> ax1.set_title("Sine Wave")
+    >>> 
+    >>> fig2, ax2 = plt.subplots()
+    >>> ax2.plot(x, np.cos(x))
+    >>> ax2.set_title("Cosine Wave")
+    >>> 
+    >>> # Combine with shared x-axis label
+    >>> combined = side_by_side_plots(
+    ...     ax1, ax2,
+    ...     title_main="Trigonometric Functions",
+    ...     axis_params={'common_axis': True, 'axis_xlabel': 'x', 'axis_ylabel': 'f(x)'}
+    ... )
     """
     # Set font properties
     font['font.family'] = font.get('font_family', 'sans-serif')
-    axis_size= font.get('axis_size', 15)
-    cbar_font_size= font.get('cbar_size', 12)
+    axis_size = font.get('axis_size', 15)
+    cbar_font_size = font.get('cbar_size', 12)
     default_font_size = font.get('default_size', 12)
     title_font_size = font.get('title_size', 25)
     legend_font_size = font.get('legend_size', 12)
@@ -184,7 +287,7 @@ def side_by_side_plots(ax1: plt.Axes,
             if axis_xlabel:
                 ax_left.set_xlabel('')  # Remove individual x-label for left plot
             if axis_ylabel:
-                ax_left.set_ylabel(axis_ylabel,size=axis_size)  # Set common y-label on left plot
+                ax_left.set_ylabel(axis_ylabel, size=axis_size)  # Set common y-label on left plot
 
     # Check if ax2 is 3D
     if hasattr(ax2, 'zaxis'):
@@ -329,7 +432,7 @@ def side_by_side_plots(ax1: plt.Axes,
             ax_right.legend()
 
     # Set title for the entire figure
-    if len(title_ads)>0:
+    if len(title_ads) > 0:
         for item in title_ads:
             title_main += " " + item
     fig.suptitle(title_main, fontsize=title_font_size)
