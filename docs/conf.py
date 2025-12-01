@@ -43,6 +43,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.doctest',
     'numpydoc',
     'sphinx_copybutton',
     'sphinx_design',

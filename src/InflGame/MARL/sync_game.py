@@ -200,7 +200,7 @@ class influencer_env_sync(MultiAgentEnv):
             - :math:`B(b)` is the resource available at bin :math:`b`
             - :math:`\mathbb{B}` is the set of all bin points
 
-        The probability is calculated by the function :function:`InflGame.MARL.utils.MARL_utils.prob_matrix`:
+        The probability is calculated by the function :func:`InflGame.MARL.utils.MARL_utils.prob_matrix`:
 
 
         :param observations: Current observations of all agents.

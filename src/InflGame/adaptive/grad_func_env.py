@@ -1,4 +1,4 @@
-""".
+"""
 .. module:: grad_func_env
    :synopsis: A module for handling adaptive dynamics for agents interacting in influence games.
 
