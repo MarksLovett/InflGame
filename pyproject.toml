@@ -13,15 +13,18 @@ authors = [
   { name="Mark Lovett", email="mark.s.lovett981@gmail.com" },
 ]
 requires-python = ">=3.10"
-dependencies = ["gymnasium>=1.0.0",
-"hickle>=5.0.3",
-"imageio>=2.37.0",
-"matplotlib>=3.10.1",
-"numpy>=2.2.4",
-"ray>=2.47.1",
-"scipy>=1.15.2",
-"seaborn>=0.13.2",
-"torch>=2.6.0",
+dependencies = [
+    "gymnasium>=1.0.0",
+    "hickle>=5.0.3",
+    "imageio>=2.37.0",
+    "matplotlib>=3.10.1",
+    "numpy>=2.2.4",
+    "plotly>=5.0.0",
+    "ray>=2.47.1",
+    "scipy>=1.15.2",
+    "seaborn>=0.13.2",
+    "torch>=2.6.0",
+    "tqdm>=4.60.0",
 ]
 
 description = "A package for studying influencer games using adaptive dynamics and reinforcement learning"
