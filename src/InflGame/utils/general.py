@@ -176,27 +176,27 @@ def learning_rate(iter: int,
          \eta_t = \eta_{\text{min}} + \frac{1}{2} (\eta_{\text{max}} - \eta_{\text{min}}) 
          \left(1 + \cos\left(\frac{\pi \cdot t}{T}\right)\right)
 
-      where:
-        - :math:`\eta_t` is the learning rate at iteration :math:`t`.
-        - :math:`\eta_{\text{min}}` is the minimum learning rate.
-        - :math:`\eta_{\text{max}}` is the maximum learning rate.
-        - :math:`T` is the total number of iterations.
+      where :math:`\eta_t` is the learning rate at iteration :math:`t`,
+      :math:`\eta_{\text{min}}` is the minimum learning rate,
+      :math:`\eta_{\text{max}}` is the maximum learning rate,
+      and :math:`T` is the total number of iterations.
 
     - **Fixed**:
-      The learning rate remains constant:
+      The learning rate remains constant.
+
       .. math::
          \eta_t = \eta_{\text{fixed}}
 
     - **Trust Region**:
-      The learning rate adapts based on trust region radius:
+      The learning rate adapts based on trust region radius.
+
       .. math::
          \eta_t = \eta_{\text{initial}} \cdot \max\left(\eta_{\text{min\_factor}}, \exp\left(-\frac{t}{\tau}\right)\right)
 
-      where:
-        - :math:`\eta_{\text{initial}}` is the initial learning rate.
-        - :math:`\eta_{\text{min\_factor}}` is the minimum learning rate factor.
-        - :math:`\tau` is the decay time constant.
-        - :math:`t` is the current iteration.
+      where :math:`\eta_{\text{initial}}` is the initial learning rate,
+      :math:`\eta_{\text{min\_factor}}` is the minimum learning rate factor,
+      :math:`\tau` is the decay time constant,
+      and :math:`t` is the current iteration.
 
 
     :param iter: The current iteration.
@@ -869,8 +869,9 @@ def split_favor_bottom(num_agents: int,
     - For `num_agents=8` and `division=3`, the function will recursively split into smaller groups like `[2, 2, 2, 2]`.
 
     **Recursive Logic**:
-    - The function uses recursion to divide the agents into smaller groups. At each step, the bottom group 
-      is determined first, and the remaining agents are split further into smaller groups.
+
+    The function uses recursion to divide the agents into smaller groups. At each step, the bottom group 
+    is determined first, and the remaining agents are split further into smaller groups.
 
     **Edge Cases**:
     - If `division=0`, the function returns a single group containing all agents.
