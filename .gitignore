@@ -10,6 +10,12 @@ src/InflGame/utils/data/
 src/InflGame/utils/plots/
 src/InflGame/utils/paper_plots/
 
+# Ignore paper directory
+paper/
+
+# Ignore demo directory
+demo/
+
 
 # Byte-compiled / 
 optimized / DLL files
