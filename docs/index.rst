@@ -33,11 +33,11 @@ The main focus of this package is to provide a framework to studying the dynamic
    - Q-learning: Independent Q-learning
    - Deep reinforcement learning from [RAYRL](https://docs.ray.io/en/latest/rllib/index.html)
 
-The project is based on the work of Mark Lovett, Feng Fu, and Alex McAvoy at Dartmouth Mathematics. 
+The project is based on the work of Mark Lovett, Feng Fu at Dartmouth Mathematics with insights from Alex McAvoy at UNC . 
     
-- [Paper](https://www.google.com/): Original paper with theoretical results.
+- Original paper with theoretical results will published in early 2026.
 
-An influence game form 
+An influence game's form 
 ---------------------------
 
 The payoff for player :math:`i`  ( :math:`u_i(\mathbf{x})` ) of an influence game over a resource distribution :math:`B=\{B(b)|b\in \mathbb B\}` is the expected return of resources for a player.

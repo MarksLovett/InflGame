@@ -11,10 +11,13 @@ src/InflGame/utils/plots/
 src/InflGame/utils/paper_plots/
 
 # Ignore paper directory
-/paper/
+paper/
 
 # Ignore demo directory
-/demo/
+demo/
+
+# examples
+example_data/
 
 
 # Byte-compiled / 

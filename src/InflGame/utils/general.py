@@ -933,18 +933,18 @@ def _to_tensor(value,
     if value is None:
         raise ValueError(f"{name} cannot be None")
         
-        if isinstance(value, (list, np.ndarray)):
-            tensor = torch.tensor(value, dtype=dtype)
-        elif isinstance(value, torch.Tensor):
-            tensor = value.clone().detach().to(dtype)
-        else:
-            raise TypeError(f"{name} must be a list, np.ndarray, or torch.Tensor, got {type(value)}")
-        
-        if expected_shape is not None:
-            if tensor.shape != expected_shape:
-                raise ValueError(f"{name} must have shape {expected_shape}, got {tensor.shape}")
-        
-        return tensor
+    if isinstance(value, (list, np.ndarray)):
+        tensor = torch.tensor(value, dtype=dtype)
+    elif isinstance(value, torch.Tensor):
+        tensor = value.clone().detach().to(dtype)
+    else:
+        raise TypeError(f"{name} must be a list, np.ndarray, or torch.Tensor, got {type(value)}")
+    
+    if expected_shape is not None:
+        if tensor.shape != expected_shape:
+            raise ValueError(f"{name} must have shape {expected_shape}, got {tensor.shape}")
+    
+    return tensor
 
 
 def get_color_by_index(index: int, color_scheme: str = 'default') -> str:
