@@ -208,7 +208,7 @@ class IQL_sync_no_epochs():
         :func:`InflGame.MARL.utils.IQL_utils.adjusted_temperature`.
 
         where:
-          - :math:`T` is the temperature parameter
+          - :math:`T` is the temperature parameter higher values lead to more smooth probability distributions
           - :math:`a'` is the set of all possible actions
           - :math:`P(a|s)` is the probability of taking action :math:`a` in state :math:`s`
           - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`
@@ -292,6 +292,8 @@ class IQL_sync_no_epochs():
         if save_positions == True:
                 position_array = [MARL_utils.observation_to_position(observations=self.observations.copy(), possible_positions=self.env.possible_positions)]
         
+           
+
         self.episodes = IQL_utils.adjusted_episodes(configs=self.episode_configs, epoch=0, epochs=self.epochs)
         for episode in range(self.episodes):
             self.Q_step(episode)
@@ -307,11 +309,7 @@ class IQL_sync_no_epochs():
         
         
         if save_positions == True:
-            if trials == 1:
-                hkl.dump(position_array, data_management.data_final_name(data_parameters=data_parameters,name_ads=name_ads+["positions"])[0], mode='w', compression='gzip')
-                return self.Q_table
-            else:
-                return self.Q_table, position_array
+            return self.Q_table, position_array
         else:
-            return self.Q_table
+            return self.Q_table, None
 

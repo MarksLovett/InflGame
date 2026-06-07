@@ -1224,12 +1224,12 @@ class search_env:
                 wedgeprops={'linewidth': 1, 'edgecolor': 'white'}
             )
             
-            # Custom label positioning with percentages
-            self._add_custom_pie_labels(ax, wedges, label_names, sizes, font)
+            # Custom label positioning with percentages using fixed positions and colored boxes
+            self._add_custom_pie_labels_fixed(ax, wedges, label_names, sizes, font, pie_colors)
             
             # Fix axis limits to prevent resizing when labels change
-            ax.set_xlim(-1.6, 1.6)
-            ax.set_ylim(-1.6, 1.6)
+            ax.set_xlim(-1.8, 1.8)
+            ax.set_ylim(-1.8, 1.8)
             ax.set_aspect('equal')
             
             ax.set_title(
@@ -1243,14 +1243,24 @@ class search_env:
             ax = axes[plot_idx]
             plot_idx += 1
             
-            if stats['equilibrium_types']:
+            if stats['equilibrium_types'] or stats['cycles'] > 0:
                 # Sort equilibrium types by count (descending) for better readability
                 sorted_items = sorted(stats['equilibrium_types'].items(), 
                                     key=lambda x: x[1], reverse=True)
                 eq_types = [item[0] for item in sorted_items]
                 eq_counts = [item[1] for item in sorted_items]
                 
-                bars = ax.bar(range(len(eq_types)), eq_counts, color=colors['bar_distribution'], alpha=0.7)
+                # Add cycling as an equilibrium type if there are cycling results
+                if stats['cycles'] > 0:
+                    eq_types.append('Cycling')
+                    eq_counts.append(stats['cycles'])
+                
+                # Create colors for bars - use cycling color for the cycling bar
+                bar_colors = [colors['bar_distribution']] * len(sorted_items)
+                if stats['cycles'] > 0:
+                    bar_colors.append(colors['cycling'])
+                
+                bars = ax.bar(range(len(eq_types)), eq_counts, color=bar_colors, alpha=0.7)
                 ax.set_title(
                     text_configs.get('distribution_title', 'Equilibrium Types Distribution'),
                     fontsize=font.get('title_size', 14),
@@ -1356,100 +1366,49 @@ class search_env:
         plt.close()
         return fig, axes
 
-    def _add_custom_pie_labels(self, ax, wedges, labels, sizes, font):
-        """Helper function to add custom positioned labels with connecting lines to pie chart."""
-        label_positions = []
+    def _add_custom_pie_labels_fixed(self, ax, wedges, labels, sizes, font, pie_colors):
+        """
+        Add labels with predetermined fixed positions around the pie chart.
+        Uses colored boxes matching the pie wedge colors instead of connecting lines.
+        
+        Uses 3 fixed positions that are well-separated to avoid any overlap:
+        - Position 0: Left side (for first label - Converged)
+        - Position 1: Upper right (for second label - Cycling)  
+        - Position 2: Bottom center (for third label - No Result)
+        """
         total = sum(sizes)
         
-        # Calculate angular positions for each wedge
-        for wedge, size, label in zip(wedges, sizes, labels):
+        # Predetermined fixed label positions (x, y, horizontal_alignment)
+        # These are positioned at ~120 degree intervals around the pie
+        fixed_positions = [
+            {'x_label': -1.4, 'y_label': 0.0, 'ha': 'right'},   # Left center (Converged)
+            {'x_label': 1.4, 'y_label': 0.8, 'ha': 'left'},     # Upper right (Cycling)
+            {'x_label': 0.0, 'y_label': -1.5, 'ha': 'center'},  # Bottom center (No Result)
+        ]
+        
+        # Draw labels with colored boxes (no connecting lines)
+        for i, (wedge, size, label, color) in enumerate(zip(wedges, sizes, labels, pie_colors)):
             if size == 0:  # Skip zero slices
                 continue
-                
-            # Get the angle at the middle of the wedge
-            angle = (wedge.theta2 + wedge.theta1) / 2.0
             
-            # Calculate position on the pie edge
-            x_pie = np.cos(np.radians(angle))
-            y_pie = np.sin(np.radians(angle))
-            
-            # Calculate initial label position (radial distance from center)
-            label_distance = 1.15
-            x_label = label_distance * x_pie
-            y_label = label_distance * y_pie
-            
-            # Determine horizontal alignment based on position
-            ha = 'left' if x_label > 0 else 'right'
+            # Get fixed label position
+            pos = fixed_positions[i]
+            x_label = pos['x_label']
+            y_label = pos['y_label']
+            ha = pos['ha']
             
             # Calculate percentage
             percentage = (size / total) * 100 if total > 0 else 0
             label_with_pct = f'{label}\n{percentage:.1f}%'
             
-            label_positions.append({
-                'label': label_with_pct,
-                'x_pie': x_pie * 1.0,
-                'y_pie': y_pie * 1.0,
-                'x_label': x_label,
-                'y_label': y_label,
-                'ha': ha,
-                'angle': angle
-            })
-        
-        # Adjust overlapping labels
-        label_positions = self._adjust_label_positions(label_positions)
-        
-        # Draw labels and connecting lines
-        for pos in label_positions:
-            # Draw line from pie edge to label
-            ax.plot([pos['x_pie'], pos['x_label']], 
-                [pos['y_pie'], pos['y_label']], 
-                color='gray', linewidth=0.8, linestyle='-', zorder=0)
-            
-            # Draw label text
-            ax.text(pos['x_label'], pos['y_label'], pos['label'],
-                ha=pos['ha'], va='center', 
-                fontsize=font.get('default_size', 12),
-                fontweight='normal',
-                bbox=dict(boxstyle='round,pad=0.3', facecolor='white', 
-                            edgecolor='gray', alpha=0.8))
-
-    def _adjust_label_positions(self, positions, min_separation=0.15):
-        """Helper function to adjust label positions to avoid overlaps."""
-        if len(positions) <= 1:
-            return positions
-        
-        # Sort by y position
-        positions = sorted(positions, key=lambda p: p['y_label'])
-        
-        # Iteratively adjust overlapping labels
-        max_iterations = 10
-        for _ in range(max_iterations):
-            adjusted = False
-            for i in range(len(positions) - 1):
-                curr = positions[i]
-                next_pos = positions[i + 1]
-                
-                # Check if labels overlap vertically
-                y_diff = abs(next_pos['y_label'] - curr['y_label'])
-                if y_diff < min_separation:
-                    # Push labels apart
-                    adjustment = (min_separation - y_diff) / 2
-                    curr['y_label'] -= adjustment
-                    next_pos['y_label'] += adjustment
-                    adjusted = True
-            
-            if not adjusted:
-                break
-        
-        # Adjust horizontal positions based on which side they're on
-        for pos in positions:
-            # Push labels further out horizontally to reduce crowding
-            if pos['x_label'] > 0:
-                pos['x_label'] = max(pos['x_label'], 1.15)
-            else:
-                pos['x_label'] = min(pos['x_label'], -1.15)
-        
-        return positions
+            # Draw label text with colored box matching pie wedge
+            ax.text(x_label, y_label, label_with_pct,
+                   ha=ha, va='center',
+                   color='white',
+                   fontsize=font.get('default_size', 12),
+                   fontweight='normal',
+                   bbox=dict(boxstyle='round,pad=0.4', facecolor=color,
+                            edgecolor='white', alpha=0.85, linewidth=2))
 
 
         ## outdated- Monte Carlo specific methods for equilibrium classification

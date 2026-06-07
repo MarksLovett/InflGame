@@ -277,7 +277,7 @@ class IQL_sync():
             self.Q_table[agent][previous_observations[agent]][action_dict[agent]] = (1 - self.alpha) * self.Q_table[agent][previous_observations[agent]][action_dict[agent]]+ self.alpha * (self.rewards[agent] + self.gamma * self.Q_table[agent][self.observations[agent]][self.Q_max_action(agent)])
         return self.Q_table
 
-    def train(self,checkpoints=False,save_positions=False,data_parameters=None,name_ads=None):
+    def train(self,checkpoints=False,save_positions=False,data_parameters=None,trials=1,name_ads=None):
         r"""
         Trains the agents using the IQL algorithm over multiple epochs and episodes.
         
@@ -308,12 +308,9 @@ class IQL_sync():
                     data=self.Q_table.copy()
                     q_tables_name=data_management.data_final_name(data_parameters=data_parameters,name_ads=name_ads+["epoch"+str(epoch+1)])[0]
                     hkl.dump(data, q_tables_name, mode='w', compression='gzip')
-            
-            
             self.observation_initialized()
         if save_positions == True:
-                hkl.dump(position_array, data_management.data_final_name(data_parameters=data_parameters,name_ads=name_ads+["positions"])[0], mode='w', compression='gzip')
+            return self.Q_table, position_array
+        else:
+            return self.Q_table, None
 
-        return self.Q_table
-    
-    

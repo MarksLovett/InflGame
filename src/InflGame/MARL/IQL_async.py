@@ -300,4 +300,4 @@ class IQL_async():
             for episode in range(self.episodes):
                 self.Q_step(episode)
             self.observation_initialized()
-        return self.Q_table
+        return self.Q_table, None

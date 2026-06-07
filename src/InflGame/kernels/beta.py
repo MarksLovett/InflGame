@@ -114,11 +114,11 @@ def _influence_vectorized_core(
     # Reshape for broadcasting: agents_pos (N, 1), bin_points (1, K), params (N, 1)
     m = agents_pos.unsqueeze(1)  # (N, 1)
     b = bin_points.unsqueeze(0)  # (1, K)
-    phi = (1.0 / parameter_instance).unsqueeze(1)  # (N, 1) - using 1/parameter_instance
+    sigma = (1.0 / parameter_instance).unsqueeze(1)  # (N, 1) - using 1/parameter_instance
     
     # Compute alpha and beta parameters
-    alpha = m * (phi - 2) + 1  # (N, 1)
-    beta_param = (1 - m) * (phi - 2) + 1  # (N, 1)
+    alpha = m * (sigma - 2) + 1  # (N, 1)
+    beta_param = (1 - m) * (sigma - 2) + 1  # (N, 1)
     
     # Clamp bin_points to avoid log(0) issues
     b_clamped = torch.clamp(b, min=1e-10, max=1-1e-10)
@@ -349,7 +349,7 @@ def equation_sig_star(sig_float,nash,log_std):
     return left - log_std.item()
 
 def sigma_star(num_agents,bin_points,resource_distribution,parameter_instance=None, nash=None):
-    log_average = -torch.sum((torch.log(bin_points) - torch.log(1 - bin_points)) * resource_distribution) / torch.sum(resource_distribution)
+    log_average = torch.sum((torch.log(bin_points) - torch.log(1 - bin_points)) * torch.tensor(resource_distribution)) / torch.sum(torch.tensor(resource_distribution))
     log_squared_average = torch.sum(((torch.log(torch.tensor(bin_points)) - torch.log(1 - torch.tensor(bin_points)))**2 )* torch.tensor(resource_distribution)) / torch.sum(torch.tensor(resource_distribution))
     log_std =(num_agents-2)/(num_agents-1)*(log_squared_average-log_average**2)
     if nash==None:

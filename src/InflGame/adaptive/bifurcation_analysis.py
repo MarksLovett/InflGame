@@ -137,6 +137,118 @@ import InflGame.adaptive.jacobian as jc
 
 
 
+def _compute_single_parameter_worker(parameter_data: Dict) -> Tuple[int, torch.Tensor]:
+    """
+    Module-level worker for parallel parameter sweeps in
+    :meth:`BifurcationEnv.final_pos_over_reach`.
+
+    Keeping this at module level (not as a bound method) means
+    ``ProcessPoolExecutor`` never has to pickle the parent
+    ``BifurcationEnv`` instance, which stores unpicklable
+    ``matplotlib.tri.Triangulation`` objects (``self.triangle``,
+    ``self.trimesh``).  All data previously read from ``self`` is
+    passed in via ``parameter_data``.
+    """
+    try:
+        parameter_id      = parameter_data['parameter_id']
+        reach_param       = parameter_data['reach_param']
+        og_pos            = parameter_data['og_pos']
+        tolerance         = parameter_data['tolerance']
+        tolerated_agents  = parameter_data['tolerated_agents']
+        domain_type       = parameter_data['domain_type']
+        total_params      = parameter_data['total_params']
+        time_steps        = parameter_data['time_steps']
+
+        num_agents            = parameter_data['num_agents']
+        parameters            = parameter_data['parameters']
+        resource_distribution = parameter_data['resource_distribution']
+        bin_points            = parameter_data['bin_points']
+        infl_configs          = parameter_data['infl_configs']
+        learning_rate_type    = parameter_data['learning_rate_type']
+        learning_rate         = parameter_data['learning_rate']
+        fp                    = parameter_data['fp']
+        infl_cshift           = parameter_data['infl_cshift']
+        cshift                = parameter_data['cshift']
+        infl_fshift           = parameter_data['infl_fshift']
+        Q                     = parameter_data['Q']
+        ignore_zero_infl      = parameter_data['ignore_zero_infl']
+        if domain_type == 'simplex':
+            # Reconstruct the Triangulation objects from the picklable r2/corners arrays.
+            # AdaptiveEnv never uses triangle/trimesh in computations, but the validator
+            # checks their type, so we must supply valid objects.
+            r2      = parameter_data['r2']
+            corners = parameter_data['corners']
+            _triangle = tri.Triangulation(corners[:, 0], corners[:, 1])
+            _trimesh  = tri.UniformTriRefiner(_triangle).refine_triangulation(subdiv=4)
+            domain_bounds = (r2, corners, _triangle, _trimesh)
+        else:
+            domain_bounds = parameter_data.get('domain_bounds', None)
+
+        if domain_type == 'simplex':
+            temp_field = grad_func_env.AdaptiveEnv(
+                num_agents=num_agents,
+                agents_pos=og_pos.clone(),
+                parameters=parameters,
+                resource_distribution=resource_distribution,
+                bin_points=bin_points,
+                infl_configs=infl_configs,
+                learning_rate_type=learning_rate_type,
+                learning_rate=learning_rate,
+                time_steps=time_steps,
+                fp=fp,
+                infl_cshift=infl_cshift,
+                cshift=cshift,
+                infl_fshift=infl_fshift,
+                Q=Q,
+                domain_type=domain_type,
+                domain_bounds=domain_bounds,
+                tolerance=tolerance,
+                tolerated_agents=tolerated_agents,
+                ignore_zero_infl=ignore_zero_infl,
+            )
+        else:
+            temp_field = grad_func_env.AdaptiveEnv(
+                num_agents=num_agents,
+                agents_pos=og_pos.clone(),
+                parameters=parameters,
+                resource_distribution=resource_distribution,
+                bin_points=bin_points,
+                infl_configs=infl_configs,
+                learning_rate_type=learning_rate_type,
+                learning_rate=learning_rate,
+                time_steps=time_steps,
+                fp=fp,
+                infl_cshift=infl_cshift,
+                cshift=cshift,
+                infl_fshift=infl_fshift,
+                Q=Q,
+                domain_type=domain_type,
+                domain_bounds=domain_bounds,
+                tolerance=tolerance,
+                tolerated_agents=tolerated_agents,
+                ignore_zero_infl=ignore_zero_infl,
+            )
+
+        if domain_type == '1d':
+            temp_field.learning_rate = [
+                10 ** (-1 * (max(3, 5 * (total_params - parameter_id) / total_params))),
+                1 / 1000,
+                500,
+            ]
+            temp_field.parameters = np.array(reach_param)
+        elif domain_type in ['2d', 'simplex']:
+            temp_field.parameters = torch.tensor(reach_param).clone()
+
+        temp_field.gradient_ascent(show_out=False)
+        final_pos_row = temp_field.pos_matrix[-1].clone()
+        return parameter_id, final_pos_row
+
+    except Exception as e:
+        pid = parameter_data.get('parameter_id', '?')
+        logging.error(f"Error computing parameter {pid}: {str(e)}")
+        raise RuntimeError(f"Failed to compute parameter {pid}: {str(e)}")
+
+
 class BifurcationEnv:
     """
     Bifurcation analysis environment for studying equilibrium dynamics and stability transitions.
@@ -172,7 +284,8 @@ class BifurcationEnv:
                  domain_refinement: int = 10,
                  tolerance: float = 10**-5,
                  tolerated_agents: Optional[int] = None,
-                 ignore_zero_infl: bool = False) -> None:
+                 ignore_zero_infl: bool = False,
+                 device: Optional[Union[str, torch.device]] = None) -> None:
         """
         Initialize the BifurcationEnv with configuration parameters.
 
@@ -239,7 +352,8 @@ class BifurcationEnv:
             domain_type=domain_type,
             domain_bounds=domain_bounds,
             tolerance=tolerance,
-            tolerated_agents=tolerated_agents
+            tolerated_agents=tolerated_agents,
+            device=device
         )
         self.num_agents = validated['num_agents']
         self.agents_pos = validated['agents_pos']
@@ -264,6 +378,7 @@ class BifurcationEnv:
         self.resource_type = resource_type
         self.ignore_zero_infl=ignore_zero_infl
         self.matrix_results_complete=None
+        self.device=device
         # Set up the domain based on the type
         if domain_type == 'simplex':
             self.r2 = domain_bounds[0]
@@ -272,6 +387,49 @@ class BifurcationEnv:
             self.trimesh = domain_bounds[3]
         if domain_type == '2d':
             self.rect_X, self.rect_Y, self.rect_positions = two_utils.two_dimensional_rectangle_setup(domain_bounds, domain_refinement=domain_refinement)
+
+    # ------------------------------------------------------------------
+    # Pickle support — required for ProcessPoolExecutor / multiprocessing
+    # ------------------------------------------------------------------
+    def __getstate__(self) -> Dict:
+        """Return a picklable state dict.
+
+        ``matplotlib.tri.Triangulation`` objects (stored as
+        ``self.triangle`` and ``self.trimesh`` for the simplex domain)
+        cannot be pickled.  Submitting *any* bound method of this class
+        to ``ProcessPoolExecutor`` therefore raises::
+
+            cannot pickle 'matplotlib._tri.Triangulation' object
+
+        This method strips those two attributes and also trims
+        ``self.domain_bounds`` to its picklable prefix ``[r2, corners]``
+        (for the simplex domain its full form is
+        ``[r2, corners, triangle, trimesh]``).
+
+        All remaining attributes — including ``self.corners`` (a plain
+        numpy array stored separately in ``__init__``) — are picklable
+        and fully available to worker processes.
+        """
+        state = self.__dict__.copy()
+        state.pop('triangle', None)
+        state.pop('trimesh', None)
+        if (getattr(self, 'domain_type', None) == 'simplex'
+                and 'domain_bounds' in state
+                and state['domain_bounds'] is not None):
+            try:
+                state['domain_bounds'] = list(state['domain_bounds'])[:2]
+            except (TypeError, IndexError):
+                state['domain_bounds'] = None
+        return state
+
+    def __setstate__(self, state: Dict) -> None:
+        """Restore instance from pickled state.
+
+        Triangulation attributes are intentionally absent after
+        unpickling — they are only needed for plotting, not for
+        gradient-ascent workers.
+        """
+        self.__dict__.update(state)
 
     def setup_adaptive_env(self) -> None:
         """
@@ -392,19 +550,49 @@ class BifurcationEnv:
             if batch_size is None:
                 batch_size = max(1, len(reach_parameters) // max_workers)
             
-            # Prepare parameter data for parallel processing
+            # Prepare parameter data for parallel processing.
+            # All attributes that were previously read from 'self' inside
+            # _compute_single_parameter are embedded here so the module-level
+            # worker never touches 'self' (and thus never requires pickling the
+            # BifurcationEnv instance, which holds unpicklable Triangulation objects).
+            # domain_bounds is excluded for simplex because it contains Triangulations.
+            shared_env_data = {
+                'num_agents':            self.num_agents,
+                'parameters':            self.parameters,
+                'resource_distribution': self.resource_distribution,
+                'bin_points':            self.bin_points,
+                'infl_configs':          self.infl_configs,
+                'learning_rate_type':    self.learning_rate_type,
+                'learning_rate':         self.learning_rate,
+                'fp':                    self.fp,
+                'infl_cshift':           self.infl_cshift,
+                'cshift':                self.cshift,
+                'infl_fshift':           self.infl_fshift,
+                'Q':                     self.Q,
+                'ignore_zero_infl':      self.ignore_zero_infl,
+            }
+            if self.domain_type == 'simplex':
+                # Pass the picklable parts of domain_bounds separately.
+                # The worker will reconstruct the Triangulation objects locally so
+                # that the validator inside AdaptiveEnv is satisfied.
+                shared_env_data['r2']      = self.r2
+                shared_env_data['corners'] = self.corners
+            else:
+                shared_env_data['domain_bounds'] = self.domain_bounds
+
             parameter_data_list = []
             for parameter_id, reach_param in enumerate(reach_parameters):
                 parameter_data = {
-                    'parameter_id': parameter_id,
-                    'reach_param': reach_param,
-                    'og_pos': og_pos,
-                    'tolerance': tolerance,
+                    'parameter_id':    parameter_id,
+                    'reach_param':     reach_param,
+                    'og_pos':          og_pos,
+                    'tolerance':       tolerance,
                     'tolerated_agents': tolerated_agents,
-                    'domain_type': self.domain_type,
-                    'total_params': len(reach_parameters),
-                    'time_steps': time_steps
+                    'domain_type':     self.domain_type,
+                    'total_params':    len(reach_parameters),
+                    'time_steps':      time_steps,
                 }
+                parameter_data.update(shared_env_data)
                 parameter_data_list.append(parameter_data)
             
             # Initialize result storage
@@ -416,9 +604,10 @@ class BifurcationEnv:
                 
                 try:
                     with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                        # Submit all tasks
+                        # Use the module-level worker — not a bound method — so
+                        # BifurcationEnv (with its Triangulation objects) is never pickled.
                         future_to_param = {
-                            executor.submit(self._compute_single_parameter, param_data): param_data['parameter_id']
+                            executor.submit(_compute_single_parameter_worker, param_data): param_data['parameter_id']
                             for param_data in parameter_data_list
                         }
                         
@@ -429,12 +618,19 @@ class BifurcationEnv:
                         for future in as_completed(future_to_param):
                             try:
                                 parameter_id, final_pos_row = future.result()
+                                # Worker returns barycentric coords; convert to Cartesian xy
+                                # to match the sequential path (which calls ba2xy_vectorized).
+                                if self.domain_type == 'simplex':
+                                    final_pos_row = simplex_utils.ba2xy_vectorized(
+                                        barycentric_coords=final_pos_row,
+                                        corners=self.corners,
+                                    )
                                 results[parameter_id] = final_pos_row
                                 completed_count += 1
-                                
+
                                 if completed_count % max(1, len(reach_parameters) // 10) == 0:
                                     logging.info(f"Completed {completed_count}/{len(reach_parameters)} parameters")
-                                    
+
                             except Exception as e:
                                 param_id = future_to_param[future]
                                 logging.error(f"Parameter {param_id} failed: {str(e)}")
@@ -634,7 +830,7 @@ class BifurcationEnv:
             
             # Set parameters based on domain type
             if domain_type in ['1d']:
-                temp_field.learning_rate = [10**(-1*(max(3,5*(total_params-parameter_id)/total_params))), 1/10000, 500]
+                temp_field.learning_rate = [10**(-1*(max(3,5*(total_params-parameter_id)/total_params))), 1/1000, 500]
                 temp_field.parameters = np.array(reach_param)
             elif domain_type in ['2d', 'simplex']:
                 temp_field.parameters = torch.tensor(reach_param).clone()
@@ -891,8 +1087,8 @@ class BifurcationEnv:
                             self.field.parameters = np.array(reach_param)
                         elif  self.domain_type in ['1d']:
                             self.field.learning_rate = [
-                                10**(-1*(max(learning_rate[1], 5*(parameter_id+1)/len(reach_parameters)))), 
-                                learning_rate[0], 
+                                10**(-1*(max(learning_rate[0], 5*(parameter_id+1)/len(reach_parameters)))), 
+                                learning_rate[1], 
                                 500
                             ]
                         elif self.domain_type in ['2d', 'simplex']:
@@ -1062,7 +1258,7 @@ class BifurcationEnv:
             
             # Set parameters based on domain type following project patterns
             if domain_type in ['1d']:
-                temp_field.learning_rate = [10**(-1*(max(3,5*(total_params-parameter_id)/total_params))), 1/10000, 500]
+                temp_field.learning_rate = [10**(-1*(max(3,5*(total_params-parameter_id)/total_params))), 1/1000, 500]
                 temp_field.parameters = np.array(reach_param)
             elif domain_type in ['2d', 'simplex']:
                 temp_field.parameters = torch.tensor(reach_param).clone()
@@ -1565,6 +1761,7 @@ class BifurcationEnv:
             if self.infl_type=='beta':
                 #learning_rates = .1 - (.1 - .0001) * (t ** 2)
                 subtract = .005 + (.01 - .005) * (t ** 2)
+                learning_rates = learning_rate_p['min'] + (learning_rate_p['max'] - learning_rate_p['min']) * (t ** 2)
             else:
                 subtract = [.02] * len(resource_parameters)
                 learning_rates = learning_rate_p['min'] + (learning_rate_p['max'] - learning_rate_p['min']) * (t ** 2)
@@ -1578,14 +1775,12 @@ class BifurcationEnv:
             # Prepare parameter data for parallel processing
             parameter_data_list = []
             for resource_parameter_id, resource_param in enumerate(resource_parameters):
-                if self.infl_type=='beta':
-                    learning_rate_p = [learning_rate_p[0],self.learning_rate_large_end(resource_parameter=alphas[resource_parameter_id],second_run=second_run),learning_rate_p[2]]
                 if self.learning_rate_type=='gradient_magnitude':
-                   lr= [learning_rate_p['min_simulated'],learning_rates[resource_parameter_id],learning_rate_p['period']]
+                    lr= [learning_rate_p['min_simulated'],learning_rates[resource_parameter_id],learning_rate_p['period']]
                 elif self.learning_rate_type=='cosine_annealing':
-                   lr= [learning_rate_p['min_simulated'],learning_rates[resource_parameter_id],learning_rate_p['period']]
+                    lr= [learning_rate_p['min_simulated'],learning_rates[resource_parameter_id],learning_rate_p['period']]
                 else:
-                   lr=[learning_rates[resource_parameter_id],learning_rates[resource_parameter_id],learning_rate_p['period']]
+                    lr=[learning_rates[resource_parameter_id],learning_rates[resource_parameter_id],learning_rate_p['period']]
 
 
                 if second_run:
@@ -1940,19 +2135,18 @@ class BifurcationEnv:
                         # Check stopping condition - instability detected
                         if direct_method or sigma_indicator==1:
                             
-                            
-                            if num_agents==3:
-                                # append list false (0) and true (1)
-                                _stability_mask.append(int(has_positive))
-                            
                             if sigma_indicator==1 and len(torch.unique(final_pos_row))==2:
                                 print('skipping jacobian calculation at sigma star:', sigma_star.item())
                                 _stability_mask.append(1)
                                 break
+                            elif num_agents==3:
+                                # append list false (0) and true (1) for 3-player case
+                                _stability_mask.append(int(has_positive))
                             else:
                                 _stability_mask.append(int(torch.sum(real_parts > 0).item()>1))
-                                if sigma_indicator==1 and torch.sum(real_parts > 0).item()>1:
-                                    break
+                            
+                            if sigma_indicator==1 and torch.sum(real_parts > 0).item()>1:
+                                break
                                  
                         else:    
                             if has_positive:
@@ -2183,7 +2377,10 @@ class BifurcationEnv:
         if self.infl_type == 'beta':
             t = np.linspace(0, 1, len(resource_parameters))
             # reverse learning rate schedule for beta influence
-            learning_rates = learning_rate_p[1] + (learning_rate_p[0] - learning_rate_p[1]) * (-4 * t ** 2 + 4 * t)
+            learning_rates = learning_rate_p['min'] + (learning_rate_p['max'] - learning_rate_p['min']) * (-4 * t ** 2 + 4 * t)
+            # Broadcast scalar guess_distance to list for beta influence type
+            if not hasattr(guess_distance, '__len__') or (torch.is_tensor(guess_distance) and guess_distance.dim() == 0):
+                guess_distance = [guess_distance.item() if torch.is_tensor(guess_distance) else guess_distance] * len(resource_parameters)
         else:
             t = np.linspace(0, 1, len(resource_parameters))  
             learning_rates = learning_rate_p['min'] + (learning_rate_p['max'] - learning_rate_p['min']) * (t ** 2)

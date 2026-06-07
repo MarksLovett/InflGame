@@ -79,7 +79,8 @@ def validate_adaptive_config(num_agents: int,
                             domain_type: str = '1d',
                             domain_bounds: Union[List[float], torch.Tensor] = [0, 1],
                             tolerance: float = 10**-5,
-                            tolerated_agents: Optional[int] = None) -> dict:
+                            tolerated_agents: Optional[int] = None,
+                            device: Optional[Union[str, torch.device]] = None) -> dict:
     """
     Validate the configuration of an adaptive influence model.
     
@@ -116,6 +117,7 @@ def validate_adaptive_config(num_agents: int,
           - ``'gaussian'``: Gaussian influence kernel
           - ``'multi_gaussian'``: Multivariate Gaussian kernel
           - ``'dirichlet'``: Dirichlet kernel for simplex domains
+          - ``'diric_mode'``: Mode-parameterized Dirichlet kernel for simplex domains
           - ``'beta'``: Beta distribution kernel
           - ``'Jones_M'``: Jones mean kernel
           - ``'custom'``: User-defined custom kernel
@@ -174,6 +176,9 @@ def validate_adaptive_config(num_agents: int,
     tolerated_agents : Optional[int], optional
         Number of agents that must meet tolerance before stopping, by default None.
         If None, defaults to ``num_agents``. Must be between 1 and ``num_agents``.
+    device : Optional[Union[str, torch.device]], optional
+        Device to place tensors on, by default None (uses CPU).
+        Can be a string like ``'cuda'`` or ``'cpu'``, or a ``torch.device`` object.
 
     Returns
     -------
@@ -229,27 +234,43 @@ def validate_adaptive_config(num_agents: int,
     validated['num_agents'] = num_agents
     
     # 2. Validate and convert agents_pos (second parameter)
-    agents_pos = _to_tensor(agents_pos, "agents_pos")
+    agents_pos = _to_tensor(agents_pos, "agents_pos", device=device)
     if len(agents_pos) != num_agents:
         raise ValueError(f"agents_pos must be a tensor with {num_agents} elements, got shape {agents_pos.shape}")
     validated['agents_pos'] = agents_pos
     
     # 3. Validate and convert parameters (third parameter)
     if parameters is not None:
-        parameters = _to_tensor(parameters, "parameters")
-        if len(parameters) != num_agents:
-            raise ValueError(f"parameters must be a tensor with {num_agents} elements")
+        parameters = _to_tensor(parameters, "parameters", device=device)
+        _infl_type = infl_configs.get('infl_type')
+        # Blotto uses [sigma, chi] — a fixed-length 2-element parameter vector shared
+        # across all agents, so the num_agents length check is skipped.
+        if _infl_type == 'blotto':
+            if len(parameters) != num_agents:
+                    warnings.warn(f"Blotto kernel expects parameters=[sigma, chi] with exactly 2 elements shared across all agents, got {len(parameters)} elements. Skipping length check for Blotto kernel.", UserWarning)
+            if len(parameters[0]) != 2:
+                raise ValueError(
+                    f"Blotto kernel requires parameters=[sigma, chi] with exactly 2 elements, "
+                    f"got {len(parameters[0])}"
+                    )
+            if float(parameters[0][0]) <= 0:
+                raise ValueError(f"Blotto sigma (parameters[0]) must be positive, got {float(parameters[0][0])}")
+            if float(parameters[0][1]) <= 0:
+                raise ValueError(f"Blotto chi (parameters[1]) must be positive, got {float(parameters[0][1])}")
+        else:
+            if len(parameters) != num_agents:
+                raise ValueError(f"parameters must be a tensor with {num_agents} elements")
         if not torch.all(torch.isfinite(parameters)):
             raise ValueError("parameters must contain finite values (no NaN or Inf)")
-        if torch.any(parameters < 0) and infl_configs.get('infl_type') in ['gaussian', 'multi_gaussian', 'dirichlet']:
+        if torch.any(parameters < 0) and _infl_type in ['gaussian', 'multi_gaussian', 'dirichlet', 'diric_mode']:
             warnings.warn("Parameters with negative values detected, this may result in unpredictable behavior", UserWarning)
         # Beta distribution requires concentration parameter phi > 2 for proper mode parameterization
-        if infl_configs.get('infl_type') == 'beta' and torch.any(parameters < 0):
+        if _infl_type == 'beta' and torch.any(parameters < 0):
             raise ValueError("Beta kernel concentration parameters (phi) must be >0 for mode parameterization")
         validated['parameters'] = parameters
     
     # 4. Validate and convert resource_distribution (fourth parameter)
-    resource_distribution = _to_tensor(resource_distribution, "resource_distribution")
+    resource_distribution = _to_tensor(resource_distribution, "resource_distribution", device=device)
     if not torch.all(torch.isfinite(resource_distribution)):
         raise ValueError("resource_distribution must contain finite values (no NaN or Inf)")
     if torch.any(resource_distribution < 0):
@@ -257,7 +278,7 @@ def validate_adaptive_config(num_agents: int,
     validated['resource_distribution'] = resource_distribution
     
     # 5. Validate and convert bin_points (fifth parameter)
-    bin_points = _to_tensor(bin_points, "bin_points")
+    bin_points = _to_tensor(bin_points, "bin_points", device=device)
     if len(bin_points) == 0:
         raise ValueError("bin_points must be a non-empty tensor")
     if len(resource_distribution) != len(bin_points):
@@ -268,7 +289,7 @@ def validate_adaptive_config(num_agents: int,
     if not isinstance(infl_configs, dict):
         raise TypeError("infl_configs must be a dictionary")
     
-    valid_infl_types = ['gaussian', 'Jones_M', 'dirichlet', 'multi_gaussian', 'beta', 'custom']
+    valid_infl_types = ['gaussian', 'Jones_M', 'dirichlet', 'diric_mode', 'multi_gaussian', 'beta', 'blotto', 'custom']
     infl_type = infl_configs.get('infl_type')
     if infl_type not in valid_infl_types:
         raise ValueError(f"Invalid influence type '{infl_type}'. Supported types are {valid_infl_types}")
@@ -288,7 +309,7 @@ def validate_adaptive_config(num_agents: int,
     validated['learning_rate_type'] = learning_rate_type
     
     # 8. Validate and convert learning_rate (eighth parameter)
-    learning_rate = _to_tensor(learning_rate, "learning_rate")
+    learning_rate = _to_tensor(learning_rate, "learning_rate", device=device)
     if learning_rate.dim() != 1 or (len(learning_rate) != 3 and len(learning_rate) != 1):
         raise ValueError("learning_rate must be a 1D tensor with exactly 3 elements [min_lr, max_lr, decay_steps] or a single float for fixed learning rate")
     if torch.any(learning_rate <= 0):
@@ -319,7 +340,7 @@ def validate_adaptive_config(num_agents: int,
         
     # convert to a tensor
     if infl_cshift:
-        cshift = _to_tensor(cshift, "cshift")
+        cshift = _to_tensor(cshift, "cshift", device=device)
     validated['cshift'] =cshift
     
     # 13. Validate infl_fshift (thirteenth parameter)
@@ -342,14 +363,14 @@ def validate_adaptive_config(num_agents: int,
     
     # 16. Validate and convert domain_bounds (sixteenth parameter)
     if domain_type == '1d':
-        domain_bounds = _to_tensor(domain_bounds, "domain_bounds")
+        domain_bounds = _to_tensor(domain_bounds, "domain_bounds", device=device)
         if domain_bounds.dim() != 1 or len(domain_bounds) != 2:
             raise ValueError("domain_bounds must be a 1D tensor with exactly 2 elements [min, max]")
         if domain_bounds[0] >= domain_bounds[1]:
             raise ValueError(f"domain_bounds must have min < max, got {domain_bounds.tolist()}")
 
     elif domain_type == '2d':
-        domain_bounds = _to_tensor(domain_bounds, "domain_bounds")
+        domain_bounds = _to_tensor(domain_bounds, "domain_bounds", device=device)
         if domain_bounds.dim() != 2 or domain_bounds.shape[0] != 2 or domain_bounds.shape[1] != 2:
             raise ValueError("domain_bounds must be a 2D tensor with [[xmin,xmax],[ymin,ymax]] with shape [2, 2] for 2D rectangular domains")
         
@@ -378,8 +399,24 @@ def validate_adaptive_config(num_agents: int,
     #                     (agents_pos[:, 1] >= domain_bounds[0, 1]) & (agents_pos[:, 1] <= domain_bounds[1, 1])):
     #        raise ValueError(f"agents_pos must be within 2d domain bounds {domain_bounds.tolist()}")
     elif domain_type == "simplex":
-        if not torch.all((agents_pos > 0) & (agents_pos < 1) & torch.all(agents_pos.sum(dim=-1) == torch.ones(num_agents))):
-            raise ValueError(f"agents_pos must be valid simplex coordinates (all values between 0 and 1, sum to 1) for simplex domain, got {agents_pos.tolist()}")
+        if infl_type == 'blotto':
+            # Blotto positions lie on the budget simplex: all > 0, rows sum to chi.
+            # chi is the second column of parameters (per-agent or shared).
+            if parameters.dim() == 2:
+                chi_vals = parameters[:, 1]
+            else:
+                chi_vals = parameters[1].expand(num_agents)
+            row_sums = agents_pos.sum(dim=-1)
+            tol = 1e-4
+            if not (torch.all(agents_pos > 0) and
+                    torch.all(torch.abs(row_sums - chi_vals) < tol * chi_vals.abs().clamp(min=1))):
+                raise ValueError(
+                    f"For blotto domain, agents_pos rows must be positive and each sum to chi "
+                    f"(expected chi per agent: {chi_vals.tolist()}, got row sums: {row_sums.tolist()})"
+                )
+        else:
+            if not torch.all((agents_pos > 0) & (agents_pos < 1) & torch.all(agents_pos.sum(dim=-1) == torch.ones(num_agents))):
+                raise ValueError(f"agents_pos must be valid simplex coordinates (all values between 0 and 1, sum to 1) for simplex domain, got {agents_pos.tolist()}")
 
     # 17. Validate tolerance (seventeenth parameter)
     if not isinstance(tolerance, (int, float)) or tolerance <= 0:
@@ -394,6 +431,8 @@ def validate_adaptive_config(num_agents: int,
         tolerated_agents = num_agents
     validated['tolerated_agents'] = tolerated_agents
     
+    # 19. Store device (nineteenth parameter)
+    validated['device'] = device
 
     return validated
 

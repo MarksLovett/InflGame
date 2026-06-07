@@ -363,7 +363,11 @@ def influence_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
         agents_pos = agents_pos.float()
         bin_points = bin_points.float()
         sigma_inv = sigma_inv.float()
-        
+
+        # Ensure all tensors are on the same device as agents_pos
+        device = agents_pos.device
+        bin_points = bin_points.to(device)
+        sigma_inv = sigma_inv.to(device)
         
         num_agents, agent_dims = agents_pos.shape
         num_bins, bin_dims = bin_points.shape
@@ -462,7 +466,11 @@ def d_ln_f_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
         agents_pos = agents_pos.float()
         bin_points = bin_points.float()
         sigma_inv = sigma_inv.float()
-        
+
+        # Ensure all tensors are on the same device as agents_pos
+        device = agents_pos.device
+        bin_points = bin_points.to(device)
+        sigma_inv = sigma_inv.to(device)
         
         # Use JIT-compiled core for optimal performance
         gradient_tensor = _d_ln_f_vectorized_core(agents_pos, bin_points, sigma_inv)

@@ -55,6 +55,18 @@ import InflGame.utils.general as general
 import torch 
 import numpy as np
 
+def _agent_sort_key(agent_key):
+    """Sort key for agents: 'player0' < 'player1' < ..., or numeric order for int keys."""
+    if isinstance(agent_key, (int, np.integer)):
+        return (0, agent_key)
+    if isinstance(agent_key, str) and agent_key.startswith('player'):
+        try:
+            return (0, int(agent_key[6:]))
+        except (ValueError, IndexError):
+            return (1, str(agent_key))
+    return (1, str(agent_key))
+
+
 def Q_table_to_tensor(Q_table):
     """
     Converts a Q-table (nested dictionary) into a tensor representation.
@@ -66,21 +78,35 @@ def Q_table_to_tensor(Q_table):
         -:math:`Q(s_i, a_j, a_k)` is the Q-value for state :math:`s_i`, actions :math:`a_j` , and :math:`p_i` the :math:`i`-th player.
 
     :param dict Q_table: Nested dictionary representing the Q-table.
+        Expected structure: Q_table[agent][state][action] = value.
+        Agents may be strings (e.g. 'player0') or integers.
     :return: Tensor representation of the Q-table.
     :rtype: torch.Tensor
     """
-    Q_matrix=[]
-    key_int=0
-    for key in Q_table:
-        agent_matrix=[]
-        for key2 in Q_table[key]:
-            action_vec=[]
-            for key3 in Q_table[key][key2]:
-                action_vec.append(Q_table[key][key2][key3])
-            action_row=torch.tensor(action_vec)
-            agent_matrix=general.matrix_builder(row_id=key2,row=action_row,matrix=agent_matrix)
-        Q_matrix=general.matrix_builder(row_id=key_int,row=agent_matrix,matrix=Q_matrix)
-        key_int+=1
+    agent_keys = sorted(Q_table.keys(), key=_agent_sort_key)
+    Q_matrix = []
+    for key_int, key in enumerate(agent_keys):
+        agent_data = Q_table[key]
+        if not isinstance(agent_data, dict):
+            raise TypeError(
+                f"Q_table[{key!r}] must be a dict (state -> {{action -> value}}), "
+                f"got {type(agent_data).__name__}. "
+                "Expected structure: Q_table[agent][state][action] = value."
+            )
+        state_keys = sorted(agent_data.keys(), key=lambda x: (int(x) if isinstance(x, (int, np.integer)) else x))
+        agent_matrix = []
+        for row_id, key2 in enumerate(state_keys):
+            state_data = agent_data[key2]
+            if not isinstance(state_data, dict):
+                raise TypeError(
+                    f"Q_table[{key!r}][{key2!r}] must be a dict (action -> value), "
+                    f"got {type(state_data).__name__}."
+                )
+            action_keys = sorted(state_data.keys(), key=lambda x: (int(x) if isinstance(x, (int, np.integer)) else x))
+            action_vec = [float(state_data[k]) for k in action_keys]
+            action_row = torch.tensor(action_vec)
+            agent_matrix = general.matrix_builder(row_id=row_id, row=action_row, matrix=agent_matrix)
+        Q_matrix = general.matrix_builder(row_id=key_int, row=agent_matrix, matrix=Q_matrix)
     return Q_matrix
 
 def Q_tensor_to_policy(q_tensor: torch.Tensor,

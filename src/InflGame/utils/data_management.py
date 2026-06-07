@@ -386,7 +386,7 @@ def data_directory(data_parameters: Dict[str, str],
         p.mkdir(exist_ok=True)
         return file_name
     else:
-        if data_parameters['data_type'] in ["plots"]:
+        if data_parameters['data_type'] in ["plot", "plots"]:
             file=[cwd,data_parameters['domain_type']]
             file_name='\\'.join([str(x) for x in file ])
             p = Path(file_name)
@@ -526,6 +526,12 @@ def data_name(data_parameters: Dict[str, str],
         data_name='final_positions'
     elif data_type=='final_mad':
         data_name='final_mad'
+    elif data_type=='resource_distribution':
+        data_name='resource_distribution'
+    elif data_type=='agent_trajectories_3d':
+        data_name='agent_trajectories_3d'
+    elif data_type=='agent_density_3d':
+        data_name='agent_density_3d'
     elif data_type=='plot':
         if paper_figure==True:
             agents=str(data_parameters['num_agents'])

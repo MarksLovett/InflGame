@@ -204,31 +204,48 @@ def learning_rate(iter: int,
     :param learning_rate_type: The type of learning rate ('cosine_annealing', 'fixed', or 'trust_region').
     :type learning_rate_type: str
     :param learning_rate: Learning rate parameters. For trust_region: [initial_lr, min_factor, decay_constant]
-    :type learning_rate: list, np.ndarray, or float
+    :type learning_rate: list, np.ndarray, torch.Tensor, or float
     :return: The computed learning rate.
     :rtype: float
     """
+    # Helper function to extract scalar value from tensor or regular value
+    def _get_scalar(val):
+        if torch.is_tensor(val):
+            return val.cpu().item() if val.numel() == 1 else val.cpu().numpy()
+        return val
+    
+    # Extract learning rate values (handles tensors on GPU)
+    if torch.is_tensor(learning_rate):
+        lr_vals = [_get_scalar(learning_rate[i]) for i in range(len(learning_rate))]
+    elif isinstance(learning_rate, (list, np.ndarray)):
+        lr_vals = [_get_scalar(v) for v in learning_rate]
+    else:
+        lr_vals = learning_rate  # scalar case
+    
     if learning_rate_type=='cosine_annealing':
-        lra=learning_rate[0]+1/2*(learning_rate[1]-learning_rate[0])*(1+np.cos(iter/learning_rate[2]*np.pi))
+        min_lr, max_lr, decay_steps = lr_vals[0], lr_vals[1], lr_vals[2]
+        if min_lr > max_lr:
+            raise ValueError(f"For cosine_annealing, learning_rate[0] (min_lr={min_lr}) must be <= learning_rate[1] (max_lr={max_lr})")
+        lra = min_lr + 0.5 * (max_lr - min_lr) * (1 + np.cos(iter / decay_steps * np.pi))
     elif learning_rate_type=='fixed':
-        lra=learning_rate
+        lra = lr_vals if not isinstance(lr_vals, list) else lr_vals[0]
     elif learning_rate_type=='trust_region':
         # Trust region learning rate: [initial_lr, min_factor, decay_constant]
         lra = trust_region_learning_rate(
             iter=iter,
-            initial_lr=learning_rate[0],
-            min_factor=learning_rate[1],
-            decay_constant=learning_rate[2]
+            initial_lr=lr_vals[0],
+            min_factor=lr_vals[1],
+            decay_constant=lr_vals[2]
         )
     elif learning_rate_type=='gradient_magnitude':
         gradient_magnitude = torch.max(torch.abs(gradient)).item()
         if gradient_magnitude == 0:
             lra = 1.0  # Default learning rate when gradient is zero
         else:
-            if iter <= learning_rate[2]:
-                lra = 1.0 / (gradient_magnitude)* learning_rate[0]
+            if iter <= lr_vals[2]:
+                lra = 1.0 / (gradient_magnitude) * lr_vals[0]
             else:
-                lra = learning_rate[1]
+                lra = lr_vals[1]
     return lra
 
 def trust_region_learning_rate(iter: int,
@@ -348,7 +365,7 @@ def agent_parameter_setup(num_agents: int,
 
     :param num_agents: Number of agents.
     :type num_agents: int
-    :param infl_type: Influence type ('gaussian', 'dirichlet', etc.).
+    :param infl_type: Influence type ('gaussian', 'dirichlet', 'diric_mode', 'beta', 'multi_gaussian').
     :type infl_type: str
     :param setup_type: Setup type ('initial_symmetric_setup' or 'parameter_space').
     :type setup_type: str
@@ -364,14 +381,14 @@ def agent_parameter_setup(num_agents: int,
     :rtype: np.ndarray or torch.Tensor
     """
     if setup_type=="initial_symmetric_setup":
-        if infl_type in ["gaussian","dirichlet","beta"]:
+        if infl_type in ["gaussian","dirichlet","diric_mode","beta"]:
             agent_parameters=[reach]*num_agents
             agent_parameters=np.array(agent_parameters)
         elif infl_type=='multi_gaussian':
             agent_parameters=[reach]*num_agents
             agent_parameters=torch.tensor(agent_parameters)
     elif setup_type=='parameter_space':
-        if infl_type in ["gaussian","dirichlet","beta"]:
+        if infl_type in ["gaussian","dirichlet","diric_mode","beta"]:
             start=[reach_start]*num_agents
             end=[reach_end]*num_agents
             agent_parameters=np.linspace(start,end,reach_num_points)
@@ -425,7 +442,8 @@ def agent_position_setup(num_agents: int,
                           domain_bounds: np.ndarray,
                           dimensions: int = None,
                           bound_lower: float = 0.1,
-                          bound_upper: float = 0.9) -> Union[np.ndarray, torch.Tensor]:
+                          bound_upper: float = 0.9,
+                          random_seed: int = None) -> Union[np.ndarray, torch.Tensor]:
     """
     Sets up agent/player positions based on the specified domain and setup type.
     
@@ -443,6 +461,7 @@ def agent_position_setup(num_agents: int,
     
     - ``'initial_symmetric_setup'``: Distributes agents symmetrically
     - ``'paper_default'``: Uses default positions from published work
+    - ``'random'``: Randomly samples positions uniformly from domain bounds
     
     **Example**:
     
@@ -458,10 +477,19 @@ def agent_position_setup(num_agents: int,
             domain_type='1d',
             domain_bounds=np.array([0, 1])
         )
+        
+        # Setup 5 agents randomly in 2D domain
+        positions = agent_position_setup(
+            num_agents=5,
+            setup_type='random',
+            domain_type='2d',
+            domain_bounds=np.array([[0, 5], [0, 5]]),
+            random_seed=42
+        )
     
     :param num_agents: Number of agents.
     :type num_agents: int
-    :param setup_type: Setup type ('initial_symmetric_setup' or 'paper_default').
+    :param setup_type: Setup type ('initial_symmetric_setup', 'paper_default', or 'random').
     :type setup_type: str
     :param domain_type: Domain type ('1d', '2d', or 'simplex').
     :type domain_type: str
@@ -473,17 +501,51 @@ def agent_position_setup(num_agents: int,
     :type bound_lower: float
     :param bound_upper: Upper bound for positions. Defaults to 0.9.
     :type bound_upper: float
+    :param random_seed: Random seed for reproducibility when using 'random' setup. Defaults to None.
+    :type random_seed: int, optional
     :return: Agent/player positions as tensor.
     :rtype: Union[np.ndarray, torch.Tensor]
     """
-    if setup_type=="initial_symmetric_setup":
+    if setup_type == "random":
+        if random_seed is not None:
+            np.random.seed(random_seed)
+            torch.manual_seed(random_seed)
+        
+        if domain_type == "1d":
+            # Random positions along the 1D domain
+            agent_positions = np.random.uniform(
+                domain_bounds[0], domain_bounds[1], size=num_agents
+            )
+            agent_positions = np.around(agent_positions, decimals=4)
+        
+        elif domain_type == "2d":
+            # Random positions in 2D rectangular domain
+            x_positions = np.random.uniform(
+                domain_bounds[0, 0], domain_bounds[0, 1], size=num_agents
+            )
+            y_positions = np.random.uniform(
+                domain_bounds[1, 0], domain_bounds[1, 1], size=num_agents
+            )
+            agent_positions = torch.tensor(
+                np.column_stack([x_positions, y_positions]), dtype=torch.float32
+            )
+        
+        elif domain_type == "simplex":
+            # Random positions on the simplex using Dirichlet distribution (uniform on simplex)
+            # For a d-dimensional simplex, sample from Dirichlet(1, 1, ..., 1)
+            if dimensions is None:
+                raise ValueError("dimensions must be specified for simplex domain type")
+            agent_positions = np.random.dirichlet(np.ones(dimensions), size=num_agents)
+    
+    elif setup_type=="initial_symmetric_setup":
         
         if domain_type=="1d":
             agent_positions=np.linspace(bound_lower,bound_upper,num=num_agents).reshape( (num_agents, ) )
             agent_positions=np.around(agent_positions,decimals=2)
 
-        #simple 2d domains
-        if domain_type=="2d":
+        # Bug fix: was a standalone 'if' (not 'elif'), so it could evaluate independently
+        # of the 1d branch above.  Changed to elif so the chain is correct.
+        elif domain_type=="2d":
             x_edge_values=organize_array(np.linspace(domain_bounds[0,0],domain_bounds[0,1],int(np.ceil(num_agents/4)+1)))
             y_edge_values=organize_array(np.linspace(domain_bounds[1,0],domain_bounds[1,1],int(np.ceil(num_agents/4)+1)))
             pos_list=[]
@@ -501,6 +563,8 @@ def agent_position_setup(num_agents: int,
 
         #unit simplex
         elif domain_type=="simplex":
+            if dimensions is None:
+                raise ValueError("dimensions must be specified for simplex domain type")
             position_element=np.linspace(.1,.9,int(np.ceil(num_agents/dimensions)))
             agent_positions=[]
             agent_id=0
@@ -536,9 +600,9 @@ def agent_position_setup(num_agents: int,
 
 
     if torch.is_tensor(agent_positions):
-        return agent_positions
+        return agent_positions.float()   # ensure float32 regardless of how the tensor was created
     else:
-        return torch.tensor(agent_positions)
+        return torch.tensor(agent_positions, dtype=torch.float32)
 
 def agent_optimal_position_setup(num_agents: int,
                                   agents_pos: np.ndarray,
@@ -911,12 +975,13 @@ def split_favor_bottom(num_agents: int,
 def _to_tensor(value,
                name: str,
                expected_shape: Optional[tuple] = None,
-               dtype=torch.float32) -> torch.Tensor:
+               dtype=torch.float32,
+               device: Optional[Union[str, torch.device]] = None) -> torch.Tensor:
     """
     Helper function to convert inputs to tensors with validation.
     
     This internal utility ensures consistent tensor conversion across the module,
-    with optional shape validation.
+    with optional shape validation and device placement.
     
     :param value: Input value to convert to tensor.
     :type value: Union[list, np.ndarray, torch.Tensor]
@@ -926,17 +991,32 @@ def _to_tensor(value,
     :type expected_shape: Optional[tuple]
     :param dtype: Desired data type of the tensor.
     :type dtype: torch.dtype
-    :return: Converted and validated tensor.
+    :param device: Device to place the tensor on ('cpu', 'cuda', 'cuda:0', etc.). 
+        If None, uses the default device. If a tensor is passed and already on a 
+        different device, it will be moved to the specified device.
+    :type device: Optional[Union[str, torch.device]]
+    :return: Converted and validated tensor on the specified device.
     :rtype: torch.Tensor
     :raises ValueError: If value is None or shape doesn't match expected_shape.
     """
     if value is None:
         raise ValueError(f"{name} cannot be None")
+    
+    # Determine target device
+    if device is not None:
+        target_device = torch.device(device)
+    else:
+        target_device = None
         
     if isinstance(value, (list, np.ndarray)):
         tensor = torch.tensor(value, dtype=dtype)
+        if target_device is not None:
+            tensor = tensor.to(target_device)
     elif isinstance(value, torch.Tensor):
         tensor = value.clone().detach().to(dtype)
+        # Move to target device if specified and tensor is not already there
+        if target_device is not None and tensor.device != target_device:
+            tensor = tensor.to(target_device)
     else:
         raise TypeError(f"{name} must be a list, np.ndarray, or torch.Tensor, got {type(value)}")
     

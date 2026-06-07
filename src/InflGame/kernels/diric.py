@@ -187,7 +187,7 @@ def _gradient_computation_core(
         if dim != fixed_pa:
             # Non-fixed dimension: vectorized computation across all bin points
             log_bins = torch.log(bin_points_tensor[:, dim] + 1e-10)  # Shape: (num_bins,)
-            gradient_matrix[dim] = c_f * (log_bins - psi_alpha[dim] + psi_sum)
+            gradient_matrix[dim] = c_f * (log_bins - psi_alpha[dim])
     
     # Compute fixed dimension as weighted sum of other dimensions
     fixed_gradient = torch.zeros(num_bins, dtype=torch.float32)

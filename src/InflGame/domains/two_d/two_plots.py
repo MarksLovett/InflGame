@@ -19,7 +19,7 @@ can be used to plot agent positions over time and their influence distributions.
 
 """
 
-from typing import Optional
+from typing import Optional, Tuple
 import numpy as np
 import torch
 import colorsys
@@ -79,8 +79,25 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
     mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
     mpl.rcParams['legend.fontsize'] = legend_font_size
 
-    x_coords = bin_points[:, 0].numpy() if torch.is_tensor(bin_points) else bin_points[:, 0]
-    y_coords = bin_points[:, 1].numpy() if torch.is_tensor(bin_points) else bin_points[:, 1]
+    # Convert bin_points to numpy array
+    if torch.is_tensor(bin_points):
+        bin_points = bin_points.cpu().numpy()
+    elif not isinstance(bin_points, np.ndarray):
+        bin_points = np.array(bin_points)
+    if torch.is_tensor(pos_matrix):
+        pos_matrix = pos_matrix.cpu().numpy()
+    elif not isinstance(pos_matrix, np.ndarray):
+        pos_matrix = np.array(pos_matrix)
+    if torch.is_tensor(infl_dist):
+        infl_dist = infl_dist.cpu().numpy()
+    elif not isinstance(infl_dist, np.ndarray):
+        infl_dist = np.array(infl_dist)
+    if torch.is_tensor(resources):
+        resources = resources.cpu().numpy()
+    elif not isinstance(resources, np.ndarray):
+        resources = np.array(resources)
+    x_coords = bin_points[:, 0]
+    y_coords = bin_points[:, 1]
 
     # Generate a distinct, high-contrast color for each agent using HSV spacing.
     # This scales to any number of agents and returns a suggested edge color
@@ -112,7 +129,7 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
     ax0.set_box_aspect(1)
     for a_id in range(num_agents):
         new_coor = pos_matrix[:, a_id]
-        y = new_coor.detach().cpu().numpy()
+        y = new_coor
         fill_color, edge_color = agent_colors[a_id]
         # Ensure agents are drawn above the heatmap by increasing zorder
         ax0.scatter(y[-1, 0], y[-1, 1], s=70, color=fill_color, linewidth=0.3,
@@ -194,7 +211,7 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
         c = a_id % k
         ax1 = fig.add_subplot(right_spec[r, c])
         ax1.set_box_aspect(1)
-        pvals = infl_dist[a_id].numpy()
+        pvals = infl_dist[a_id].cpu().numpy() if torch.is_tensor(infl_dist[a_id]) else infl_dist[a_id]
         grid_w = griddata(points, pvals, (grid_x, grid_y), method='cubic', fill_value=0)
         pcm = ax1.pcolormesh(grid_x, grid_y, grid_w, cmap=cmap2)
         ax1.set_aspect('equal')
@@ -255,10 +272,114 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
     plt.close()
     return fig
 
+
+def pos_plot_2d(num_agents: int,
+                pos_matrix: torch.Tensor,
+                domain_bounds: np.ndarray,
+                title_ads: Optional[list] = [],
+                font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+                axis_return: Optional[bool] = False,
+                line_thickness: float = 2,
+                marker_size: float = 8,
+                black:bool=False,
+                fig_size:Tuple=(18, 18) 
+                ) -> matplotlib.figure.Figure:
+    """
+    Plot agent position trajectories over time in a 2D domain.
+    
+    Creates a plot showing how agent positions change over gradient ascent iterations
+    in a 2D space. Each agent's trajectory is plotted as a separate line with a distinct
+    color. Start positions are marked with open circles and end positions with filled circles.
+
+    :param num_agents: Number of agents in the simulation.
+    :type num_agents: int
+    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents, 2]).
+    :type pos_matrix: torch.Tensor
+    :param domain_bounds: Bounds of the 2D domain as [[x_min, x_max], [y_min, y_max]].
+    :type domain_bounds: np.ndarray
+    :param title_ads: Additional strings to append to the plot title.
+    :type title_ads: Optional[list]
+    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    :type font: dict
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: Optional[bool]
+    :param line_thickness: Thickness of trajectory lines.
+    :type line_thickness: float
+    :param marker_size: Size of start/end markers.
+    :type marker_size: float
+    
+    :return: The generated matplotlib figure or axes object.
+    :rtype: matplotlib.figure.Figure
+    """
+    font['font.family'] = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
+
+    # Convert to numpy if tensor
+    if torch.is_tensor(pos_matrix):
+        pos_matrix = pos_matrix.cpu().numpy()
+    
+    # Convert domain_bounds to numpy if tensor (for GPU compatibility)
+    if torch.is_tensor(domain_bounds):
+        domain_bounds = domain_bounds.cpu().numpy()
+    
+    fig, ax = plt.subplots(figsize=fig_size)
+    ax.set_box_aspect(1)
+    if num_agents>10:
+        black=True
+    # Generate colors for agents
+    if black:
+        #grey for all 
+        colors = ['black']*num_agents
+        alph=.1
+    else:
+        colors = plt.cm.tab10(np.linspace(0, 1, num_agents))
+        alph=1
+    
+    for a_id in range(num_agents):
+        x1 = pos_matrix[:, a_id, 0]  # First coordinate
+        x2 = pos_matrix[:, a_id, 1]  # Second coordinate
+        
+        # Plot trajectory
+        ax.plot(x1, x2, color=colors[a_id], label=f'Agent {a_id + 1}', linewidth=line_thickness,alpha=alph)
+        # Start position (open circle)
+        ax.plot(x1[0], x2[0], 'o', color=colors[a_id],alpha=alph, mfc='none', markersize=marker_size)
+        # End position (filled circle)
+        ax.plot(x1[-1], x2[-1], 'o', color=colors[a_id],alpha=alph, markersize=marker_size)
+    
+    ax.set_xlabel(r'$x_1$', fontsize=default_font_size)
+    ax.set_ylabel(r'$x_2$', fontsize=default_font_size)
+    ax.set_xlim(domain_bounds[0, 0], domain_bounds[0, 1])
+    ax.set_ylim(domain_bounds[1, 0], domain_bounds[1, 1])
+    
+    # Horizontal legend
+    ncols = min(num_agents, 8)
+    if num_agents<=10:
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.08), ncol=ncols, fontsize=legend_font_size)
+    
+    title = "Agent Position Trajectories"
+    if len(title_ads) > 0:
+        for item in title_ads:
+            title += " " + item
+    ax.set_title(title, fontsize=title_font_size)
+    
+    plt.tight_layout()
+    plt.close()
+    
+    if axis_return:
+        return ax
+    else:
+        return fig
+
+
 def dist_plot_2d(agent_id: int,
                  infl_dist: torch.Tensor,
                  rect_Y: np.ndarray,
-                 rect_X: np.ndarray) -> matplotlib.figure.Figure:
+                 rect_X: np.ndarray,
+                 font: dict) -> matplotlib.figure.Figure:
     """
     Plots the influence distribution of a single agent.
 
@@ -273,10 +394,17 @@ def dist_plot_2d(agent_id: int,
     :returns: The generated plot figure.
     :rtype: matplotlib.figure.Figure
     """
+    font['font.family'] = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
     fig, ax = plt.subplots()
-    pval=infl_dist[agent_id].numpy()
-    pval=pval.reshape(len(rect_Y),len(rect_X))
-    im = ax.pcolormesh(rect_X,rect_Y, pval)
+    # Convert to numpy for matplotlib (handle GPU tensors)
+    pval = infl_dist[agent_id].cpu().numpy() if torch.is_tensor(infl_dist[agent_id]) else infl_dist[agent_id]
+    pval = pval.reshape(len(rect_Y), len(rect_X))
+    im = ax.pcolormesh(rect_X, rect_Y, pval)
 
     # Make the plot square
     ax.set_box_aspect(1) 
@@ -344,3 +472,194 @@ def equilibrium_bifurcation_plot_2d_simple(num_agents: int,
 #     Y, X = self.rect_Y,self.rect_X
 #     U,V = self.direction[:,0].reshape((10,10)),self.direction[:,1].reshape((10,10))
 #     strm = ax.streamplot(X, Y, U, V, **kwargs)
+
+
+def agent_density_3d_2d(
+    pos_matrix: np.ndarray,
+    num_agents: int,
+    domain_bounds: np.ndarray,
+    bins: int = 25,
+    distance_threshold: float = 0.05,
+    cmap: str = 'viridis',
+    font: dict = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
+    figsize: Tuple = (24, 20),
+    xlabel: str = r'$x_1$',
+    ylabel: str = r'$x_2$',
+    zlabel: str = 'Number of Agents',
+    axis_return: bool = False,
+    edgecolor: str = 'black',
+    linewidth: float = 0.2,
+    alpha: float = 0.9,
+    title_ads: list = [],
+    save: bool = False,
+    name_ads: list = [],
+    save_types: list = ['.png', '.svg'],
+    paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'agent_density_3d'},
+    id: int = 0,
+    cap_z_axis: bool = True,
+    integer_ticks: bool = True
+) -> matplotlib.figure.Figure:
+    """
+    Create a 3D histogram showing agent density at final positions for 2D rectangular domain.
+    
+    :param pos_matrix: Position matrix of shape (time_steps, num_agents, 2).
+    :type pos_matrix: np.ndarray or torch.Tensor
+    :param num_agents: Number of agents.
+    :type num_agents: int
+    :param domain_bounds: Domain bounds of shape (2, 2) as [[x_min, x_max], [y_min, y_max]].
+    :type domain_bounds: np.ndarray
+    :param bins: Number of bins in each dimension.
+    :type bins: int
+    :param distance_threshold: Distance threshold for clustering nearby agents.
+    :type distance_threshold: float
+    :param cmap: Colormap name.
+    :type cmap: str
+    :param font: Font configuration dictionary.
+    :type font: dict
+    :param figsize: Figure size as (width, height).
+    :type figsize: tuple
+    :param xlabel: Label for x-axis.
+    :type xlabel: str
+    :param ylabel: Label for y-axis.
+    :type ylabel: str
+    :param zlabel: Label for z-axis.
+    :type zlabel: str
+    :param axis_return: If True, return axes object; if False, return figure object.
+    :type axis_return: bool
+    :param edgecolor: Color of outlines around bars.
+    :type edgecolor: str
+    :param linewidth: Width of bar edge lines.
+    :type linewidth: float
+    :param alpha: Bar transparency.
+    :type alpha: float
+    :param title_ads: Additional titles for the plot.
+    :type title_ads: list
+    :param save: Whether to save the plot.
+    :type save: bool
+    :param name_ads: Additional names for saved files.
+    :type name_ads: list
+    :param save_types: File types to save the plot.
+    :type save_types: list
+    :param paper_figure: Dictionary for paper figure naming.
+    :type paper_figure: dict
+    :param id: Identifier for file naming.
+    :type id: int
+    :param cap_z_axis: If True, cap the z-axis maximum at num_agents.
+    :type cap_z_axis: bool
+    :param integer_ticks: If True, only show integer ticks on the z-axis.
+    :type integer_ticks: bool
+    :return: The generated plot figure.
+    :rtype: matplotlib.figure.Figure
+    """
+    from matplotlib.colors import Normalize
+    from matplotlib.ticker import MaxNLocator
+    from scipy.cluster.hierarchy import linkage, fcluster
+    from scipy.spatial.distance import pdist
+    from InflGame.utils import data_management
+    
+    title = f'Agent Density'
+    if title_ads:
+        title = title + ' - ' + ' - '.join(title_ads)
+    
+    if torch.is_tensor(pos_matrix):
+        pos_matrix = pos_matrix.cpu().numpy()
+    
+    if torch.is_tensor(domain_bounds):
+        domain_bounds = domain_bounds.cpu().numpy()
+
+    if pos_matrix.ndim == 3:
+        final_positions = pos_matrix[-1, :, :]
+    else:
+        final_positions = pos_matrix
+
+    # Cluster nearby agents
+    if len(final_positions) > 1:
+        distances = pdist(final_positions)
+        if len(distances) > 0:
+            Z = linkage(distances, method='complete')
+            clusters = fcluster(Z, t=distance_threshold, criterion='distance')
+            
+            unique_clusters = np.unique(clusters)
+            centers = []
+            counts = []
+            
+            for c in unique_clusters:
+                mask = clusters == c
+                cluster_positions = final_positions[mask]
+                centers.append(cluster_positions.mean(axis=0))
+                counts.append(mask.sum())
+            
+            cluster_centers = np.array(centers)
+            cluster_counts = np.array(counts)
+        else:
+            cluster_centers = final_positions
+            cluster_counts = np.ones(len(final_positions))
+    else:
+        cluster_centers = final_positions
+        cluster_counts = np.ones(len(final_positions))
+
+    x1_final = cluster_centers[:, 0]
+    x2_final = cluster_centers[:, 1]
+
+    h, xedges, yedges = np.histogram2d(
+        x1_final, x2_final,
+        bins=bins,
+        range=[[domain_bounds[0, 0], domain_bounds[0, 1]],
+               [domain_bounds[1, 0], domain_bounds[1, 1]]],
+        weights=cluster_counts
+    )
+
+    xcenters = (xedges[:-1] + xedges[1:]) / 2
+    ycenters = (yedges[:-1] + yedges[1:]) / 2
+    xpos, ypos = np.meshgrid(xcenters, ycenters, indexing='ij')
+    xpos = xpos.ravel()
+    ypos = ypos.ravel()
+    zpos = np.zeros_like(xpos)
+    dx = (xedges[1] - xedges[0]) * np.ones_like(xpos)
+    dy = (yedges[1] - yedges[0]) * np.ones_like(ypos)
+    dz = h.ravel()
+
+    nonzero = dz > 0
+    xpos, ypos, zpos = xpos[nonzero], ypos[nonzero], zpos[nonzero]
+    dx, dy, dz = dx[nonzero], dy[nonzero], dz[nonzero]
+
+    font_family = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font_family})
+
+    fig = plt.figure(figsize=figsize)
+    ax = fig.add_subplot(1, 1, 1, projection='3d')
+
+    norm = Normalize(vmin=dz.min() if dz.size else 0, vmax=dz.max() if dz.size else 1)
+    colors_arr = plt.get_cmap(cmap)(norm(dz))
+
+    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors_arr, edgecolor=edgecolor, linewidth=linewidth, alpha=alpha, shade=True)
+
+    ax.set_xlabel(xlabel, labelpad=15)
+    ax.set_xlim(domain_bounds[0, 0], domain_bounds[0, 1])
+    ax.set_ylim(domain_bounds[1, 0], domain_bounds[1, 1])
+    ax.set_ylabel(ylabel, labelpad=15)
+    ax.set_zlabel(zlabel, labelpad=15)
+    
+    if cap_z_axis:
+        ax.set_zlim(0, num_agents)
+    if integer_ticks:
+        ax.zaxis.set_major_locator(MaxNLocator(integer=True))
+    
+    ax.set_title(title, fontsize=title_font_size)
+
+    if save:
+        file_names = data_management.data_final_name(
+            {'data_type': 'plot', 'plot_type': 'agent_density_3d', 'section': paper_figure['section'], 
+             'figure_id': paper_figure.get('figure_id', 'agent_density_3d'), "num_agents": num_agents, 'domain_type': '2d'},
+            name_ads=name_ads + [f'id_{id}'] if id else name_ads,
+            save_types=save_types,
+            paper_figure=paper_figure['paper']
+        )
+        for file_name in file_names:
+            if file_name.lower().endswith('.svg'):
+                plt.rcParams['svg.fonttype'] = 'none'
+            fig.savefig(file_name, dpi=600 if file_name.lower().endswith('.svg') else 300, bbox_inches='tight')
+    
+    return ax if axis_return else fig

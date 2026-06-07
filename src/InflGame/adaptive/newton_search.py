@@ -553,7 +553,7 @@ class newton_method:
         self.field.agents_pos = original_pos
         return current_pos - 0.001 * (newton_direction / torch.norm(newton_direction))
 
-    def grid_search_newton_4player_xyz(self,
+    def grid_search_newton_hyperplane_xyz(self,
                                       grid_points_per_dim=5,
                                       bounds=(0, 1),
                                       max_workers=None,

@@ -65,7 +65,9 @@ def side_by_side_plots(ax1: plt.Axes,
                        title_ads: list = [],
                        cbar_params: dict = {'common_cbar': False, 'cbar_title': ''},
                        axis_params: dict = {'common_axis': False, 'axis_ylabel': '', 'axis_xlabel': ''},
-                       font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'}):
+                       font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+                       legend_params: dict = {'external_legend': False, 'legend_title': ''},
+                       limits_params: dict = {'xlim_left': None, 'xlim_right': None, 'ylim': None}):
     """
     Create a side-by-side comparison figure from two existing plot axes.
     
@@ -106,12 +108,21 @@ def side_by_side_plots(ax1: plt.Axes,
     font : dict, optional
         Font configuration dictionary, by default ``{'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'}``.
         
-        - ``'default_size'`` (int): Default font size for general text
+        - ``'default_size'`` (int): Default font size for general text and tick labels
         - ``'cbar_size'`` (int): Font size for colorbar tick labels
-        - ``'title_size'`` (int): Font size for figure title
+        - ``'title_size'`` (int): Font size for figure suptitle
+        - ``'subtitle_size'`` (int): Font size for subplot titles (falls back to ``title_size``)
         - ``'legend_size'`` (int): Font size for legend text
-        - ``'axis_size'`` (int): Font size for axis labels
+        - ``'axis_size'`` (int): Font size for axis labels (also accepts ``'label_size'``)
         - ``'font_family'`` (str): Font family (e.g., 'sans-serif', 'serif')
+    limits_params : dict, optional
+        Axis limits and tick configuration, by default ``{'xlim_left': None, 'xlim_right': None, 'ylim': None}``.
+        
+        - ``'xlim_left'`` (list): [min, max] x-axis limits for left subplot
+        - ``'xlim_right'`` (list): [min, max] x-axis limits for right subplot
+        - ``'ylim'`` (list): [min, max] y-axis limits for both subplots
+        - ``'tick_count_left'`` (int): Maximum number of ticks on each axis of the left subplot (>= 2)
+        - ``'tick_count_right'`` (int): Maximum number of ticks on each axis of the right subplot (>= 2)
 
     Returns
     -------
@@ -149,10 +160,11 @@ def side_by_side_plots(ax1: plt.Axes,
     """
     # Set font properties
     font['font.family'] = font.get('font_family', 'sans-serif')
-    axis_size = font.get('axis_size', 15)
+    axis_size = font.get('axis_size', font.get('label_size', 15))
     cbar_font_size = font.get('cbar_size', 12)
     default_font_size = font.get('default_size', 12)
     title_font_size = font.get('title_size', 25)
+    subtitle_font_size = font.get('subtitle_size', title_font_size)
     legend_font_size = font.get('legend_size', 12)
     mpl.rcParams.update({'font.size': default_font_size, 'font.family': font['font.family']})
     mpl.rcParams['legend.fontsize'] = legend_font_size
@@ -163,10 +175,28 @@ def side_by_side_plots(ax1: plt.Axes,
     common_axis = axis_params.get('common_axis', False)
     axis_ylabel = axis_params.get('axis_ylabel', '')
     axis_xlabel = axis_params.get('axis_xlabel', '')
+    show_legend = legend_params.get('show_legend', True)
+    external_legend = legend_params.get('external_legend', False)
+    legend_title = legend_params.get('legend_title', '')
+    xlim_left = limits_params.get('xlim_left', [0.03, 0.3])
+    xlim_right = limits_params.get('xlim_right',[0.03, 0.3])
+    ylim = limits_params.get('ylim', None)
+    tick_count_left = limits_params.get('tick_count_left', None)
+    tick_count_right = limits_params.get('tick_count_right', None)
+    if tick_count_left is not None:
+        tick_count_left = max(2, int(tick_count_left))
+    if tick_count_right is not None:
+        tick_count_right = max(2, int(tick_count_right))
 
-    
-    
-    fig = plt.figure(figsize=(16, 8))
+    # Use GridSpec for better control when external legend is needed
+    from matplotlib.gridspec import GridSpec
+    if show_legend and external_legend:
+        # Create figure with GridSpec: 2 plot columns + 1 legend column (wider legend space)
+        fig = plt.figure(figsize=(40, 16))
+        gs = GridSpec(1, 3, figure=fig, width_ratios=[1, 1, 0.25], wspace=0.5)
+    else:
+        fig = plt.figure(figsize=(25, 13))
+        gs = None
     
     # Variables to store image mappables for common colorbar
     left_images = []
@@ -174,7 +204,10 @@ def side_by_side_plots(ax1: plt.Axes,
     
     # Check if ax1 is 3D
     if hasattr(ax1, 'zaxis'):
-        ax_left = fig.add_subplot(121, projection='3d')
+        if gs is not None:
+            ax_left = fig.add_subplot(gs[0], projection='3d')
+        else:
+            ax_left = fig.add_subplot(121, projection='3d')
         # Copy 3D data from ax1
         for line in ax1.get_lines():
             if hasattr(line, '_verts3d'):
@@ -193,18 +226,23 @@ def side_by_side_plots(ax1: plt.Axes,
         ax_left.set_ylabel(ax1.get_ylabel(), fontsize=axis_size)
         ax_left.set_zlabel(ax1.get_zlabel(), fontsize=axis_size)
         # Copy 3D axis limits
-        ax_left.set_xlim(ax1.get_xlim())
-        ax_left.set_ylim(ax1.get_ylim())
+        ax_left.set_xlim(xlim_left if xlim_left is not None else ax1.get_xlim())
+        ax_left.set_ylim(ylim if ylim is not None else ax1.get_ylim())
         ax_left.set_zlim(ax1.get_zlim())
-        # Copy 3D tick labels
-        ax_left.set_xticks(ax1.get_xticks())
-        ax_left.set_xticklabels(ax1.get_xticklabels())
-        ax_left.set_yticks(ax1.get_yticks())
-        ax_left.set_yticklabels(ax1.get_yticklabels())
+        # Only copy tick labels if no custom limits provided (otherwise let matplotlib auto-generate)
+        if xlim_left is None:
+            ax_left.set_xticks(ax1.get_xticks())
+            ax_left.set_xticklabels(ax1.get_xticklabels())
+        if ylim is None:
+            ax_left.set_yticks(ax1.get_yticks())
+            ax_left.set_yticklabels(ax1.get_yticklabels())
         ax_left.set_zticks(ax1.get_zticks())
         ax_left.set_zticklabels(ax1.get_zticklabels())
     else:
-        ax_left = fig.add_subplot(121)
+        if gs is not None:
+            ax_left = fig.add_subplot(gs[0])
+        else:
+            ax_left = fig.add_subplot(121)
         # Copy 2D data from ax1
         for line in ax1.get_lines():
             ax_left.plot(line.get_xdata(), line.get_ydata(), 
@@ -229,8 +267,22 @@ def side_by_side_plots(ax1: plt.Axes,
             colors = cmap(np.linspace(0, 1, n_levels))
             discrete_cmap = ListedColormap(colors)
             
-            im_left = ax_left.imshow(array, extent=extent, cmap=discrete_cmap, norm=norm,
-                                   alpha=alpha, aspect=ax1.get_aspect(), origin='lower')
+            # Use pcolormesh instead of imshow so heatmap data is vector (not raster) in SVG
+            _arr = np.array(array)
+            if _arr.ndim > 2:
+                _arr = _arr[:, :, 0]  # take first channel if RGB/A
+            # Downsample to cap SVG cell count (nearest-neighbour, preserves discrete values)
+            _max_cells = 60
+            rows, cols = _arr.shape
+            row_step = max(1, rows // _max_cells)
+            col_step = max(1, cols // _max_cells)
+            _arr = _arr[::row_step, ::col_step]
+            rows, cols = _arr.shape
+            x_mesh = np.linspace(extent[0], extent[1], cols + 1)
+            y_mesh = np.linspace(extent[2], extent[3], rows + 1)
+            X_mesh, Y_mesh = np.meshgrid(x_mesh, y_mesh)
+            im_left = ax_left.pcolormesh(X_mesh, Y_mesh, _arr, cmap=discrete_cmap, norm=norm,
+                                         alpha=alpha)
             left_images.append(im_left)
             
             # Add individual colorbar only if not using common colorbar
@@ -259,26 +311,43 @@ def side_by_side_plots(ax1: plt.Axes,
                     pass
         
         # Copy collections (scatter plots, contour fills, etc.)
+        from matplotlib.collections import PathCollection as _PathCollection
         for collection in ax1.collections:
-            if hasattr(collection, 'get_array') and collection.get_array() is not None:
-                # This handles contour fills, scatter plots with color mapping, etc.
-                if hasattr(collection, '_paths'):  # ContourSet or similar
-                    # For contour plots, we need to recreate them
-                    # This is complex, so we'll copy the collection directly for now
+            if isinstance(collection, _PathCollection):
+                # Scatter plot — reconstruct with ax.scatter so SVG stays compact
+                offsets = collection.get_offsets()
+                c_array = collection.get_array()
+                sizes = collection.get_sizes()
+                _s = sizes[0] if len(sizes) == 1 else (sizes if len(sizes) > 1 else 10)
+                alpha = collection.get_alpha()
+                if c_array is not None and len(c_array) > 0:
+                    sc = ax_left.scatter(offsets[:, 0], offsets[:, 1], c=np.asarray(c_array),
+                                         cmap=collection.get_cmap(), norm=collection.norm,
+                                         s=_s, alpha=alpha, linewidths=0, rasterized=False)
+                    left_images.append(sc)
+                elif len(offsets) > 0:
+                    fc = collection.get_facecolors()
+                    ax_left.scatter(offsets[:, 0], offsets[:, 1],
+                                    color=fc[:len(offsets)] if len(fc) >= len(offsets) else fc,
+                                    s=_s, alpha=alpha, linewidths=0, rasterized=False)
+            elif hasattr(collection, 'get_array') and collection.get_array() is not None:
+                try:
                     ax_left.add_collection(type(collection)(collection._paths, **collection._get_patch_kwargs()))
-                else:
+                except Exception:
                     ax_left.add_collection(collection)
-        
+
         ax_left.set_xlabel(ax1.get_xlabel(), fontsize=axis_size)
         ax_left.set_ylabel(ax1.get_ylabel(), fontsize=axis_size)
-        # Copy 2D axis limits
-        ax_left.set_xlim(ax1.get_xlim())
-        ax_left.set_ylim(ax1.get_ylim())
-        # Copy tick labels and positions
-        ax_left.set_xticks(ax1.get_xticks())
-        ax_left.set_xticklabels(ax1.get_xticklabels())
-        ax_left.set_yticks(ax1.get_yticks())
-        ax_left.set_yticklabels(ax1.get_yticklabels())
+        # Copy 2D axis limits (use provided limits if available)
+        ax_left.set_xlim(xlim_left if xlim_left is not None else ax1.get_xlim())
+        ax_left.set_ylim(ylim if ylim is not None else ax1.get_ylim())
+        # Only copy tick labels if no custom limits provided (otherwise let matplotlib auto-generate)
+        if xlim_left is None:
+            ax_left.set_xticks(ax1.get_xticks())
+            ax_left.set_xticklabels(ax1.get_xticklabels())
+        if ylim is None:
+            ax_left.set_yticks(ax1.get_yticks())
+            ax_left.set_yticklabels(ax1.get_yticklabels())
         if ax1.get_aspect() != 'auto':
             ax_left.set_aspect(ax1.get_aspect())
         
@@ -291,7 +360,10 @@ def side_by_side_plots(ax1: plt.Axes,
 
     # Check if ax2 is 3D
     if hasattr(ax2, 'zaxis'):
-        ax_right = fig.add_subplot(122, projection='3d')
+        if gs is not None:
+            ax_right = fig.add_subplot(gs[1], projection='3d')
+        else:
+            ax_right = fig.add_subplot(122, projection='3d')
         # Copy 3D data from ax2
         for line in ax2.get_lines():
             if hasattr(line, '_verts3d'):
@@ -309,19 +381,24 @@ def side_by_side_plots(ax1: plt.Axes,
         ax_right.set_xlabel(ax2.get_xlabel(), fontsize=axis_size)
         ax_right.set_ylabel(ax2.get_ylabel(), fontsize=axis_size)
         ax_right.set_zlabel(ax2.get_zlabel(), fontsize=axis_size)
-        # Copy 3D axis limits
-        ax_right.set_xlim(ax2.get_xlim())
-        ax_right.set_ylim(ax2.get_ylim())
+        # Copy 3D axis limits (use provided limits if available)
+        ax_right.set_xlim(xlim_right if xlim_right is not None else ax2.get_xlim())
+        ax_right.set_ylim(ylim if ylim is not None else ax2.get_ylim())
         ax_right.set_zlim(ax2.get_zlim())
-        # Copy 3D tick labels
-        ax_right.set_xticks(ax2.get_xticks())
-        ax_right.set_xticklabels(ax2.get_xticklabels())
-        ax_right.set_yticks(ax2.get_yticks())
-        ax_right.set_yticklabels(ax2.get_yticklabels())
+        # Only copy tick labels if no custom limits provided (otherwise let matplotlib auto-generate)
+        if xlim_right is None:
+            ax_right.set_xticks(ax2.get_xticks())
+            ax_right.set_xticklabels(ax2.get_xticklabels())
+        if ylim is None:
+            ax_right.set_yticks(ax2.get_yticks())
+            ax_right.set_yticklabels(ax2.get_yticklabels())
         ax_right.set_zticks(ax2.get_zticks())
         ax_right.set_zticklabels(ax2.get_zticklabels())
     else:
-        ax_right = fig.add_subplot(122)
+        if gs is not None:
+            ax_right = fig.add_subplot(gs[1])
+        else:
+            ax_right = fig.add_subplot(122)
         # Copy 2D data from ax2
         for line in ax2.get_lines():
             ax_right.plot(line.get_xdata(), line.get_ydata(), 
@@ -346,8 +423,22 @@ def side_by_side_plots(ax1: plt.Axes,
             colors = cmap(np.linspace(0, 1, n_levels))
             discrete_cmap = ListedColormap(colors)
             
-            im_right = ax_right.imshow(array, extent=extent, cmap=discrete_cmap, norm=norm,
-                                     alpha=alpha, aspect=ax2.get_aspect(), origin='lower')
+            # Use pcolormesh instead of imshow so heatmap data is vector (not raster) in SVG
+            _arr = np.array(array)
+            if _arr.ndim > 2:
+                _arr = _arr[:, :, 0]  # take first channel if RGB/A
+            # Downsample to cap SVG cell count (nearest-neighbour, preserves discrete values)
+            _max_cells = 60
+            rows, cols = _arr.shape
+            row_step = max(1, rows // _max_cells)
+            col_step = max(1, cols // _max_cells)
+            _arr = _arr[::row_step, ::col_step]
+            rows, cols = _arr.shape
+            x_mesh = np.linspace(extent[0], extent[1], cols + 1)
+            y_mesh = np.linspace(extent[2], extent[3], rows + 1)
+            X_mesh, Y_mesh = np.meshgrid(x_mesh, y_mesh)
+            im_right = ax_right.pcolormesh(X_mesh, Y_mesh, _arr, cmap=discrete_cmap, norm=norm,
+                                           alpha=alpha)
             right_images.append(im_right)
             
             # Add individual colorbar only if not using common colorbar
@@ -376,26 +467,43 @@ def side_by_side_plots(ax1: plt.Axes,
                     pass
         
         # Copy collections (scatter plots, contour fills, etc.)
+        from matplotlib.collections import PathCollection as _PathCollection
         for collection in ax2.collections:
-            if hasattr(collection, 'get_array') and collection.get_array() is not None:
-                # This handles contour fills, scatter plots with color mapping, etc.
-                if hasattr(collection, '_paths'):  # ContourSet or similar
-                    # For contour plots, we need to recreate them
-                    # This is complex, so we'll copy the collection directly for now
+            if isinstance(collection, _PathCollection):
+                # Scatter plot — reconstruct with ax.scatter so SVG stays compact
+                offsets = collection.get_offsets()
+                c_array = collection.get_array()
+                sizes = collection.get_sizes()
+                _s = sizes[0] if len(sizes) == 1 else (sizes if len(sizes) > 1 else 10)
+                alpha = collection.get_alpha()
+                if c_array is not None and len(c_array) > 0:
+                    sc = ax_right.scatter(offsets[:, 0], offsets[:, 1], c=np.asarray(c_array),
+                                          cmap=collection.get_cmap(), norm=collection.norm,
+                                          s=_s, alpha=alpha, linewidths=0, rasterized=False)
+                    right_images.append(sc)
+                elif len(offsets) > 0:
+                    fc = collection.get_facecolors()
+                    ax_right.scatter(offsets[:, 0], offsets[:, 1],
+                                     color=fc[:len(offsets)] if len(fc) >= len(offsets) else fc,
+                                     s=_s, alpha=alpha, linewidths=0, rasterized=False)
+            elif hasattr(collection, 'get_array') and collection.get_array() is not None:
+                try:
                     ax_right.add_collection(type(collection)(collection._paths, **collection._get_patch_kwargs()))
-                else:
+                except Exception:
                     ax_right.add_collection(collection)
-        
+
         ax_right.set_xlabel(ax2.get_xlabel(), fontsize=axis_size)
         ax_right.set_ylabel(ax2.get_ylabel(), fontsize=axis_size)
-        # Copy 2D axis limits
-        ax_right.set_xlim(ax2.get_xlim())
-        ax_right.set_ylim(ax2.get_ylim())
-        # Copy tick labels and positions
-        ax_right.set_xticks(ax2.get_xticks())
-        ax_right.set_xticklabels(ax2.get_xticklabels())
-        ax_right.set_yticks(ax2.get_yticks())
-        ax_right.set_yticklabels(ax2.get_yticklabels())
+        # Copy 2D axis limits (use provided limits if available)
+        ax_right.set_xlim(xlim_right if xlim_right is not None else ax2.get_xlim())
+        ax_right.set_ylim(ylim if ylim is not None else ax2.get_ylim())
+        # Only copy tick labels if no custom limits provided (otherwise let matplotlib auto-generate)
+        if xlim_right is None:
+            ax_right.set_xticks(ax2.get_xticks())
+            ax_right.set_xticklabels(ax2.get_xticklabels())
+        if ylim is None:
+            ax_right.set_yticks(ax2.get_yticks())
+            ax_right.set_yticklabels(ax2.get_yticklabels())
         if ax2.get_aspect() != 'auto':
             ax_right.set_aspect(ax2.get_aspect())
         
@@ -407,29 +515,65 @@ def side_by_side_plots(ax1: plt.Axes,
                 ax_right.set_ylabel('')  # Remove y-label from right plot when using common labels
     
     # Copy titles
-    ax_left.set_title(ax1.get_title())
-    ax_right.set_title(ax2.get_title())
+    ax_left.set_title(ax1.get_title(), fontsize=subtitle_font_size)
+    ax_right.set_title(ax2.get_title(), fontsize=subtitle_font_size)
     
-    # Add legends if there are labeled lines
-    if any(line.get_label() and not line.get_label().startswith('_') for line in ax1.get_lines()):
-        # Get original legend location if it exists
-        original_legend = ax1.get_legend()
-        if original_legend:
-            # Get the location from the original legend
-            loc = original_legend._loc
-            ax_left.legend(loc='lower center')
-        else:
-            ax_left.legend()
+    # Handle legends - collect all labeled lines for potential external legend
+    all_lines = []
+    all_labels = []
     
-    if any(line.get_label() and not line.get_label().startswith('_') for line in ax2.get_lines()):
-        # Get original legend location if it exists
-        original_legend = ax2.get_legend()
-        if original_legend:
-            # Get the location from the original legend
-            loc = original_legend._loc
-            ax_right.legend(loc='lower center')
+    # Collect lines from ax1/ax_left
+    for line in ax_left.get_lines():
+        label = line.get_label()
+        if label and not label.startswith('_'):
+            all_lines.append(line)
+            all_labels.append(label)
+    
+    # Add legends based on external_legend setting (only if show_legend is True)
+    if show_legend:
+        if external_legend and gs is not None:
+            # Create external legend axis using GridSpec
+            if all_lines:
+                # Get unique labels (avoid duplicates)
+                unique_labels = []
+                unique_lines = []
+                for line, label in zip(all_lines, all_labels):
+                    if label not in unique_labels:
+                        unique_labels.append(label)
+                        unique_lines.append(line)
+                
+                # Create a dedicated axis for the legend in the third GridSpec column
+                ax_legend = fig.add_subplot(gs[2])
+                ax_legend.axis('off')  # Hide the axis
+                
+                # Create legend in the dedicated axis
+                ax_legend.legend(unique_lines, unique_labels, 
+                               loc='center',
+                               fontsize=legend_font_size,
+                               title=legend_title if legend_title else None,
+                               title_fontsize=legend_font_size,
+                               frameon=True)
         else:
-            ax_right.legend()
+            # Original behavior: place legends inside each subplot
+            if any(line.get_label() and not line.get_label().startswith('_') for line in ax1.get_lines()):
+                # Get original legend location if it exists
+                original_legend = ax1.get_legend()
+                if original_legend:
+                    # Get the location from the original legend
+                    loc = original_legend._loc
+                    ax_left.legend(loc='lower center')
+                else:
+                    ax_left.legend()
+            
+            if any(line.get_label() and not line.get_label().startswith('_') for line in ax2.get_lines()):
+                # Get original legend location if it exists
+                original_legend = ax2.get_legend()
+                if original_legend:
+                    # Get the location from the original legend
+                    loc = original_legend._loc
+                    ax_right.legend(loc='lower center')
+                else:
+                    ax_right.legend()
 
     # Set title for the entire figure
     if len(title_ads) > 0:
@@ -490,6 +634,26 @@ def side_by_side_plots(ax1: plt.Axes,
             print(f"Warning: Could not create common colorbar: {e}")
             pass
     
+    # Apply tick count limits if specified
+    if tick_count_left is not None:
+        ax_left.xaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_left))
+        ax_left.yaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_left))
+        if hasattr(ax_left, 'zaxis'):
+            ax_left.zaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_left))
+    if tick_count_right is not None:
+        ax_right.xaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_right))
+        ax_right.yaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_right))
+        if hasattr(ax_right, 'zaxis'):
+            ax_right.zaxis.set_major_locator(ticker.MaxNLocator(nbins=tick_count_right))
+
+    # Apply tick label font sizes explicitly
+    ax_left.tick_params(axis='both', labelsize=default_font_size)
+    ax_right.tick_params(axis='both', labelsize=default_font_size)
+    if hasattr(ax_left, 'zaxis'):
+        ax_left.zaxis.set_tick_params(labelsize=default_font_size)
+    if hasattr(ax_right, 'zaxis'):
+        ax_right.zaxis.set_tick_params(labelsize=default_font_size)
+
     plt.tight_layout()
     plt.close()
     return fig

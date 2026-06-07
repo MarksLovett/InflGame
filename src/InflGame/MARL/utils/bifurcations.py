@@ -104,9 +104,8 @@ from tqdm import tqdm
 import InflGame.MARL.utils.IQL_utils as IQL_utils
 import InflGame.utils.data_management as data_management
 
-
 def _run_single_parameter_optimized(param, env_configs, algo_config, trials, checkpoints, save_positions, 
-                                  q_tables_parameter, name_ads, action_type, random_seed):
+                                  q_tables_parameter, name_ads, action_type, random_seed, cap_trials=0):
     """
     Execute a single parameter experiment in a worker process.
     
@@ -156,6 +155,9 @@ def _run_single_parameter_optimized(param, env_configs, algo_config, trials, che
     if action_type == "sync":
         from InflGame.MARL.sync_game import influencer_env_sync
         env = influencer_env_sync(config=local_env_configs)
+        for agent in env.possible_agents:
+                env.action_spaces[agent].seed(random_seed)
+                env.observation_spaces[agent].seed(random_seed)
         from InflGame.MARL.IQL_sync_no_epochs import IQL_sync_no_epochs
         algo_config_local = algo_config.copy()
         algo_config_local["env"] = env
@@ -164,6 +166,9 @@ def _run_single_parameter_optimized(param, env_configs, algo_config, trials, che
         from InflGame.MARL.async_game import influencer_env_async
         from InflGame.MARL.IQL_async import IQL_async
         env = influencer_env_async(config=local_env_configs)
+        for agent in env.possible_agents:
+                env.action_spaces[agent].seed(random_seed)
+                env.observation_spaces[agent].seed(process_seed)
         algo_config_local = algo_config.copy()
         algo_config_local["env"] = env
         algo = IQL_async(algo_config_local)
@@ -186,13 +191,117 @@ def _run_single_parameter_optimized(param, env_configs, algo_config, trials, che
         position_array[trial] = positions
     
     # Use numpy operations instead of torch for faster computation
-    mean_vals = np.mean(position_array, axis=0)
-    mad = np.mean(np.abs(position_array - mean_vals), axis=0)
+    # Only use trials from cap_trials onward (discard burn-in trials)
+    position_array_capped = position_array[cap_trials:]
+    mean_vals = np.mean(position_array_capped, axis=0)
+    mad = np.mean(np.abs(position_array_capped - mean_vals), axis=0)
     
     return mean_vals[-1], mad[-1]
 
-def _run_batch_parameters(param_batch, batch_index, env_configs, algo_config, trials, checkpoints, save_positions, 
-                         q_tables_parameter, name_ads, action_type, random_seed):
+
+def _run_single_parameter_optimized_fresh(param_index, param, env_configs, algo_config, trials, checkpoints, save_positions, 
+                                  q_tables_parameter, name_ads, action_type, random_seed, cap_trials=0):
+    """
+    Execute a single parameter experiment in a worker process.
+    
+    This function runs multiple trials of reinforcement learning for a single parameter value,
+    computing the final positions and their variability (MAD) across trials.
+    
+    Parameters
+    ----------
+    param_index : int
+        The index of this parameter in the params array (used for deterministic seeding).
+    param : float
+        The parameter value to test (applied to all agents).
+    env_configs : dict
+        Environment configuration dictionary.
+    algo_config : dict
+        Algorithm configuration dictionary.
+    trials : int
+        Number of independent trials to run for this parameter.
+    checkpoints : bool
+        Whether to save training checkpoints.
+    save_positions : bool
+        Whether to save position trajectories during training.
+    q_tables_parameter : dict
+        Q-table storage parameters for data management.
+    name_ads : list[str]
+        Additional name identifiers for file naming.
+    action_type : str
+        Type of action space ("sync" or "async").
+    random_seed : int
+        Base random seed for reproducibility.
+        
+    Returns
+    -------
+    tuple[np.ndarray, np.ndarray]
+        A tuple containing:
+        - mean_vals[-1] : Final mean positions across all trials
+        - mad[-1] : Final mean absolute deviation across all trials
+        
+    Notes
+    -----
+    Each trial gets a unique deterministic random seed based on param_index and trial number
+    to ensure reproducibility while avoiding identical sequences across processes.
+    """
+    # Create a copy of env_configs to avoid modifying the original
+    local_env_configs = env_configs.copy()
+    local_env_configs["parameters"] = np.array([param] * local_env_configs["num_agents"])
+    
+    # Pre-allocate arrays for better memory efficiency
+    num_episodes = algo_config["episode_configs"]["episode_max"]+1
+    num_agents = local_env_configs["num_agents"]
+    position_array = np.zeros((trials, num_episodes, num_agents))
+    
+    for trial in range(trials):
+        # Set deterministic seed for each trial: base_seed + param_index * 10000 + trial
+        # This ensures reproducibility across runs and avoids seed collisions
+        trial_seed = random_seed + param_index * 10000 + trial
+        random.seed(trial_seed)
+        np.random.seed(trial_seed)
+        torch.manual_seed(trial_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(trial_seed)
+        
+        # Create fresh environment and algorithm AFTER seeding
+        if action_type == "sync":
+            from InflGame.MARL.sync_game import influencer_env_sync
+            from InflGame.MARL.IQL_sync_no_epochs import IQL_sync_no_epochs
+            env = influencer_env_sync(config=local_env_configs)
+            # Seed gym spaces for reproducibility
+            for agent in env.possible_agents:
+                env.action_spaces[agent].seed(trial_seed)
+                env.observation_spaces[agent].seed(trial_seed)
+            algo_config_local = algo_config.copy()
+            algo_config_local["env"] = env
+            algo = IQL_sync_no_epochs(algo_config_local)
+        elif action_type == "async":
+            from InflGame.MARL.async_game import influencer_env_async
+            from InflGame.MARL.IQL_async import IQL_async
+            env = influencer_env_async(config=local_env_configs)
+            # Seed gym spaces for reproducibility
+            for agent in env.possible_agents:
+                env.action_spaces[agent].seed(trial_seed)
+                env.observation_spaces[agent].seed(trial_seed)
+            algo_config_local = algo_config.copy()
+            algo_config_local["env"] = env
+            algo = IQL_async(algo_config_local)
+        
+        env.reset()
+        positions = algo.train(checkpoints=checkpoints, save_positions=save_positions, 
+                              data_parameters=q_tables_parameter, trials=trials, name_ads=name_ads)[1]
+        position_array[trial] = positions
+    
+    # Use numpy operations instead of torch for faster computation
+    # Only use trials from cap_trials onward (discard burn-in trials)
+    position_array_capped = position_array[cap_trials:]
+    mean_vals = np.mean(position_array_capped, axis=0)
+    mad = np.mean(np.abs(position_array_capped - mean_vals), axis=0)
+    
+    return mean_vals[-1], mad[-1]
+
+def _run_batch_parameters(param_batch, batch_index, batch_size, env_configs, algo_config, trials, checkpoints, save_positions, 
+                         q_tables_parameter, name_ads, action_type, random_seed, fresh_start=True, cap_trials=0):
     """
     Process a batch of parameters in a single worker process.
     
@@ -205,6 +314,8 @@ def _run_batch_parameters(param_batch, batch_index, env_configs, algo_config, tr
         List of parameter values to process in this batch.
     batch_index : int
         Index of this batch (used for result ordering).
+    batch_size : int
+        Size of each batch (used to compute global param index for seeding).
     env_configs : dict
         Environment configuration dictionary.
     algo_config : dict
@@ -238,9 +349,16 @@ def _run_batch_parameters(param_batch, batch_index, env_configs, algo_config, tr
     """
     results = []
     for i, param in enumerate(param_batch):
-        result = _run_single_parameter_optimized(param, env_configs, algo_config, trials, 
+        # Compute global param index for deterministic seeding
+        global_param_index = batch_index * batch_size + i
+        if fresh_start:
+            result = _run_single_parameter_optimized_fresh(global_param_index, param, env_configs, algo_config, trials, 
                                                checkpoints, save_positions, q_tables_parameter, 
-                                               name_ads, action_type, random_seed)
+                                               name_ads, action_type, random_seed, cap_trials)
+        else:
+            result = _run_single_parameter_optimized(param, env_configs, algo_config, trials, 
+                                               checkpoints, save_positions, q_tables_parameter, 
+                                               name_ads, action_type, random_seed, cap_trials)
         results.append(result)
     return batch_index, results
 
@@ -265,7 +383,9 @@ def experiment_optimized(action_type: str = "sync",
                         name_ads: list[str] = [],
                         n_processes: int = None,
                         batch_size: int = None,
-                        use_progress_bar: bool = True) -> tuple:
+                        use_progress_bar: bool = True,
+                        fresh_start: bool = True,
+                        cap_trials: int = 0) -> tuple:
     """
     Run an optimized parameter sweep experiment using parallel processing.
     
@@ -345,6 +465,14 @@ def experiment_optimized(action_type: str = "sync",
     use_progress_bar : bool, optional
         Whether to display a progress bar during execution. Useful for monitoring
         long-running experiments. Default is True.
+    fresh_start : bool, optional
+        Whether to create fresh environment and algorithm instances for each trial
+        (better reproducibility but slower). Default is True.
+    cap_trials : int, optional
+        Number of initial trials to discard as "burn-in" when computing mean and MAD.
+        Only trials from index `cap_trials` onward are used for statistics.
+        For example, if trials=500 and cap_trials=100, only the last 400 trials
+        contribute to the final mean and MAD. Default is 0 (use all trials).
         
     Returns
     -------
@@ -503,9 +631,10 @@ def experiment_optimized(action_type: str = "sync",
         # Submit all jobs with batch indices
         future_to_batch_info = {}
         for batch_idx, batch in enumerate(param_batches):
-            future = executor.submit(_run_batch_parameters, batch, batch_idx, env_configs,
+            future = executor.submit(_run_batch_parameters, batch, batch_idx, batch_size, env_configs,
                                    algo_config, trials, checkpoints, save_positions,
-                                   q_tables_parameter, name_ads, action_type, random_seed)
+                                   q_tables_parameter, name_ads, action_type, random_seed,
+                                   fresh_start=fresh_start, cap_trials=cap_trials)
             future_to_batch_info[future] = (batch_idx, len(batch))
         
         # Process results with optional progress bar, maintaining order

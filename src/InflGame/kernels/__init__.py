@@ -11,11 +11,13 @@ Pre-made influence kernels from the paper including Gaussian, Multi-variate Gaus
 Submodules          Description
 ==================  =============================================
 `beta`              Beta influence kernels
+`blotto`            Colonel Blotto influence kernels
 `diric`             Dirichlet influence kernels 
+`diric_mode`        Mode-parameterized Dirichlet influence kernels
 `gauss`             Gaussian influence kernels
 `jones`             Mathew Jones influence kernels
 `MV_gauss`          Multi Variate Gaussian kernels
-==================  =============================================
+==================  ===============================================
 
 
 Dirichlet Influence Kernel
@@ -104,6 +106,32 @@ where:
   - :math:`\beta = (1 - x_i)(\phi - 2) + 1`
   - :math:`\phi` is the concentration parameter for agent :math:`i` (must be > 2)
   - :math:`B(\alpha, \beta)` is the Beta function
+
+
+Mode-Parameterized Dirichlet Influence Kernel
+==============================================
+
+Mathematical Definitions:
+-------------------------
+The mode-parameterized Dirichlet influence kernel uses the parameterization:
+
+.. math::
+    \alpha_{(i,l)} = 1 + \sigma \cdot x_{(i,l)}
+
+where:
+  - :math:`\sigma > 0` is a concentration parameter controlling spread
+  - :math:`x_{(i,l)}` is the position of agent :math:`i` in dimension :math:`l`
+  - The sum :math:`\alpha_0 = L + \sigma` where :math:`L` is the dimension
+
+The gradient with respect to agent position is:
+
+.. math::
+    d_{(i,l)} = \sigma \left( \ln(b_l) - \psi_0(1 + \sigma x_{(i,l)}) \right)
+
+The Hessian is a diagonal matrix:
+
+.. math::
+    H_{l,l} = -\sigma^2 \psi_1(1 + \sigma x_{(i,l)})
 
    
 """

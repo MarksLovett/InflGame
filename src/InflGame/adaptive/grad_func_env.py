@@ -69,8 +69,10 @@ import InflGame.utils.validation as validation
 import InflGame.kernels.gauss as gauss
 import InflGame.kernels.jones as jones
 import InflGame.kernels.diric as diric
+import InflGame.kernels.diric_mode as diric_mode
 import InflGame.kernels.MV_gauss as MV_gauss
 import InflGame.kernels.beta as beta_kernel
+import InflGame.kernels.blotto as blotto
 
 import InflGame.domains.simplex.simplex_utils as simplex_utils
 
@@ -335,6 +337,7 @@ class AdaptiveEnv:
                  tolerance: float = 10**-5,
                  tolerated_agents: Optional[int] = None,
                  ignore_zero_infl: bool = False,
+                 device: Optional[Union[str, torch.device]] = None
                  ) -> None:
         """
         Initialize the AdaptiveEnv class.
@@ -394,7 +397,8 @@ class AdaptiveEnv:
             domain_type=domain_type,
             domain_bounds=domain_bounds,
             tolerance=tolerance,
-            tolerated_agents=tolerated_agents
+            tolerated_agents=tolerated_agents,
+            device=device
         )
         self.num_agents = validated['num_agents']
         self.agents_pos = validated['agents_pos']
@@ -417,7 +421,8 @@ class AdaptiveEnv:
         self.tolerance = validated['tolerance']
         self.tolerated_agents = validated['tolerated_agents']
         self.ignore_zero_infl = ignore_zero_infl
-        self.alt_form=False  # whether to use alternative form for 1d gradient calculation
+        self.alt_form=False
+        self.device=device  # whether to use alternative form for 1d gradient calculation
             
         
 
@@ -481,6 +486,29 @@ class AdaptiveEnv:
                         bin_points=self.bin_points,
                         alpha_matrix=self.alpha_matrix,
                     )
+                elif self.infl_type == 'diric_mode':
+                    # Mode-parameterized Dirichlet: parameter_instance is sigma (concentration)
+                    # For diric_mode, we expect a single sigma value or one per agent
+                    if isinstance(parameter_instance, (list, np.ndarray, torch.Tensor)):
+                        if len(parameter_instance) == 1:
+                            sigma = float(parameter_instance[0])
+                        elif len(parameter_instance) == self.num_agents:
+                            # Use first sigma value (assumes homogeneous agents)
+                            sigma = float(parameter_instance[0])
+                        else:
+                            sigma = float(parameter_instance[0])
+                    else:
+                        sigma = float(parameter_instance)
+                    
+                    self.sigma = sigma
+                    self.alpha_matrix = diric_mode.param_vectorized(
+                        agents_pos=self.agents_pos,
+                        sigma=sigma
+                    )
+                    infl_matrix = diric_mode.influence_vectorized(
+                        bin_points=self.bin_points,
+                        alpha_matrix=self.alpha_matrix,
+                    )
                 elif self.infl_type == 'multi_gaussian':
                     self.sigma_inv = MV_gauss.cov_matrix_vectorized(parameter_instances=parameter_instance)
                     infl_matrix = MV_gauss.influence_vectorized(
@@ -494,6 +522,32 @@ class AdaptiveEnv:
                         agents_pos=self.agents_pos,
                         bin_points=self.bin_points
                     )
+                elif self.infl_type == 'blotto':
+                    # Blotto kernel: f_i(x_i, b) = (x_{i,b} / chi)^sigma
+                    # parameter_instance = [sigma, chi]
+                        
+                    # Ensure agents_pos is a tensor for blotto computation
+                    if not torch.is_tensor(self.agents_pos):
+                        agents_pos_t = general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
+                    else:
+                        agents_pos_t = self.agents_pos
+
+                    # Parse sigma/chi — scalar (shared) or per-agent tensors
+                    sigma_val, chi_val, per_agent = blotto._parse_blotto_params(parameter_instance)
+                    if per_agent:
+                        sigma_vec = sigma_val.to(agents_pos_t.device)
+                        chi_vec   = chi_val.to(agents_pos_t.device)
+                        infl_matrix = blotto.influence_vectorized_per_agent(
+                            agents_pos=agents_pos_t,
+                            sigma_vec=sigma_vec,
+                            chi_vec=chi_vec,
+                        )
+                    else:
+                        infl_matrix = blotto.influence_vectorized(
+                            agents_pos=agents_pos_t,
+                            sigma=sigma_val,
+                            chi=chi_val,
+                        )
                 elif self.infl_type == 'custom':
                     # Validate custom influence configuration
                     if 'custom_influence' not in self.infl_configs:
@@ -503,11 +557,11 @@ class AdaptiveEnv:
                     if not callable(custom_influence):
                         raise TypeError("Custom influence must be a callable function")
                     if not torch.is_tensor(self.agents_pos):
-                        self.agents_pos = torch.tensor(self.agents_pos, dtype=torch.float32)
+                        self.agents_pos = general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
                     if not torch.is_tensor(self.bin_points):
-                        self.bin_points = torch.tensor(self.bin_points, dtype=torch.float32)  
+                        self.bin_points = general._to_tensor(self.bin_points, "bin_points", device=self.device)  
                     if not torch.is_tensor(parameter_instance):
-                        parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)  
+                        parameter_instance = general._to_tensor(parameter_instance, "parameter_instance", device=self.device)  
                     try:
                         infl_matrix = custom_influence(
                             self.agents_pos,
@@ -560,9 +614,9 @@ class AdaptiveEnv:
                     if torch.is_tensor(self.bin_points):
                         bin_points_tensor = self.bin_points
                     else:
-                        bin_points_tensor = torch.tensor(self.bin_points, dtype=torch.float32)
+                        bin_points_tensor = general._to_tensor(self.bin_points, "bin_points", device=self.device)
                     if not torch.is_tensor(self.agents_pos):
-                        agents_pos_tensor = torch.tensor(self.agents_pos, dtype=torch.float32)
+                        agents_pos_tensor = general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
                     else:
                         agents_pos_tensor = self.agents_pos
 
@@ -754,13 +808,33 @@ class AdaptiveEnv:
         """
         
         try:
+            # ---- Blotto fast path (reward) -----------------------------------
+            if self.infl_type == 'blotto':
+                agents_pos_t = self.agents_pos if torch.is_tensor(self.agents_pos) else general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
+                agents_pos_t = agents_pos_t.to(torch.float32)
+                sigma_val, chi_val, per_agent = blotto._parse_blotto_params(parameter_instance)
+                if per_agent:
+                    infl = blotto.influence_vectorized_per_agent(agents_pos_t, sigma_val.to(agents_pos_t.device), chi_val.to(agents_pos_t.device))
+                else:
+                    infl = blotto.influence_vectorized(agents_pos_t, float(sigma_val), float(chi_val))
+                denom = infl.sum(dim=0, keepdim=True).clamp(min=1e-25)
+                G = infl / denom  # (N, M)
+                B = self.resource_distribution.clone().detach().to(torch.float32)
+                reward = (G * B.unsqueeze(0)).sum(dim=-1)  # (N,)
+                if reward.dim() == 0:
+                    reward = reward.unsqueeze(0)
+                return reward
+            # ---- end Blotto fast path ----------------------------------------
+
             # Convert resource distribution to tensor for efficient computation
             if not isinstance(self.resource_distribution, torch.Tensor):
-                resource_tensor = torch.tensor(self.resource_distribution, dtype=torch.float32)
+                resource_tensor = general._to_tensor(self.resource_distribution, "resource_distribution", device=self.device)
             else:
                 resource_tensor = self.resource_distribution.clone().detach()
                 if resource_tensor.dtype != torch.float32:
                     resource_tensor = resource_tensor.to(torch.float32)
+                if self.device is not None and resource_tensor.device != torch.device(self.device):
+                    resource_tensor = resource_tensor.to(self.device)
             
             # Get probability matrix with error handling
             try:
@@ -830,6 +904,10 @@ class AdaptiveEnv:
             
             (infl_type=='dirichlet')
         
+        - **Mode-parameterized Dirichlet influence kernel**
+            
+            (infl_type=='diric_mode')
+        
         - **Multi-variate Gaussian influence kernel** 
             
             (infl_type=='multi_gaussian')
@@ -854,10 +932,47 @@ class AdaptiveEnv:
         elif self.infl_type=='dirichlet':
             self.alpha_matrix=diric.param(num_agents=self.num_agents,parameter_instance=parameter_instance,agents_pos=self.agents_pos,fixed_pa=self.fp)
             d_matrix=diric.d_ln_f_vectorized(agents_pos=self.agents_pos,bin_points=self.bin_points,alpha_matrix=self.alpha_matrix,fixed_pa=self.fp)
+        elif self.infl_type=='diric_mode':
+            # Mode-parameterized Dirichlet: use stored sigma from influence_matrix
+            if not hasattr(self, 'sigma'):
+                # Extract sigma from parameter_instance
+                if isinstance(parameter_instance, (list, np.ndarray, torch.Tensor)):
+                    sigma = float(parameter_instance[0]) if len(parameter_instance) >= 1 else 1.0
+                else:
+                    sigma = float(parameter_instance)
+                self.sigma = sigma
+            # Pass pre-computed alpha_matrix (set by influence_matrix() in the same gradient() call)
+            # to avoid redundant param_vectorized computation.
+            cached_alpha = self.alpha_matrix if hasattr(self, 'alpha_matrix') else None
+            d_matrix=diric_mode.d_ln_f_vectorized(agents_pos=self.agents_pos,bin_points=self.bin_points,sigma=self.sigma,alpha_matrix=cached_alpha)
         elif self.infl_type=='multi_gaussian':
             d_matrix=MV_gauss.d_ln_f_vectorized(sigma_inv=self.sigma_inv,agents_pos=self.agents_pos,bin_points=self.bin_points)
         elif self.infl_type=='beta':
             d_matrix=beta_kernel.d_ln_f_vectorized(parameter_instance=parameter_instance,agents_pos=self.agents_pos,bin_points=self.bin_points)
+        elif self.infl_type=='blotto':
+            # Blotto: gradient of ln f on the unit simplex (after normalizing by chi).
+            # Returns shape (N, M, M) — a batch of diagonal matrices.
+            # The kernel computes d/dy (where y=x/chi), but positions are updated in x-space,
+            # so we divide by chi to convert to d/dx = (1/chi) * d/dy.
+            if not torch.is_tensor(self.agents_pos):
+                agents_pos_t = general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
+            else:
+                agents_pos_t = self.agents_pos
+            sigma_val, chi_val, per_agent = blotto._parse_blotto_params(parameter_instance)
+            if per_agent:
+                sigma_vec = sigma_val.to(agents_pos_t.device)
+                chi_vec   = chi_val.to(agents_pos_t.device)
+                d_matrix = blotto.d_ln_f_vectorized_per_agent(
+                    agents_pos=agents_pos_t, sigma_vec=sigma_vec, chi_vec=chi_vec
+                )
+                # Rescale: each agent i divided by chi_i — shape (N, 1, 1) for broadcast over (N, M, M)
+                d_matrix = d_matrix / chi_vec.to(d_matrix.device).view(-1, 1, 1)
+            else:
+                self.sigma = sigma_val
+                self.chi   = chi_val
+                d_matrix = blotto.d_ln_f_vectorized(agents_pos=agents_pos_t, sigma=self.sigma, chi=self.chi)
+                # Rescale from y-space to x-space
+                d_matrix = d_matrix / self.chi
 
         return d_matrix 
     
@@ -1189,14 +1304,61 @@ class AdaptiveEnv:
         :raises TypeError: If input types are not supported.
         """
         
+        # ---- Blotto fast path ------------------------------------------------
+        # Blotto is a discrete-battlefield game: influence is defined over M
+        # battlefields (= position dimensions), not over K continuous bin points.
+        # We bypass the bin-points machinery entirely and compute directly.
+        if self.infl_type == 'blotto':
+            try:
+                agents_pos_t = self.agents_pos if torch.is_tensor(self.agents_pos) else general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
+                agents_pos_t = agents_pos_t.to(torch.float32)
+
+                sigma_val, chi_val, per_agent = blotto._parse_blotto_params(parameter_instance)
+
+                if per_agent:
+                    sigma_vec = sigma_val.to(agents_pos_t.device)
+                    chi_vec   = chi_val.to(agents_pos_t.device)
+                    infl = blotto.influence_vectorized_per_agent(agents_pos_t, sigma_vec, chi_vec)  # (N, M)
+                    d_diag = sigma_vec.unsqueeze(1) / agents_pos_t.clamp(min=1e-10)                 # (N, M) d ln f / d x
+                else:
+                    infl = blotto.influence_vectorized(agents_pos_t, float(sigma_val), float(chi_val))  # (N, M)
+                    d_diag = float(sigma_val) / agents_pos_t.clamp(min=1e-10)                          # (N, M)
+
+                # Column-wise normalisation → win probability per battlefield
+                denom = infl.sum(dim=0, keepdim=True).clamp(min=1e-25)  # (1, M)
+                G = infl / denom  # (N, M)
+
+                # Resource distribution must be (M,) — one value per battlefield
+                B = self.resource_distribution.clone().detach().to(torch.float32)
+                if B.shape[0] != agents_pos_t.shape[1]:
+                    raise ValueError(
+                        f"For blotto, resource_distribution must have M={agents_pos_t.shape[1]} elements "
+                        f"(one per battlefield), got {B.shape[0]}. "
+                        f"Use resources_blotto, not resources_guass."
+                    )
+
+                # grad[i, l] = G[i,l] * (sigma/x[i,l]) * B[l]
+                grad = G * d_diag * B.unsqueeze(0)  # (N, M)
+
+                if grad.dtype != torch.float32:
+                    grad = grad.to(torch.float32)
+                return grad
+            except Exception as e:
+                if isinstance(e, (ValueError, RuntimeError, TypeError)):
+                    raise
+                raise RuntimeError(f"Blotto gradient computation failed: {str(e)}") from e
+        # ---- end Blotto fast path --------------------------------------------
+
         try:
             # Convert and validate parameter_instance
             if isinstance(parameter_instance, (list, np.ndarray)):
                 if len(parameter_instance) != self.num_agents:
                     raise ValueError(f"parameter_instance length ({len(parameter_instance)}) must match number of agents ({self.num_agents})")
-                parameter_instance = torch.tensor(parameter_instance, dtype=torch.float32)
+                parameter_instance = general._to_tensor(parameter_instance, "parameter_instance", device=self.device)
             elif isinstance(parameter_instance, torch.Tensor):
                 parameter_instance = parameter_instance.to(torch.float32)
+                if self.device is not None and parameter_instance.device != torch.device(self.device):
+                    parameter_instance = parameter_instance.to(self.device)
                 if len(parameter_instance) != self.num_agents:
                     raise ValueError(f"parameter_instance length ({len(parameter_instance)}) must match number of agents ({self.num_agents})")
             else:
@@ -1214,7 +1376,7 @@ class AdaptiveEnv:
             try:
                 if self.infl_type == 'custom':
                     d_matrix = self.d_torch(parameter_instance)
-                elif self.infl_type in ['multi_gaussian', 'gaussian', 'Jones_M', 'dirichlet', 'beta']:
+                elif self.infl_type in ['multi_gaussian', 'gaussian', 'Jones_M', 'dirichlet', 'diric_mode', 'beta', 'blotto']:
                     d_matrix = self.d_lnf_matrix(parameter_instance)
                     
             except Exception as e:
@@ -1360,17 +1522,24 @@ class AdaptiveEnv:
         where :math:`\epsilon` is the tolerance and :math:`E` is the tolerated agents.
         The learning rate :math:`\eta_t` is computed using the function :func:`InflGame.utils.general.learning_rate`.
 
-            If the domain type is 'simplex', the agent positions are projected onto the simplex so the update step looks like this:
+            If the domain type is 'simplex', softmax parameterization is used to handle the simplex constraint.
+            The agent positions are parameterized as :math:`\mathbf{x} = \text{softmax}(\boldsymbol{\theta})` where
+            :math:`\boldsymbol{\theta}` is an unconstrained parameter vector. The gradient is transformed using:
                 
                 .. math::
-                    \mathbf{x}_{i;t+1}=\mathbf{P}_{\Delta}(\mathbf{x}_{i;t}+\eta_t\cdot normalized(\nabla \vec{R}_{i;t}))\\
+                    \frac{\partial R}{\partial \theta_l} = x_l \left( \frac{\partial R}{\partial x_l} - \langle \nabla R, \mathbf{x} \rangle \right)
+                
+            where :math:`\langle \nabla R, \mathbf{x} \rangle = \sum_k \frac{\partial R}{\partial x_k} x_k` is the dot product.
             
-            using the function :func:`InflGame.domains.simplex.simplex_utils.projection_onto_simplex`.
-
-            Due to the normalization of the gradient, the stoping condtions is slightly different:
+            The update is then:
                 
                 .. math::
-                    \sum_{i=1}^{N}||\mathbf{x}_{i;t+5}-\mathbf{x}_{i;t}||_1\leq \epsilon = E\\
+                    \boldsymbol{\theta}_{t+1} = \boldsymbol{\theta}_t + \eta_t \cdot \nabla_{\theta} R
+                    
+                .. math::
+                    \mathbf{x}_{t+1} = \text{softmax}(\boldsymbol{\theta}_{t+1})
+            
+            This parameterization ensures positions remain on the simplex without explicit projection.
 
         
         :param show_out: Whether to return intermediate outputs.
@@ -1391,23 +1560,36 @@ class AdaptiveEnv:
             self.grad_modify = grad_modify
             
             # Store original agent positions for restoration
-            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else torch.tensor(self.agents_pos, dtype=torch.float32)
+            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
             current_positions = agents_og.clone().detach()
+            
+            # For simplex domain, use softmax parameterization
+            # Convert positions to unconstrained log-space: theta = log(x)
+            # Then x = softmax(theta) = exp(theta) / sum(exp(theta))
+            # Only use softmax parameterization for diric_mode
+            use_softmax = (self.domain_type == 'simplex' and self.infl_type == 'diric_mode')
+            if use_softmax:
+                # Initialize theta from current positions (inverse softmax)
+                # theta = log(x) (up to additive constant, which doesn't matter for softmax)
+                theta = torch.log(current_positions.clamp(min=1e-10))
+            
             # Pre-allocate storage tensors for efficiency
-            pos_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32)
-            grad_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32)
-            reward_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32) if reward else None
+            pos_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32, device=self.device)
+            grad_history = torch.zeros((self.time_steps, *current_positions.shape), dtype=torch.float32, device=self.device)
+            reward_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32, device=self.device) if reward else None
             
             # Main gradient ascent loop with vectorized operations
             converged_at_step = None
             
             try:
                 for time_step in range(self.time_steps):
-                    # Update agent positions in environment for gradient computation
+                    # Update agent positions in environment for gradient computation.
+                    # .detach() only (no .clone()) - current_positions is reassigned each step,
+                    # never mutated in-place, so aliasing is safe here.
                     if isinstance(self.agents_pos, torch.Tensor):
-                        self.agents_pos = current_positions.clone().detach()
+                        self.agents_pos = current_positions.detach()
                     
-                    # Compute gradient with error handling
+                    # Compute gradient with error handling (gradient w.r.t. simplex coordinates x)
                     try:
                         grad_vec_row = self.gradient(self.parameters)
                     except Exception as e:
@@ -1423,18 +1605,31 @@ class AdaptiveEnv:
                     if torch.any(torch.isinf(grad_vec_row)):
                         raise RuntimeError(f"Infinite values detected in gradient at step {time_step}")
                     
-                    # Process gradient based on domain type
-                    if self.domain_type == 'simplex':
+                    # Process gradient based on domain type and influence type
+                    if use_softmax:
+                        # Softmax parameterization gradient transformation for diric_mode
+                        # Given Euclidean gradient ∂R/∂x, compute gradient w.r.t. theta (log-space)
+                        # ∂R/∂θ_l = x_l * (∂R/∂x_l - ⟨∇R, x⟩)
+                        # This is the natural gradient for softmax parameterization
+                        
                         if grad_vec_row.dim() == 1:
-                            # If gradient is 1D, expand for normalization
-                            grad_expanded = grad_vec_row.unsqueeze(0) if grad_vec_row.shape[0] == current_positions.shape[1] else grad_vec_row.unsqueeze(1)
-                            processed_grad = torch.nn.functional.normalize(grad_expanded, dim=-1)
-                            if grad_vec_row.shape[0] == current_positions.shape[1]:
-                                processed_grad = processed_grad.squeeze(0)
-                            else:
-                                processed_grad = processed_grad.squeeze(1)
-                        else:
-                            processed_grad = torch.nn.functional.normalize(grad_vec_row, dim=-1)
+                            grad_vec_row = grad_vec_row.unsqueeze(0)
+                        
+                        # Compute ⟨∇R, x⟩ for each agent (dot product of gradient with position)
+                        grad_dot_x = torch.sum(grad_vec_row * current_positions, dim=-1, keepdim=True)
+                        
+                        # Softmax gradient: x * (grad - <grad, x>)
+                        processed_grad = current_positions * (grad_vec_row - grad_dot_x)
+                    elif self.domain_type == 'simplex':
+                        # Riemannian gradient projection for non-diric_mode simplex methods
+                        # Project gradient onto the tangent space of the simplex
+                        if grad_vec_row.dim() == 1:
+                            grad_vec_row = grad_vec_row.unsqueeze(0)
+                        
+                        # Remove the component that violates the sum-to-one constraint
+                        # Tangent space projection: grad - mean(grad) * ones
+                        grad_mean = torch.mean(grad_vec_row, dim=-1, keepdim=True)
+                        processed_grad = grad_vec_row - grad_mean
                     else:
                         processed_grad = grad_vec_row
                     
@@ -1449,53 +1644,60 @@ class AdaptiveEnv:
                     except Exception as e:
                         raise RuntimeError(f"Learning rate computation failed at step {time_step}: {str(e)}") from e
                     
-                    # Vectorized position update
-                    updated_positions = current_positions + lr * processed_grad
-                    
-                    # Handle domain constraints vectorized
-                    if self.domain_type == 'simplex':
-                        # Vectorized simplex projection
-                        try:
-                            # Apply projection to each agent
-                            valid_mask = torch.ones(self.num_agents, dtype=torch.bool)
-                            for agent_idx in range(self.num_agents):
-                                projected_pos = simplex_utils.projection_onto_simplex(updated_positions[agent_idx])
-                                
-                                # Check if projection is valid (all positive)
-                                if torch.all(projected_pos > 0):
-                                    updated_positions[agent_idx] = projected_pos
-                                else:
-                                    valid_mask[agent_idx] = False
-                            
-                            # Only update positions for valid projections
-                            current_positions = torch.where(
-                                valid_mask.unsqueeze(-1).expand_as(current_positions),
-                                updated_positions,
-                                current_positions
-                            )
-                            
-                        except Exception as e:
-                            raise RuntimeError(f"Simplex projection failed at step {time_step}: {str(e)}") from e
+                    # Update based on domain type and influence type
+                    if use_softmax:
+                        # Update theta in unconstrained space (for diric_mode)
+                        theta = theta + lr * processed_grad
+                        
+                        # Convert back to simplex via softmax: x = exp(theta) / sum(exp(theta))
+                        # Use stable softmax computation
+                        theta_max = theta.max(dim=-1, keepdim=True).values
+                        exp_theta = torch.exp(theta - theta_max)
+                        current_positions = exp_theta / exp_theta.sum(dim=-1, keepdim=True)
+                        
+                        # Clamp to avoid numerical issues at boundaries
+                        current_positions = current_positions.clamp(min=1e-10)
+                        # Renormalize after clamping
+                        current_positions = current_positions / current_positions.sum(dim=-1, keepdim=True)
+                    elif self.domain_type == 'simplex':
+                        # Direct update with projection for non-diric_mode simplex methods
+                        current_positions = current_positions + lr * processed_grad
+                        
+                        # Project back onto simplex using standard projection
+                        # Clamp to non-negative
+                        current_positions = current_positions.clamp(min=1e-10)
+                        # Normalize: for blotto, rescale to chi per agent; otherwise to 1
+                        if self.infl_type == 'blotto':
+                            params = self.parameters
+                            if torch.is_tensor(params) and params.dim() == 2:
+                                chi_vals = params[:, 1].to(current_positions.device).unsqueeze(1)  # (N, 1)
+                            else:
+                                chi_vals = float(params[1]) if hasattr(params, '__len__') else float(params)
+                            current_positions = (current_positions / current_positions.sum(dim=-1, keepdim=True)) * chi_vals
+                        else:
+                            current_positions = current_positions / current_positions.sum(dim=-1, keepdim=True)
                     else:
                         # Direct update for non-simplex domains
-                        current_positions = updated_positions
+                        current_positions = current_positions + lr * processed_grad
                     
-                    # Store history (vectorized)
-                    pos_history[time_step] = current_positions.clone()
-                    grad_history[time_step] = grad_vec_row.clone()
-                    
+                    # Store history — assignment into a pre-allocated tensor slice copies data,
+                    # so explicit .clone() is redundant here.
+                    pos_history[time_step] = current_positions
+                    grad_history[time_step] = grad_vec_row if grad_vec_row.dim() > 1 else grad_vec_row.unsqueeze(0)
+
                     # Compute rewards if requested
                     if reward:
                         try:
-                            # Update environment positions for reward computation
+                            # Reuse current_positions directly; it was just updated above.
+                            # No .clone() needed: reward_F only reads, does not mutate agents_pos.
                             if isinstance(self.agents_pos, torch.Tensor):
-                                self.agents_pos = current_positions.clone().detach()
+                                self.agents_pos = current_positions.detach()
                             else:
-                                self.agents_pos = current_positions.clone().detach().numpy()
-                            
+                                self.agents_pos = current_positions.detach().numpy()
+
                             reward_vec_row = self.reward_F(self.parameters)
-                            reward_history[time_step] = reward_vec_row.clone()
-                            
+                            reward_history[time_step] = reward_vec_row
+
                         except Exception as e:
                             raise RuntimeError(f"Reward computation failed at step {time_step}: {str(e)}") from e
                     
@@ -1614,22 +1816,26 @@ class AdaptiveEnv:
             self.grad_modify = grad_modify
             
             # Store original agent positions for restoration
-            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else torch.tensor(self.agents_pos, dtype=torch.float32)
+            agents_og = self.agents_pos.clone() if isinstance(self.agents_pos, torch.Tensor) else general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
             
             # Pre-allocate storage tensors for efficiency (eliminates general.matrix_builder)
-            pos_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32)
-            grad_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32)
-            reward_history = torch.zeros((self.time_steps, self.num_agents+self.infl_cshift+self.infl_fshift), dtype=torch.float32) if reward else None
+            pos_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32, device=self.device)
+            grad_history = torch.zeros((self.time_steps, self.num_agents), dtype=torch.float32, device=self.device)
+            reward_history = torch.zeros((self.time_steps, self.num_agents+self.infl_cshift+self.infl_fshift), dtype=torch.float32, device=self.device) if reward else None
             
             # Convert domain bounds to tensors for vectorized operations
             if not torch.is_tensor(self.domain_bounds[0]):
-                lower_bound = torch.tensor(self.domain_bounds[0].clone().detach(), dtype=torch.float32)
+                lower_bound = general._to_tensor(self.domain_bounds[0], "lower_bound", device=self.device)
             else:
                 lower_bound = self.domain_bounds[0].clone().detach()
+                if self.device is not None and lower_bound.device != torch.device(self.device):
+                    lower_bound = lower_bound.to(self.device)
             if not torch.is_tensor(self.domain_bounds[1]):
-                upper_bound = torch.tensor(self.domain_bounds[1].clone().detach(), dtype=torch.float32)
+                upper_bound = general._to_tensor(self.domain_bounds[1], "upper_bound", device=self.device)
             else:
                 upper_bound = self.domain_bounds[1].clone().detach()
+                if self.device is not None and upper_bound.device != torch.device(self.device):
+                    upper_bound = upper_bound.to(self.device)
 
             # Main gradient ascent loop with vectorized operations
             converged_at_step = None
@@ -1719,8 +1925,10 @@ class AdaptiveEnv:
                             abs_differences = torch.abs(position_diff)
                             
                             # Count agents that have converged
+                            
                             converged_agents = torch.sum(abs_differences <= self.tolerance).item()
-
+                            if self.ignore_tolerance:
+                                converged_agents = 0
                             # check if gradients have gone to zero 
                             
                             if converged_agents >= self.tolerated_agents:
@@ -1779,6 +1987,7 @@ class AdaptiveEnv:
                         show_out: bool = False,
                         grad_modify: bool = False,
                         reward: bool = True,
+                        ignore_tolerance: bool = False,
                         ) -> Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]:
         r"""
         This is the helper function for performing gradient ascent for agents in the environment. It calls the appropriate gradient ascent function based on the domain type.
@@ -1797,7 +2006,7 @@ class AdaptiveEnv:
         :raises TypeError: If input types are not supported.
         :raises AttributeError: If required attributes are missing from the environment.
         """
-        
+        self.ignore_tolerance = ignore_tolerance
         try:
             # Comprehensive input validation
             if not isinstance(show_out, bool):
@@ -1814,7 +2023,7 @@ class AdaptiveEnv:
                 if isinstance(self.agents_pos, torch.Tensor):
                     agent_og = self.agents_pos.clone().detach()
                 else:
-                    agent_og = torch.tensor(self.agents_pos, dtype=torch.float32)
+                    agent_og = general._to_tensor(self.agents_pos, "agents_pos", device=self.device)
             except Exception as e:
                 raise RuntimeError(f"Failed to store original agent positions: {str(e)}") from e
             
@@ -1956,24 +2165,28 @@ class AdaptiveEnv:
         try:
             # Store original values for restoration
             og_pos = self.agents_pos
-            if self.infl_type == 'dirichlet':
+            if self.infl_type in ['dirichlet', 'diric_mode']:
                 og_alpha = self.alpha_matrix
             
             # Input validation and conversion
             try:
                 # Validate and convert agents_pos
                 if isinstance(agents_pos, (list, np.ndarray)):
-                    agents_pos_tensor = torch.tensor(agents_pos, dtype=torch.float32)
+                    agents_pos_tensor = general._to_tensor(agents_pos, "agents_pos", device=self.device)
                 elif isinstance(agents_pos, torch.Tensor):
                     agents_pos_tensor = agents_pos.to(torch.float32)
+                    if self.device is not None and agents_pos_tensor.device != torch.device(self.device):
+                        agents_pos_tensor = agents_pos_tensor.to(self.device)
                 else:
                     raise TypeError(f"agents_pos must be list, np.ndarray, or torch.Tensor, got {type(agents_pos)}")
                 
                 # Validate and convert parameter_instance
                 if isinstance(parameter_instance, (list, np.ndarray)):
-                    parameter_tensor = torch.tensor(parameter_instance, dtype=torch.float32)
+                    parameter_tensor = general._to_tensor(parameter_instance, "parameter_instance", device=self.device)
                 elif isinstance(parameter_instance, torch.Tensor):
                     parameter_tensor = parameter_instance.to(torch.float32)
+                    if self.device is not None and parameter_tensor.device != torch.device(self.device):
+                        parameter_tensor = parameter_tensor.to(self.device)
                 else:
                     raise TypeError(f"parameter_instance must be list, np.ndarray, or torch.Tensor, got {type(parameter_instance)}")
                 
@@ -2013,7 +2226,7 @@ class AdaptiveEnv:
                 
             except Exception as e:
                 self.agents_pos = og_pos  # Restore on failure
-                if self.infl_type == 'dirichlet':
+                if self.infl_type in ['dirichlet', 'diric_mode']:
                     self.alpha_matrix = og_alpha
                 raise RuntimeError(f"Matrix computation failed: {str(e)}") from e
             
@@ -2043,12 +2256,14 @@ class AdaptiveEnv:
             # Convert resource distribution to tensor for vectorized operations
             try:
                 if not isinstance(self.resource_distribution, torch.Tensor):
-                    resource_tensor = torch.tensor(self.resource_distribution, dtype=torch.float32)
+                    resource_tensor = general._to_tensor(self.resource_distribution, "resource_distribution", device=self.device)
                 else:
                     resource_tensor = self.resource_distribution.clone()
+                    if self.device is not None and resource_tensor.device != torch.device(self.device):
+                        resource_tensor = resource_tensor.to(self.device)
             except Exception as e:
                 self.agents_pos = og_pos
-                if self.infl_type == 'dirichlet':
+                if self.infl_type in ['dirichlet', 'diric_mode']:
                     self.alpha_matrix = og_alpha
                 raise RuntimeError(f"Failed to convert resource distribution to tensor: {str(e)}") from e
             
@@ -2097,7 +2312,7 @@ class AdaptiveEnv:
             finally:
                 # Always restore original environment state
                 self.agents_pos = og_pos
-                if self.infl_type == 'dirichlet':
+                if self.infl_type in ['dirichlet', 'diric_mode']:
                     self.alpha_matrix = og_alpha
             
             return grad
@@ -2106,7 +2321,7 @@ class AdaptiveEnv:
             # Final catch-all with state restoration
             try:
                 self.agents_pos = og_pos
-                if self.infl_type == 'dirichlet':
+                if self.infl_type in ['dirichlet', 'diric_mode']:
                     self.alpha_matrix = og_alpha
             except:
                 pass  # Don't override original error if restoration fails

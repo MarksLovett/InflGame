@@ -91,6 +91,8 @@ import plotly.graph_objects as go
 
 import matplotlib.figure
 from typing import Union, List, Dict, Optional, Tuple
+from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.spatial.distance import pdist
 
 import InflGame.adaptive.grad_func_env as grad_func_env
 from InflGame.adaptive.grad_func_env import AdaptiveEnv
@@ -160,7 +162,8 @@ class Shell:
                  domain_refinement: int = 10,
                  tolerance: float = 10**-5,
                  tolerated_agents: Optional[int] = None,
-                 ignore_zero_infl: bool = False) -> None:
+                 ignore_zero_infl: bool = False,
+                 device: Optional[Union[str, torch.device]] = None) -> None:
         """
         Initialize the Shell class with simulation parameters.
 
@@ -235,7 +238,8 @@ class Shell:
             domain_type=domain_type,
             domain_bounds=domain_bounds,
             tolerance=tolerance,
-            tolerated_agents=tolerated_agents
+            tolerated_agents=tolerated_agents,
+            device=device
         )
         self.num_agents = validated['num_agents']
         self.agents_pos = validated['agents_pos']
@@ -260,6 +264,7 @@ class Shell:
         self.resource_type = resource_type
         self.ignore_zero_infl=ignore_zero_infl
         self.matrix_results_complete=None
+        self.device=device
         # Set up the domain based on the type
         if domain_type == 'simplex':
             self.r2 = domain_bounds[0]
@@ -284,7 +289,8 @@ class Shell:
         self.field=grad_func_env.AdaptiveEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
                                              infl_configs=self.infl_configs,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate,time_steps=self.time_steps,fp=self.fp,infl_cshift=self.infl_cshift,cshift=self.cshift,
-                                             infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl)
+                                             infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl,
+                                             device=self.device)
     
     def setup_bifurcation_env(self) -> None:
         """
@@ -302,14 +308,17 @@ class Shell:
                                              infl_configs=self.infl_configs,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate,time_steps=self.time_steps,fp=self.fp,infl_cshift=self.infl_cshift,cshift=self.cshift,
                                              infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl)
     
-    ## Plots
+    # Plots
     def pos_plot(self,
                  title_ads: List[str] = [],
+                 fig_size:Tuple = (18, 18),
                  save: bool = False,
                  name_ads: List[str] = [],
+                 line_thickness: float = 2,
                  font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
                  save_types: List[str] = ['.png', '.svg'],
-                 paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'}) -> matplotlib.figure.Figure:
+                 paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'},
+                 svg_options: dict = None) -> matplotlib.figure.Figure:
         r"""
         Plots the positions of agents over gradient ascent steps. The positions of players are calculated via the 
         results of :func:`InflGame.adaptive.grad_func_env.gradient_ascent`  
@@ -329,18 +338,38 @@ class Shell:
         """
         
         if self.domain_type=='1d':
-            fig=one_plots.pos_plot_1d(num_agents=self.num_agents,pos_matrix=self.field.pos_matrix,title_ads=title_ads,domain_bounds=self.domain_bounds,font=font)
+            fig=one_plots.pos_plot_1d(num_agents=self.num_agents,pos_matrix=self.field.pos_matrix,title_ads=title_ads,domain_bounds=self.domain_bounds,font=font,line_thickness=line_thickness,fig_size=fig_size)
 
         elif self.domain_type=='2d':
-            ValueError("Not yet complete for 2d systems")
+            fig=two_plots.pos_plot_2d(num_agents=self.num_agents,pos_matrix=self.field.pos_matrix,title_ads=title_ads,domain_bounds=self.domain_bounds,font=font,line_thickness=line_thickness,fig_size=fig_size)
 
         elif self.domain_type=='simplex':
-            fig=simplex_plots.pos_plot_simplex(num_agents=self.num_agents,bin_points=self.bin_points,corners=self.corners,triangle=self.triangle,pos_matrix=self.field.pos_matrix,font=font)
+            fig=simplex_plots.pos_plot_simplex(num_agents=self.num_agents,bin_points=self.bin_points,corners=self.corners,triangle=self.triangle,pos_matrix=self.field.pos_matrix,font=font,fig_size=fig_size)
         
         if save==True:
             file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'position','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','pos_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            _svg_opts = svg_options or {}
+            _text_as_objects = _svg_opts.get('text_as_objects', True)
+            _simplify_paths = _svg_opts.get('simplify_paths', False)
+            _simplify_threshold = _svg_opts.get('simplify_threshold', 5.0)
             for file_name in file_names:
-                fig.savefig(file_name,bbox_inches='tight')
+                if str(file_name).lower().endswith('.svg'):
+                    import matplotlib as _mpl
+                    _orig_fonttype = _mpl.rcParams.get('svg.fonttype', 'path')
+                    _orig_simplify = _mpl.rcParams.get('path.simplify', True)
+                    _orig_threshold = _mpl.rcParams.get('path.simplify_threshold', 1.0 / 9.0)
+                    try:
+                        _mpl.rcParams['svg.fonttype'] = 'none' if _text_as_objects else 'path'
+                        if _simplify_paths:
+                            _mpl.rcParams['path.simplify'] = True
+                            _mpl.rcParams['path.simplify_threshold'] = _simplify_threshold
+                        fig.savefig(file_name, bbox_inches='tight')
+                    finally:
+                        _mpl.rcParams['svg.fonttype'] = _orig_fonttype
+                        _mpl.rcParams['path.simplify'] = _orig_simplify
+                        _mpl.rcParams['path.simplify_threshold'] = _orig_threshold
+                else:
+                    fig.savefig(file_name, bbox_inches='tight')
         return fig
 
     def grad_plot(self,
@@ -558,12 +587,12 @@ class Shell:
             pos=general.agent_optimal_position_setup(num_agents=self.num_agents,agents_pos=self.agents_pos,infl_type=self.infl_type,mean=mean,domain_type=self.domain_type,ids=ids)
         else:
             if not torch.is_tensor(pos):
-                pos=torch.tensor(pos, dtype=torch.float32)
+                pos=general._to_tensor(pos, "pos", device=self.device)
         if parameter_instance is None:
             parameter_instance=self.parameters
         else:
             if not torch.is_tensor(parameter_instance):
-                parameter_instance=torch.tensor(parameter_instance, dtype=torch.float32)
+                parameter_instance=general._to_tensor(parameter_instance, "parameter_instance", device=self.device)
         if self.domain_type=='1d':
             grads=self.calc_direction_and_strength(parameter_instance=parameter_instance,agent_id=agent_id,ids=ids,pos=pos,alt_form=alt_form)
             fig=one_plots.vector_plot_1d(gradient=grads,ids=ids,title_ads=title_ads,font=font,**kwargs)
@@ -615,8 +644,11 @@ class Shell:
 
         if self.domain_type=='1d':
             fig, ax = plt.subplots()
+            # Convert tensors to numpy for matplotlib (handle GPU tensors)
+            bin_points_np = self.bin_points.cpu().numpy() if torch.is_tensor(self.bin_points) else self.bin_points
             for agent_id in range(self.num_agents):
-                ax.plot(self.bin_points,self.infl_dist[agent_id],label='Agent '+str(agent_id))
+                infl_dist_np = self.infl_dist[agent_id].cpu().numpy() if torch.is_tensor(self.infl_dist[agent_id]) else self.infl_dist[agent_id]
+                ax.plot(bin_points_np, infl_dist_np, label='Agent '+str(agent_id))
             plt.legend()
             plt.title('Agent influence distribution')
             plt.close()
@@ -631,6 +663,86 @@ class Shell:
             file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'distribution','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','dist_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
             for file_name in file_names:
                 fig.savefig(file_name,bbox_inches='tight')
+        
+        return fig
+
+    def resource_distribution_plot(self,
+                                   alpha: float = None,
+                                   show_alpha_line: bool = True,
+                                   title: str = 'Resource distribution',
+                                   fig_size: Tuple = (12, 8),
+                                   line_width: float = 2,
+                                   save: bool = False,
+                                   name_ads: List[str] = [],
+                                   save_types: List[str] = ['.png', '.svg'],
+                                   paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'resource_dist'},
+                                   font: dict = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'alpha_size': 20, 'font_family': 'sans-serif'},
+                                   y_padding: float = 1.25) -> matplotlib.figure.Figure:
+        r"""
+        Plots the resource distribution with optional alpha line annotation for bimodal distributions.
+        
+        For bimodal Gaussian distributions, this function draws a dashed line between the two peaks 
+        and labels it with :math:`\alpha`, representing the separation distance between peaks.
+        The peak positions are calculated as :math:`0.5 - \alpha/2` and :math:`0.5 + \alpha/2`.
+        
+        :param alpha: The separation parameter for bimodal distributions. If provided, a dashed line 
+                      will be drawn between the peaks at positions (0.5 - alpha/2) and (0.5 + alpha/2).
+        :type alpha: float, optional
+        :param show_alpha_line: Whether to show the alpha annotation line between peaks.
+        :type show_alpha_line: bool
+        :param title: Title for the plot.
+        :type title: str
+        :param fig_size: Figure size as (width, height).
+        :type fig_size: Tuple
+        :param line_width: Width of the distribution line.
+        :type line_width: float
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param name_ads: Additional names for saved files.
+        :type name_ads: List[str]
+        :param save_types: File types to save the plot.
+        :type save_types: List[str]
+        :param paper_figure: Configuration for paper figure saving.
+        :type paper_figure: dict
+        :param font: Font configuration dictionary.
+        :type font: dict
+        :param y_padding: Multiplier for y-axis upper limit to add space for labels.
+        :type y_padding: float
+        
+        :return: The generated plot figure.
+        :rtype: matplotlib.figure.Figure
+        
+        Example:
+        --------
+        .. code-block:: python
+        
+            # Plot bimodal distribution with alpha annotation
+            fig = shell.resource_distribution_plot(alpha=0.5, show_alpha_line=True)
+        """
+        if self.domain_type != '1d':
+            raise ValueError("resource_distribution_plot is only available for 1D domains.")
+        
+        fig = one_plots.resource_distribution_plot_1d(
+            bin_points=self.bin_points,
+            resource_distribution=self.resource_distribution,
+            alpha=alpha,
+            show_alpha_line=show_alpha_line,
+            title=title,
+            fig_size=fig_size,
+            line_width=line_width,
+            font=font,
+            y_padding=y_padding
+        )
+        
+        if save:
+            file_names = data_management.data_final_name(
+                {'data_type': 'plot', 'plot_type': 'resource_distribution', 'domain_type': self.domain_type, 
+                 'num_agents': self.num_agents, 'section': paper_figure['section'], 
+                 'figure_id': paper_figure.get('figure_id', 'resource_dist')},
+                name_ads=name_ads, save_types=save_types, paper_figure=paper_figure['paper']
+            )
+            for file_name in file_names:
+                fig.savefig(file_name, bbox_inches='tight')
         
         return fig
             
@@ -902,16 +1014,21 @@ class Shell:
         
         return final_fig
 
+    ## MARL and adaptive
+
     def three_agent_pos_3A1d(self,
                              x_star: Optional[float] = None,
                              title_ads: List[str] = [],
                              save: bool = False,
                              name_ads: List[str] = [],
+                             line_thickness: float = 2.0,
                              fontL = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
                              fontR = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
                              fontmain= {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
                              save_types: List[str] = ['.png', '.svg'],
-                             paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'}) -> matplotlib.figure.Figure:
+                             paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'},
+                             limits_params={'xlim_left': None, 'xlim_right': None, 
+                             'tick_count_left': 5, 'tick_count_right': 5}) -> matplotlib.figure.Figure:
         """
         Create combined visualization showing three-agent dynamics in 3D space alongside position trajectories.
         
@@ -951,8 +1068,8 @@ class Shell:
             if x_star is None:
                 x_star=general.discrete_mean(self.bin_points,resource_distribution=self.resource_distribution)
             ax1=one_plots.three_agent_dynamics(pos_matrix=self.field.pos_matrix, x_star=x_star,axis_return=True,title_ads=[],font=fontL)
-            ax2=one_plots.pos_plot_1d(num_agents=self.num_agents, pos_matrix=self.field.pos_matrix, domain_bounds=self.domain_bounds, title_ads=[], font=fontR, axis_return=True)
-            fig=plot_utils.side_by_side_plots(ax1,ax2,title_ads=title_ads,font=fontmain,title_main='Three Agent dynamics')
+            ax2=one_plots.pos_plot_1d(num_agents=self.num_agents, pos_matrix=self.field.pos_matrix, domain_bounds=self.domain_bounds, title_ads=[], font=fontR, axis_return=True,line_thickness=line_thickness)
+            fig=plot_utils.side_by_side_plots(ax1,ax2,title_ads=title_ads,font=fontmain,title_main='Three Agent dynamics',limits_params=limits_params)
 
             if save==True:
                 file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'3a_all','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','pos_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
@@ -960,623 +1077,7 @@ class Shell:
                     fig.savefig(file_name,bbox_inches='tight')
             return fig
 
-    def equilibrium_bifurcation_plot(self,
-                                     matrix: Dict = None,
-                                     reach_start: float = .03,
-                                     reach_end: float = .3,
-                                     reach_num_points: int = 30,
-                                     time_steps: int = 100,
-                                     initial_pos: Union[List[float], np.ndarray] = None,
-                                     current_alpha: float = .5,
-                                     tolerance: Optional[float] = None,
-                                     tolerated_agents: Optional[int] = None,
-                                     refinements: int = 2,
-                                     plot_type: str = "heat",
-                                     title_ads: List[str] = [],
-                                     name_ads: List[str] = [],
-                                     save: bool = False,
-                                     save_types: List[str] = ['.png', '.svg'],
-                                     return_matrix: bool = False,
-                                     parallel_configs: Dict[str, Union[bool, int]] = None,
-                                     cmaps: dict = {'heat': 'Blues', 'trajectory': '#851321', 'crit': 'Greys'},
-                                     font: dict = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12,'font_family': 'sans-serif'},
-                                     cbar_config: dict = {'center_labels': True, 'label_alignment': 'center', 'shrink': 0.8},
-                                     paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'equilibrium_bifurcation_plot'},
-                                     show_pred: bool = False,
-                                     envelope: bool = False,
-                                     optional_vline: List[float] = None,
-                                     verbose: bool = True,
-                                     complete: bool = False,
-                                     learning_rate: Optional[List] = None,
-                                     percentage: float = None) -> Union[torch.Tensor, matplotlib.figure.Figure]:
-        r"""
-        Plots the equilibrium bifurcation for agents over a range of reach parameters. As :math:`\sigma` or as variance goes to zero for players' influence kernels, 
-        the players begin to bifurcate. This plotting function computes the gradient ascent algorithm repetively for varying parameter values until the players reach an equilibrium.
-        
-        I.e. each player will have a vector of final positions :math:`X_i=[x_1,x_2,\dots,x_A]` where :math:`A` is the number of test parameters and
-        :math:`x_i` is the final position of the :math:`i` th player. Then the plot plots each players final position.
-
-        This is done via the function :func:`final_pos_over_reach`.
-
-        **1d example**
-
-        .. figure:: examples/bifurcation.png
-            :scale: 75 %
-
-            This is a 5 player positions bifurcation plot for a 1d domain.
-             
-        the critical values are estimated via :func:`InflGame.domains.one_d.utils.critical_values_plot`. 
-
-        **2d example**
-
-        .. figure:: examples/2d_bifurcation.png
-            :scale: 75 %
-
-            This is a 6 player positions bifurcation plot for a 2d domain.
-
-        **Simplex example**
-
-        .. figure:: examples/simplex_bifurcation.png
-            :scale: 75 %
-
-            This is a 3 player positions bifurcation plot for a simplex.
-
-        :param matrix: Pre-computed matrix of final positions (optional, will compute if None).
-        :type matrix: Optional[Dict]
-        :param reach_start: Starting value of reach parameter.
-        :type reach_start: float
-        :param reach_end: Ending value of reach parameter.
-        :type reach_end: float
-        :param reach_num_points: Number of points in the reach parameter range.
-        :type reach_num_points: int
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param initial_pos: Initial positions of agents.
-        :type initial_pos: Union[List[float], np.ndarray]
-        :param current_alpha: Current alpha value.
-        :type current_alpha: float
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: Optional[float]
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
-        :param refinements: Refinement level for plotting.
-        :type refinements: int
-        :param plot_type: Type of plot ('heat', 'trajectory', etc.).
-        :type plot_type: str
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param return_matrix: Whether to return the final position matrix.
-        :type return_matrix: bool
-        :param parallel_configs: Configuration dictionary for parallel processing with keys 'parallel', 'max_workers', 'batch_size'.
-        :type parallel_configs: Optional[Dict[str, Union[bool, int]]]
-        :param cmaps: Color map configuration dictionary.
-        :type cmaps: dict
-        :param font: Font configuration dictionary.
-        :type font: dict
-        :param cbar_config: Colorbar configuration dictionary.
-        :type cbar_config: dict
-        :param paper_figure: Paper figure configuration dictionary.
-        :type paper_figure: dict
-        :param show_pred: Whether to show predictions.
-        :type show_pred: bool
-        :param envelope: Whether to use envelope method.
-        :type envelope: bool
-        :param optional_vline: Optional vertical lines to add to plot.
-        :type optional_vline: Optional[List[float]]
-        :param verbose: Whether to print verbose output.
-        :type verbose: bool
-        :param complete: Whether to compute complete bifurcation envelope.
-        :type complete: bool
-        :param learning_rate: Learning rate schedule.
-        :type learning_rate: Optional[List]
-        :param percentage: Percentage threshold for envelope method.
-        :type percentage: Optional[float]
-
-        :return: The generated plot figure or final position matrix.
-        :rtype: Union[torch.Tensor, matplotlib.figure.Figure]
-        """
-        og_iterations=self.time_steps
-        og_pos=self.agents_pos.clone()
-        self.field.time_steps=time_steps
-        if initial_pos !=None:
-            self.matrix_results_complete=None
-            self.final_pos_matrix=None
-            self.agents_pos=initial_pos.clone()
-
-
-        if parallel_configs is None:
-            parallel_configs = {'parallel': False, 'max_workers': 4, 'batch_size': 2}
-        
-        parallel = parallel_configs.get('parallel', True)
-        max_workers = parallel_configs.get('max_workers', 4)
-        batch_size = parallel_configs.get('batch_size', 2)
-        if tolerated_agents==None:
-            tolerated_agents=self.tolerated_agents
-        if tolerance==None:
-            tolerance=self.tolerance
-
-        self.setup_bifurcation_env()
-        self.bif_field.setup_adaptive_env()
-
-        if self.domain_type=="1d":
-            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            if complete==True:
-                if matrix == None:
-                    if self.matrix_results_complete==None:
-                        self.matrix_results_complete = self.bif_field.equilibrium_bifurcation_complete(reach_start = reach_start,
-                                                                        reach_end = reach_end,
-                                                                        reach_num_points = reach_num_points,
-                                                                        time_steps = time_steps,
-                                                                        initial_pos = initial_pos,
-                                                                        tolerance = tolerance,
-                                                                        tolerated_agents = tolerated_agents,
-                                                                        parallel_configs = parallel_configs,
-                                                                        envelope = envelope,
-                                                                        verbose = verbose)
-                    else:
-                        self.matrix_results_complete=matrix
-                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d_COMPLETE(num_agents=self.num_agents,
-                                                                            bin_points=self.bin_points,
-                                                                            resource_distribution=self.resource_distribution,
-                                                                            infl_type=self.infl_type,
-                                                                            reach_parameters=reach_parameters,
-                                                                            matrix_list=self.matrix_results_complete,
-                                                                            reach_start=reach_start,
-                                                                            reach_end=reach_end,
-                                                                            refinements=refinements,
-                                                                            plot_type=plot_type,
-                                                                            title_ads=title_ads,
-                                                                            short_title=False,
-                                                                            cmaps=cmaps,
-                                                                            font=font,
-                                                                            cbar_config=cbar_config,
-                                                                            show_pred=show_pred,
-                                                                            optional_vline=optional_vline,
-                                                                            envelope_alpha=0.3)
-                final_pos_matrix=self.matrix_results_complete
-            elif envelope==True:
-                if matrix== None:
-                    if percentage == None:
-                        percentage=0.5
-                    extreme_positions=self.bif_field.final_pos_over_reach_envelope(reach_parameters,
-                                                                        tolerance=tolerance,
-                                                                        tolerated_agents=tolerated_agents,
-                                                                        parallel=parallel,
-                                                                        max_workers=max_workers,
-                                                                        batch_size=batch_size,
-                                                                        time_steps=time_steps,
-                                                                        percentage=percentage,
-                                                                        learning_rate=learning_rate)
-                else:
-                    extreme_positions=matrix
-                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d(num_agents=self.num_agents,
-                                                                       bin_points=self.bin_points,
-                                                                       resource_distribution=self.resource_distribution,
-                                                                       infl_type=self.infl_type,
-                                                                       infl_cshift=self.infl_cshift,
-                                                                       reach_parameters=reach_parameters,
-                                                                       extreme_positions=extreme_positions,
-                                                                       reach_start=reach_start,
-                                                                       reach_end=reach_end,
-                                                                       refinements=refinements,
-                                                                       plot_type=plot_type,
-                                                                       title_ads=title_ads,
-                                                                       font=font,
-                                                                       cmaps=cmaps,
-                                                                       cbar_config=cbar_config,
-                                                                       show_pred=show_pred,
-                                                                       optional_vline=optional_vline)
-                final_pos_matrix=extreme_positions
-            else:
-                if matrix == None:
-                    if  not hasattr(self, 'final_pos_matrix') or self.final_pos_matrix is None:
-                        self.final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters,
-                                                                tolerance=tolerance,
-                                                                tolerated_agents=tolerated_agents,
-                                                                parallel=parallel,
-                                                            max_workers=max_workers,
-                                                            batch_size=batch_size,
-                                                            time_steps=time_steps)
-                else:
-                    self.final_pos_matrix == matrix
-                final_pos_matrix=self.final_pos_matrix
-                fig=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,
-                                                              bin_points=self.bin_points,
-                                                              resource_distribution=self.resource_distribution,
-                                                              infl_type=self.infl_type,
-                                                              infl_cshift=self.infl_cshift,
-                                                              reach_parameters=reach_parameters,
-                                                              final_pos_matrix=final_pos_matrix,
-                                                              reach_start=reach_start,
-                                                              reach_end=reach_end,
-                                                              refinements=refinements,
-                                                              plot_type=plot_type,
-                                                              title_ads=title_ads,
-                                                              font=font,
-                                                              cmaps=cmaps,
-                                                              cbar_config=cbar_config,
-                                                              show_pred=show_pred,
-                                                              optional_vline=optional_vline)
-
-        elif self.domain_type=='2d':
-            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
-            fig=two_plots.equilibrium_bifurcation_plot_2d_simple(num_agents=self.num_agents,domain_bounds=self.domain_bounds,reach_num_points=reach_num_points,final_pos_matrix=final_pos_matrix,title_ads=title_ads,font=font)
-            
-        elif self.domain_type=='simplex':
-            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-            final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
-            fig=simplex_plots.equalibirium_bifurication_plot_simplex(num_agents=self.num_agents,r2=self.r2,corners=self.corners,triangle=self.triangle,final_pos_matrix=final_pos_matrix,reach_num_points=reach_num_points,type_labels=None,title_ads=title_ads)
-        
-        self.field.time_steps=og_iterations
-        self.field.agents_pos=og_pos.clone()
-        self.agents_pos=og_pos.clone()
-        if save==True:
-            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bifurcation','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','equilibrium_bifurcation_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
-            for file_name in file_names:
-                fig.savefig(file_name,bbox_inches='tight')
-        if return_matrix==True:
-            return fig,final_pos_matrix
-        else: 
-            return fig
-        
-    def first_order_bifurcation_plot(self,
-                                      agent_parameter_instance: Union[List[float], np.ndarray],
-                                      resource_distribution_type: str,
-                                      resource_entropy: bool = False,
-                                      infl_entropy: bool = False,
-                                      alpha_current: float = .5,
-                                      alpha_st: float = 0,
-                                      alpha_end: float = 1,
-                                      varying_parameter_type: str = 'mean',
-                                      fixed_parameters_lst: Optional[List[float]] = None,
-                                      name_ads: List[str] = [],
-                                      title_ads: List[str] = [],
-                                      save_types: List[str] = ['.png', '.svg'],
-                                      paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'first_order_bifurcation_plot'},
-                                      font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'}) -> matplotlib.figure.Figure:
-        r"""
-        Plots the first-order bifurcation for agents over a range of alpha values (resource parameters) via func:`jacobian_stability_fast`. Currently only works for 
-        Gaussian influence and multi-variate Gaussian influence kernels. 
-
-        **Gaussian example**
-
-        .. figure:: examples/first_order.png
-            :scale: 75 %
-
-            This is a first order bifurcations plot for 5 players using symmetric Gaussian influence kernels.
-             
-
-        :param agent_parameter_instance: Parameters for the influence function.
-        :type agent_parameter_instance: Union[List[float], np.ndarray]
-        :param resource_distribution_type: Type of resource distribution.
-        :type resource_distribution_type: str
-        :param resource_entropy: Whether to calculate resource entropy.
-        :type resource_entropy: bool
-        :param infl_entropy: Whether to calculate influence entropy.
-        :type infl_entropy: bool
-        :param alpha_current: Current alpha value.
-        :type alpha_current: float
-        :param alpha_st: Starting value of alpha.
-        :type alpha_st: float
-        :param alpha_end: Ending value of alpha.
-        :type alpha_end: float
-        :param varying_parameter_type: Type of varying parameter (e.g., 'mean').
-        :type varying_parameter_type: str
-        :param fixed_parameters_lst: List of fixed parameters.
-        :type fixed_parameters_lst: Optional[List[float]]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
-        """
-        resource_parameters,alpha=general.resource_parameter_setup(resource_distribution_type=resource_distribution_type,varying_parameter_type=varying_parameter_type,alpha_st=alpha_st, alpha_end=alpha_end, fixed_parameters_lst=fixed_parameters_lst)
-        y=self.jacobian_stability_fast(agent_parameter_instance=agent_parameter_instance,resource_distribution_type=resource_distribution_type,resource_parameters=resource_parameters,resource_entropy=resource_entropy,infl_entropy=infl_entropy)[0]
-        fig,ax=plt.subplots(figsize=(24, 16))
-        ax.set_box_aspect(1)
-        
-        # Apply font settings
-        plt.rcParams.update({'font.size': font['default_size'], 'font.family': font['font_family']})
-        
-        #plots the line where the e-values of the jacobian becomes postive
-        ax.plot(alpha,y)
-        ax.fill_between(alpha, 0, y, where=(alpha >= alpha_st), color='red', alpha=0.3)
-        ax.fill_between(alpha, y,max(max(y),.3), where=(alpha <= alpha_end), color='blue', alpha=0.3)
-        ax.vlines([alpha_current],ymin=max(min(y),0),ymax=max(max(y),.3),label=r'Current $\alpha$ value= '+str(alpha_current),colors='black',linestyles='--' )
-        
-        plt.ylim(max(min(y),0),max(max(y),.3))
-        red_p = mpatches.Patch(color='red', label='unstable')
-        blue_p = mpatches.Patch(color='blue', label='stable')
-        plt.legend()
-        old_handles, labels = ax.get_legend_handles_labels()
-        plt.legend(handles=[red_p, blue_p]+old_handles)
-        plt.ylabel("$\sigma$ (reach)", fontsize=font['default_size'])
-        plt.xlabel(r"$\alpha$ (mode distance)", fontsize=font['default_size'])
-        
-        title=r"$(\alpha,\sigma)$ $x^{*}$ stability bifurication for "+str(self.num_agents)+" players"
-        if len(title_ads)>0:
-            for title_additon in title_ads:
-                title=title+" "+title_additon
-        plt.title(title, fontsize=font['title_size'])
-        plt.xlim(alpha_st,alpha_end) 
-        plt.close()
-        
-        file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'stability_bifurcation_plot_fast','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','first_order_bifurcation_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
-        for file_name in file_names:
-            fig.savefig(file_name,bbox_inches='tight')
-        return fig
-        
-    def position_at_equalibirum_histogram(self,
-                                         reach_parameter: float = .5,
-                                         time_steps: int = 100,
-                                         initial_pos: Union[List[float], np.ndarray] = 0,
-                                         current_alpha: float = .5,
-                                         tolerance: Optional[float] = None,
-                                         tolerated_agents: Optional[int] = None,
-                                         title_ads: List[str] = [],
-                                         name_ads: List[str] = [],
-                                         save: bool = False,
-                                         save_types: List[str] = ['.png', '.svg'],
-                                         return_pos: bool = False,
-                                         parallel: bool = True,
-                                         max_workers: Optional[int] = None,
-                                         batch_size: Optional[int] = None,
-                                         paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'position_at_equalibirum_histogram'},
-                                         font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'}) -> Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]:
-        """
-        Plot the histogram of agents' positions at equilibrium for a given reach parameter via the function :func:`InflGame.adaptive.grad_func_env.gradient_ascent` .
-        This only works for '1d' domains.
-        
-        .. figure:: examples/histogram.png
-            :scale: 75 %
-
-            This is the histogram of player positions at equilibrium for 5 player game.
-             
-           
-        
-
-        :param reach_parameter: Reach parameter value.
-        :type reach_parameter: float
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param initial_pos: Initial positions of agents.
-        :type initial_pos: Union[List[float], np.ndarray]
-        :param current_alpha: Current alpha value.
-        :type current_alpha: float
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: Optional[float]
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param return_pos: Whether to return the final positions.
-        :type return_pos: bool
-        :param parallel: Whether to use parallel processing.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param paper_figure: Paper figure configuration dictionary.
-        :type paper_figure: dict
-        :param font: Font configuration dictionary.
-        :type font: dict
-
-        :return: The generated plot figure or final positions.
-        :rtype: Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]
-        """
-        og_iterations=self.time_steps
-        og_pos=self.agents_pos.clone()
-        self.field.time_steps=time_steps
-        
-        if not torch.is_tensor(initial_pos):
-            initial_pos=torch.tensor(initial_pos)
-        self.agents_pos=initial_pos.clone()
-        self.field.agents_pos=initial_pos.clone()
-        
-        if tolerated_agents==None:
-            tolerated_agents=self.tolerated_agents
-        if tolerance==None:
-            tolerance=self.tolerance
-
-        self.setup_bifurcation_env()
-        if self.domain_type=="1d":
-            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_parameter,reach_end = reach_parameter,reach_num_points = 1)
-            final_pos_vector=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=time_steps)
-            fig=one_plots.final_position_histogram_1d(num_agents=self.num_agents,domain_bounds=self.domain_bounds,current_alpha=current_alpha,reach_parameter=reach_parameter,final_pos_vector=final_pos_vector,title_ads=title_ads,font=font)
-        else:
-            ValueError("Histogram is limited to 1d domains")
-            
-        self.field.time_steps=og_iterations
-        self.field.agents_pos=og_pos.clone()
-        self.agents_pos=og_pos.clone()
-
-        if save==True:
-            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'positional_histogram','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','position_at_equalibirum_histogram')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
-            for file_name in file_names:
-                fig.savefig(file_name,bbox_inches='tight')
-        if return_pos==True:
-            return fig,final_pos_vector
-        else:
-            return fig
-
-    def bifurcation_plot_AD_MARL(self,
-                                  parameters_AD:dict,
-                                  parameters_MARL:dict,
-                                  fontmain= {'default_size': 15, 'axis_size':15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
-                                  save: bool = False,
-                                  name_ads: List[str] = [],
-                                  save_types: List[str] = ['.png', '.svg'],
-                                  paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'},
-                                  ) -> matplotlib.figure.Figure:
-        """
-        Create side-by-side bifurcation plots comparing Adaptive Dynamics (AD) and Multi-Agent Reinforcement Learning (MARL) approaches.
-        
-        This method generates comparative visualization showing how equilibrium positions change with parameter variation
-        for both gradient-based adaptive dynamics and reinforcement learning methods.
-        
-        :param parameters_AD: Configuration dictionary for adaptive dynamics bifurcation with keys:
-            - 'reach_start': Starting reach parameter value
-            - 'reach_end': Ending reach parameter value
-            - 'reach_num_points': Number of parameter points
-            - 'time_steps': Gradient ascent iterations
-            - 'tolerance': Convergence tolerance
-            - 'tolerated_agents': Number of agents for convergence check
-            - 'plot_type': Type of bifurcation plot
-            - 'refinements': Plot refinement level
-            - 'title_ads': Additional title strings
-            - 'cmaps': Color map configuration
-            - 'cbar_config': Colorbar configuration
-            - 'parallel_configs': Parallel processing settings
-            - 'font': Font configuration
-        :type parameters_AD: dict
-        :param parameters_MARL: Configuration dictionary for MARL bifurcation with keys:
-            - 'step_size': Step size for RL environment
-            - 'resource': Resource distribution type
-            - 'reach_start': Starting reach parameter
-            - 'reach_end': Ending reach parameter
-            - 'reach_parameters': Array of reach parameter values
-            - 'refinements': Plot refinement level
-            - 'plot_type': Type of bifurcation plot
-            - 'infl_type': Influence kernel type
-            - 'title_ads': Additional title strings
-            - 'font': Font configuration
-            - 'cbar_config': Colorbar configuration
-        :type parameters_MARL: dict
-        :param fontmain: Main font configuration for combined plot.
-        :type fontmain: dict
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional filename components for saving.
-        :type name_ads: List[str]
-        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
-        :type paper_figure: dict
-        
-        :return: Combined matplotlib figure with AD and MARL bifurcation plots.
-        :rtype: matplotlib.figure.Figure
-        """
-
-
-
-        import hickle as hkl  
-        self.setup_bifurcation_env()
-
-        # AD bifurcation plot
-
-        reach_start = parameters_AD.get('reach_start', 0.03)
-        reach_end = parameters_AD.get('reach_end', 0.3)
-        reach_num_points = parameters_AD.get('reach_num_points', 200)
-        time_steps = parameters_AD.get('time_steps', 10000)
-        tolerance = parameters_AD.get('tolerance', None)
-        tolerated_agents = parameters_AD.get('tolerated_agents', None)
-        plot_type = parameters_AD.get('plot_type', 'heat')
-        refinements = parameters_AD.get('refinements', 10)
-        title_ads = parameters_AD.get('title_ads', [])
-        cmaps = parameters_AD.get('cmaps', {'heat': 'Blues', 'trajectory': '#851321', 'crit': 'Greys'})
-        cbar_config = parameters_AD.get('cbar_config', {'center_labels': True, 'label_alignment': 'center', 'shrink': 1.0})
-        parallel_configs = parameters_AD.get('parallel_configs', {})
-        parallel = parallel_configs.get('parallel', True)
-        max_workers = parallel_configs.get('max_workers', 6)
-        batch_size = parallel_configs.get('batch_size', 4)
-        font= parameters_AD.get('font', fontmain)
-        
-        if tolerated_agents==None:
-            tolerated_agents=self.tolerated_agents
-        if tolerance==None:
-            tolerance=self.tolerance
-
-
-
-        reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
-        final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
-        ax1=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,
-                                                      bin_points=self.bin_points,
-                                                      resource_distribution=self.resource_distribution,
-                                                      infl_type=self.infl_type,
-                                                      infl_cshift=self.infl_cshift,
-                                                      reach_parameters=reach_parameters,
-                                                      final_pos_matrix=final_pos_matrix,
-                                                      reach_start=reach_start,
-                                                      reach_end=reach_end,
-                                                      refinements=refinements,
-                                                      plot_type=plot_type,
-                                                      title_ads=title_ads,
-                                                      short_title=True,
-                                                      font=font,
-                                                      cmaps=cmaps,
-                                                      cbar_config=cbar_config,
-                                                      axis_return=True,)
-
-        # MARL bifurcation plot this is only done if the MARL data is available
-
-        step = parameters_MARL.get('step_size', 0.1)
-        resource = parameters_MARL.get('resource', "gauss_mix_2m")
-        
-
-        env_config_main = {"num_agents":self.num_agents,"parameters":[self.parameters[0].item()],"step_size":step}
-        configs={"env_config_main":env_config_main}
-        params=data_management.data_parameters(configs=configs,data_type="configs",resource_type=resource)
-        config_name=data_management.data_final_name(data_parameters=params,name_ads=[])
-        params=data_management.data_parameters(configs=configs,data_type="final_positions",resource_type=resource)
-        data_name=data_management.data_final_name(data_parameters=params,name_ads=["test"])
-        params=data_management.data_parameters(configs=configs,data_type="final_mad",resource_type=resource)
-        data_name2=data_management.data_final_name(data_parameters=params,name_ads=["test"])
-        mean=hkl.load(data_name[0])
-        mean=torch.tensor(mean)
-        mad=hkl.load(data_name2[0])
-        mad=torch.tensor(mad)
-
-
-        reach_start_marl = parameters_MARL.get('reach_start', 0.03)
-        reach_end_marl = parameters_MARL.get('reach_end', 0.3)
-        refinements_marl = parameters_MARL.get('refinements', 10)
-        from InflGame.MARL.MARL_plots import bifurcation_over_parameters
-        ax2=bifurcation_over_parameters(positions=mean,
-                                    reach_parameters=parameters_MARL.get('reach_parameters', np.linspace(reach_start_marl, reach_end_marl, 96)),
-                                    num_agents=self.num_agents,
-                                    bin_points=self.bin_points,
-                                    resource_distribution=self.resource_distribution,
-                                    refinements=refinements_marl,
-                                    plot_type=parameters_MARL.get('plot_type', 'gaussian'),
-                                    infl_cshift=self.infl_cshift,
-                                    infl_type=parameters_MARL.get('infl_type', 'gaussian'),
-                                    name_ads=[],
-                                    title_ads=parameters_MARL.get('title_ads', []),
-                                    short_title=True,
-                                    font=parameters_MARL.get('font', fontmain),
-                                    cbar_config=parameters_MARL.get('cbar_config', {'center_labels': True, 'label_alignment': 'center', 'shrink': 1.0}),
-                                    save=False,
-                                    axis_return=True,
-                                    )
-        # Combine plots
-        fig=plot_utils.side_by_side_plots(ax1,ax2,title_ads=[f'{self.num_agents} Agents']+title_ads,font=fontmain,title_main='Adaptive vs MARL Dynamcis Bifurcations',cbar_params={'common_cbar':True,'cbar_title':'Number of Agents'},axis_params={'common_axis':True,'axis_ylabel':'Agent Position','axis_xlabel':r'$\sigma$ (reach)'})
-
-        if save==True:
-            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bif_adp_marl','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','pos_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
-            for file_name in file_names:
-                fig.savefig(file_name,bbox_inches='tight')
-        return fig
-
-    # 3d visualization for traces 
+    ## 3d visualization for traces 
     def _process_point_worker(self, args):
         """
         Worker function for processing gradient ascent from a starting point in parallel execution.
@@ -1606,9 +1107,9 @@ class Shell:
             # Set the starting position
             if self.num_agents !=3:
                 extra_agents = self.num_agents - 3
-                point_extended = point.tolist() + [point[1].item()] * extra_agents
-                shell_obj.agents_pos = torch.tensor(point_extended)
-                shell_obj.field.agents_pos = torch.tensor(point_extended)
+                point_extended = point.cpu().tolist() + [point[1].cpu().item()] * extra_agents
+                shell_obj.agents_pos = general._to_tensor(point_extended, "agents_pos", device=self.device)
+                shell_obj.field.agents_pos = general._to_tensor(point_extended, "agents_pos", device=self.device)
             else:
                 shell_obj.agents_pos = point.clone()
                 shell_obj.field.agents_pos = point.clone()
@@ -1630,9 +1131,9 @@ class Shell:
             
             # Get the path data
             if self.num_agents != 3:
-                pos_matrix = shell_obj.field.pos_matrix[:, :3].numpy()
+                pos_matrix = shell_obj.field.pos_matrix[:, :3].cpu().numpy()
             else:
-                pos_matrix = shell_obj.field.pos_matrix.numpy()
+                pos_matrix = shell_obj.field.pos_matrix.cpu().numpy()
             converged = len(shell_obj.field.pos_matrix) < time_steps
             
             print(f"Success: Generated path with {len(pos_matrix)} points for {point}")
@@ -1691,7 +1192,7 @@ class Shell:
         self.agents_pos = original_pos
         return result
 
-    def plot_3d_fixed_diagonal_view(self, 
+    def threed_fixed_diagonal_view(self, 
                              resolution=5,
                              time_steps=10000,
                              show_planes=True,
@@ -1918,7 +1419,7 @@ class Shell:
                         continue
                     
                     # Get the path data
-                    pos_matrix = self.field.pos_matrix.numpy()
+                    pos_matrix = self.field.pos_matrix.cpu().numpy()
                     converged = len(self.field.pos_matrix) < time_steps
                     if verbose==True:
                         print(f"Success: Generated path with {len(pos_matrix)} points for {point}")
@@ -2092,8 +1593,7 @@ class Shell:
         self.field.time_steps = original_time_steps
         return fig, results
 
-    # 3d visualization for traces gif
-    def plot_3d_fixed_diagonal_view_gif(self,
+    def threed_fixed_diagonal_view_gif(self,
                                         max_frames: int,
                                         output_filename: str = '3d_diagonal_traces.gif',
                                         resolution: int = 5,
@@ -2337,7 +1837,7 @@ class Shell:
         
         return final_fig
         
-    def plot_3d_gradient_ascent_paths_interactive(self, 
+    def threed_gradient_ascent_paths_interactive(self, 
                                         resolution=5, 
                                         time_steps=10000,
                                         start_color='red',
@@ -2457,17 +1957,17 @@ class Shell:
                 if self.num_agents != 3:
                     # we need to add number of players -3 values equal to player 2 position
                     extra_agents = self.num_agents - 3
-                    point_extended = point.tolist() + [point[1].item()] * extra_agents
-                    self.field.agents_pos = torch.tensor(point_extended)
+                    point_extended = point.cpu().tolist() + [point[1].cpu().item()] * extra_agents
+                    self.field.agents_pos = general._to_tensor(point_extended, "agents_pos", device=self.device)
                 else:
                     self.field.agents_pos = point.clone()
                 self.field.gradient_ascent()
                 
                 # Get the path data
                 if self.num_agents != 3:
-                    pos_matrix= self.field.pos_matrix[:, :3].numpy()  # Only take first 3 dimensions for plotting
+                    pos_matrix= self.field.pos_matrix[:, :3].cpu().numpy()  # Only take first 3 dimensions for plotting
                 else:
-                    pos_matrix = self.field.pos_matrix.numpy()  # Convert to numpy for plotly
+                    pos_matrix = self.field.pos_matrix.cpu().numpy()  # Convert to numpy for plotly
                 converged = len(self.field.pos_matrix) < time_steps
                 path_color = get_region_color(point)
                 
@@ -2593,6 +2093,9 @@ class Shell:
         )
         
         return fig
+    
+    ## Bifrucation plots
+
     def first_order_bifurcation_plot(self,
                                      processed_data: dict,
                                      alpha_st: float = 0,
@@ -2701,7 +2204,19 @@ class Shell:
         
         alpha = alpha_values[:cutoff_index]
         has_cycles = 'cycles_end' in processed_data and processed_data['cycles_end'] is not None
-        if self.num_agents>=5:
+        if self.num_agents>=5 or self.infl_type=='beta':
+            """
+            if self.infl_type == 'beta':
+                y = np.array(processed_data['sigma_star'][:cutoff_index])
+                cutoff_index = np.argmax(y >= 0.5) if np.any(y >= 0.5) else cutoff_index
+                print(f"Cutoff index adjusted to {cutoff_index} based on sigma_star reaching 0.5")
+                alpha = alpha_values[:cutoff_index]
+                y = processed_data['stable_flip'][:cutoff_index, 0]
+                ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
+                ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
+                ax.fill_between(alpha, 0, y,where=(alpha >= alpha_st), color="#388001", alpha=0.5)
+            else:
+            """
             y = processed_data['sigma_star'][:cutoff_index]
             ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
             ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
@@ -2713,12 +2228,20 @@ class Shell:
             
             
             # Plot sigma_star and unstable flip
-            ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
-            ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
+            if self.infl_type == 'beta':
+                ax.plot(alpha, y, label=r'$\sigma^{*}_0$ est', color='black')
+            else:
+                ax.plot(alpha, y, label=r'$\sigma^{*}_0$ exact', color='black')
             
-            if infl_type == 'beta':
+            ax.fill_between(alpha, y, max(max(y), .3), where=(alpha <= alpha_end), color='#87CEEB', alpha=0.5)  # Sky blue for symmetric Nash
+            if self.infl_type == 'beta':
                 # If stable flip exists, add it
+                #find where to cut off the alphas, for when w>=.5 (only for beta)
                 if processed_data['max_stable_len'] > 0:
+                    #find where to cut off the alphas, for when w>=.5 (only for beta)
+                    w = processed_data['stable_flip'][:cutoff_index, 0]
+                    cutoff_index = np.argmax(w >= 0.5) if np.any(w >= 0.5) else cutoff_index
+                    alpha = alpha_values[:cutoff_index]
                     w = processed_data['stable_flip'][:cutoff_index, 0]
                     ax.plot(alpha, w, label=r'$\sigma^{*}_1$ est.', color='black', linestyle='dashdot')
                     ax.fill_between(alpha, w, y, where=(alpha >= alpha_st), color='#FF6B6B', alpha=0.5)  # Coral red for 2-1
@@ -2779,8 +2302,6 @@ class Shell:
         # Conditionally add legend patches based on what's plotted
         legend_handles = [blue_p]
         if infl_type == 'beta':
-            legend_handles.append(red_p)
-            legend_handles.append(purple_p)
             if has_cycles:
                 legend_handles.append(yellow_p)
         else:
@@ -2816,7 +2337,1388 @@ class Shell:
                 fig.savefig(file_name,bbox_inches='tight')
             
         return fig ,ax
-    #Utils integrated into the class for simplicity
+
+    def equilibrium_bifurcation_plot(self,
+                                     matrix: Dict = None,
+                                     reach_start: float = .03,
+                                     reach_end: float = .3,
+                                     reach_num_points: int = 30,
+                                     time_steps: int = 100,
+                                     initial_pos: Union[List[float], np.ndarray] = None,
+                                     current_alpha: float = .5,
+                                     tolerance: Optional[float] = None,
+                                     tolerated_agents: Optional[int] = None,
+                                     refinements: int = 2,
+                                     plot_type: str = "heat",
+                                     title_ads: List[str] = [],
+                                     name_ads: List[str] = [],
+                                     save: bool = False,
+                                     save_types: List[str] = ['.png', '.svg'],
+                                     return_matrix: bool = False,
+                                     parallel_configs: Dict[str, Union[bool, int]] = None,
+                                     cmaps: dict = {'heat': 'Blues', 'trajectory': '#851321', 'crit': 'Greys'},
+                                     font: dict = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12,'font_family': 'sans-serif'},
+                                     cbar_config: dict = {'center_labels': True, 'label_alignment': 'center', 'shrink': 0.8},
+                                     paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'equilibrium_bifurcation_plot'},
+                                     show_pred: bool = False,
+                                     envelope: bool = False,
+                                     optional_vline: List[float] = None,
+                                     verbose: bool = True,
+                                     complete: bool = False,
+                                     learning_rate: Optional[List] = None,
+                                     percentage: float = None,
+                                     show_bif_labels: bool = True,
+                                     bifurcation_key_tolerance: int = 3,
+                                     short_title: bool = False) -> Union[torch.Tensor, matplotlib.figure.Figure]:
+        r"""
+        Plots the equilibrium bifurcation for agents over a range of reach parameters. As :math:`\sigma` or as variance goes to zero for players' influence kernels, 
+        the players begin to bifurcate. This plotting function computes the gradient ascent algorithm repetively for varying parameter values until the players reach an equilibrium.
+        
+        I.e. each player will have a vector of final positions :math:`X_i=[x_1,x_2,\dots,x_A]` where :math:`A` is the number of test parameters and
+        :math:`x_i` is the final position of the :math:`i` th player. Then the plot plots each players final position.
+
+        This is done via the function :func:`final_pos_over_reach`.
+
+        **1d example**
+
+        .. figure:: examples/bifurcation.png
+            :scale: 75 %
+
+            This is a 5 player positions bifurcation plot for a 1d domain.
+             
+        the critical values are estimated via :func:`InflGame.domains.one_d.utils.critical_values_plot`. 
+
+        **2d example**
+
+        .. figure:: examples/2d_bifurcation.png
+            :scale: 75 %
+
+            This is a 6 player positions bifurcation plot for a 2d domain.
+
+        **Simplex example**
+
+        .. figure:: examples/simplex_bifurcation.png
+            :scale: 75 %
+
+            This is a 3 player positions bifurcation plot for a simplex.
+
+        :param matrix: Pre-computed matrix of final positions (optional, will compute if None).
+        :type matrix: Optional[Dict]
+        :param reach_start: Starting value of reach parameter.
+        :type reach_start: float
+        :param reach_end: Ending value of reach parameter.
+        :type reach_end: float
+        :param reach_num_points: Number of points in the reach parameter range.
+        :type reach_num_points: int
+        :param time_steps: Number of gradient ascent steps.
+        :type time_steps: int
+        :param initial_pos: Initial positions of agents.
+        :type initial_pos: Union[List[float], np.ndarray]
+        :param current_alpha: Current alpha value.
+        :type current_alpha: float
+        :param tolerance: Tolerance for convergence.
+        :type tolerance: Optional[float]
+        :param tolerated_agents: Number of agents allowed to tolerate deviations.
+        :type tolerated_agents: Optional[int]
+        :param refinements: Refinement level for plotting.
+        :type refinements: int
+        :param plot_type: Type of plot ('heat', 'trajectory', etc.).
+        :type plot_type: str
+        :param title_ads: Additional titles for the plot.
+        :type title_ads: List[str]
+        :param name_ads: Additional names for saved files.
+        :type name_ads: List[str]
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param save_types: File types to save the plot.
+        :type save_types: List[str]
+        :param return_matrix: Whether to return the final position matrix.
+        :type return_matrix: bool
+        :param parallel_configs: Configuration dictionary for parallel processing with keys 'parallel', 'max_workers', 'batch_size'.
+        :type parallel_configs: Optional[Dict[str, Union[bool, int]]]
+        :param cmaps: Color map configuration dictionary.
+        :type cmaps: dict
+        :param font: Font configuration dictionary.
+        :type font: dict
+        :param cbar_config: Colorbar configuration dictionary.
+        :type cbar_config: dict
+        :param paper_figure: Paper figure configuration dictionary.
+        :type paper_figure: dict
+        :param show_pred: Whether to show predictions.
+        :type show_pred: bool
+        :param envelope: Whether to use envelope method.
+        :type envelope: bool
+        :param optional_vline: Optional vertical lines to add to plot.
+        :type optional_vline: Optional[List[float]]
+        :param verbose: Whether to print verbose output.
+        :type verbose: bool
+        :param complete: Whether to compute complete bifurcation envelope.
+        :type complete: bool
+        :param learning_rate: Learning rate schedule.
+        :type learning_rate: Optional[List]
+        :param percentage: Percentage threshold for envelope method.
+        :type percentage: Optional[float]
+
+        :return: The generated plot figure or final position matrix.
+        :rtype: Union[torch.Tensor, matplotlib.figure.Figure]
+        """
+        og_iterations=self.time_steps
+        og_pos=self.agents_pos.clone()
+        self.field.time_steps=time_steps
+        if initial_pos !=None:
+            self.matrix_results_complete=None
+            self.final_pos_matrix=None
+            self.agents_pos=initial_pos.clone()
+
+
+        if parallel_configs is None:
+            parallel_configs = {'parallel': False, 'max_workers': 4, 'batch_size': 2}
+        
+        parallel = parallel_configs.get('parallel', True)
+        max_workers = parallel_configs.get('max_workers', 4)
+        batch_size = parallel_configs.get('batch_size', 2)
+        if tolerated_agents==None:
+            tolerated_agents=self.tolerated_agents
+        if tolerance==None:
+            tolerance=self.tolerance
+
+        self.setup_bifurcation_env()
+        self.bif_field.setup_adaptive_env()
+
+        if self.domain_type=="1d":
+            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+            if complete==True:
+                if matrix is not None:
+                    # Use provided matrix
+                    self.matrix_results_complete = matrix
+                elif self.matrix_results_complete is None:
+                    # Compute matrix if not provided and not cached
+                    self.matrix_results_complete = self.bif_field.equilibrium_bifurcation_complete(reach_start = reach_start,
+                                                                    reach_end = reach_end,
+                                                                    reach_num_points = reach_num_points,
+                                                                    time_steps = time_steps,
+                                                                    initial_pos = initial_pos,
+                                                                    tolerance = tolerance,
+                                                                    tolerated_agents = tolerated_agents,
+                                                                    parallel_configs = parallel_configs,
+                                                                    envelope = envelope,
+                                                                    verbose = verbose)
+               
+                # else: use existing self.matrix_results_complete
+                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d_COMPLETE(num_agents=self.num_agents,
+                                                                            bin_points=self.bin_points,
+                                                                            resource_distribution=self.resource_distribution,
+                                                                            infl_type=self.infl_type,
+                                                                            reach_parameters=reach_parameters,
+                                                                            matrix_list=self.matrix_results_complete,
+                                                                            reach_start=reach_start,
+                                                                            reach_end=reach_end,
+                                                                            refinements=refinements,
+                                                                            plot_type=plot_type,
+                                                                            title_ads=title_ads,
+                                                                            short_title=short_title,
+                                                                            cmaps=cmaps,
+                                                                            font=font,
+                                                                            cbar_config=cbar_config,
+                                                                            show_pred=show_pred,
+                                                                            optional_vline=optional_vline,
+                                                                            envelope_alpha=0.3,
+                                                                            show_bif_labels=show_bif_labels,
+                                                                            bifurcation_key_tolerance=bifurcation_key_tolerance,
+                                                                        )
+                final_pos_matrix=self.matrix_results_complete
+            elif envelope==True:
+                if matrix== None:
+                    if percentage == None:
+                        percentage=0.5
+                    extreme_positions=self.bif_field.final_pos_over_reach_envelope(reach_parameters,
+                                                                        tolerance=tolerance,
+                                                                        tolerated_agents=tolerated_agents,
+                                                                        parallel=parallel,
+                                                                        max_workers=max_workers,
+                                                                        batch_size=batch_size,
+                                                                        time_steps=time_steps,
+                                                                        percentage=percentage,
+                                                                        learning_rate=learning_rate)
+                else:
+                    extreme_positions=matrix
+                fig=one_plots.equilibrium_bifurcation_envelope_plot_1d(num_agents=self.num_agents,
+                                                                       bin_points=self.bin_points,
+                                                                       resource_distribution=self.resource_distribution,
+                                                                       infl_type=self.infl_type,
+                                                                       infl_cshift=self.infl_cshift,
+                                                                       reach_parameters=reach_parameters,
+                                                                       extreme_positions=extreme_positions,
+                                                                       reach_start=reach_start,
+                                                                       reach_end=reach_end,
+                                                                       refinements=refinements,
+                                                                       plot_type=plot_type,
+                                                                       title_ads=title_ads,
+                                                                       font=font,
+                                                                       cmaps=cmaps,
+                                                                       cbar_config=cbar_config,
+                                                                       show_pred=show_pred,
+                                                                       optional_vline=optional_vline,
+                                                                       show_bif_labels=show_bif_labels,
+                                                                       bifurcation_key_tolerance=bifurcation_key_tolerance,
+                                                                       short_title=short_title,)
+                final_pos_matrix=extreme_positions
+            else:
+                if matrix == None:
+                    if  not hasattr(self, 'final_pos_matrix') or self.final_pos_matrix is None:
+                        final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters,
+                                                                tolerance=tolerance,
+                                                                tolerated_agents=tolerated_agents,
+                                                                parallel=parallel,
+                                                            max_workers=max_workers,
+                                                            batch_size=batch_size,
+                                                            time_steps=time_steps)
+                else:
+                    final_pos_matrix = matrix
+    
+                fig=one_plots.equilibrium_bifurcation_plot_1d(num_agents=self.num_agents,
+                                                              bin_points=self.bin_points,
+                                                              resource_distribution=self.resource_distribution,
+                                                              infl_type=self.infl_type,
+                                                              infl_cshift=self.infl_cshift,
+                                                              reach_parameters=reach_parameters,
+                                                              final_pos_matrix=final_pos_matrix,
+                                                              reach_start=reach_start,
+                                                              reach_end=reach_end,
+                                                              refinements=refinements,
+                                                              plot_type=plot_type,
+                                                              title_ads=title_ads,
+                                                              font=font,
+                                                              cmaps=cmaps,
+                                                              cbar_config=cbar_config,
+                                                              show_pred=show_pred,
+                                                              optional_vline=optional_vline,
+                                                              short_title=short_title)
+
+        elif self.domain_type=='2d':
+            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+            if matrix is not None:
+                final_pos_matrix = matrix
+            else:
+                final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
+            
+            fig=two_plots.equilibrium_bifurcation_plot_2d_simple(num_agents=self.num_agents,domain_bounds=self.domain_bounds,reach_num_points=reach_num_points,final_pos_matrix=final_pos_matrix,title_ads=title_ads,font=font)
+            
+        elif self.domain_type=='simplex':
+            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+            if matrix is not None:
+                final_pos_matrix = matrix
+            else:
+                final_pos_matrix=self.bif_field.final_pos_over_reach(reach_parameters.clone(), tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=parallel, max_workers=max_workers, batch_size=batch_size, time_steps=time_steps)
+
+           
+
+            fig=simplex_plots.equalibirium_bifurication_plot_simplex(num_agents=self.num_agents,r2=self.r2,corners=self.corners,triangle=self.triangle,final_pos_matrix=final_pos_matrix,reach_num_points=reach_num_points,type_labels=None,title_ads=title_ads)
+        
+        self.field.time_steps=og_iterations
+        self.field.agents_pos=og_pos.clone()
+        self.agents_pos=og_pos.clone()
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bifurcation','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','equilibrium_bifurcation_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            for file_name in file_names:
+                fig.savefig(file_name,bbox_inches='tight')
+        if return_matrix==True:
+            return fig,final_pos_matrix
+        else: 
+            return fig
+            
+    def position_at_equalibirum_histogram(self,
+                                         reach_parameter: float = .5,
+                                         time_steps: int = 100,
+                                         initial_pos: Union[List[float], np.ndarray] = 0,
+                                         current_alpha: float = .5,
+                                         tolerance: Optional[float] = None,
+                                         tolerated_agents: Optional[int] = None,
+                                         title_ads: List[str] = [],
+                                         name_ads: List[str] = [],
+                                         save: bool = False,
+                                         save_types: List[str] = ['.png', '.svg'],
+                                         return_pos: bool = False,
+                                         parallel: bool = True,
+                                         max_workers: Optional[int] = None,
+                                         batch_size: Optional[int] = None,
+                                         paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'position_at_equalibirum_histogram'},
+                                         font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'}) -> Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]:
+        """
+        Plot the histogram of agents' positions at equilibrium for a given reach parameter via the function :func:`InflGame.adaptive.grad_func_env.gradient_ascent` .
+        This only works for '1d' domains.
+        
+        .. figure:: examples/histogram.png
+            :scale: 75 %
+
+            This is the histogram of player positions at equilibrium for 5 player game.
+             
+           
+        
+
+        :param reach_parameter: Reach parameter value.
+        :type reach_parameter: float
+        :param time_steps: Number of gradient ascent steps.
+        :type time_steps: int
+        :param initial_pos: Initial positions of agents.
+        :type initial_pos: Union[List[float], np.ndarray]
+        :param current_alpha: Current alpha value.
+        :type current_alpha: float
+        :param tolerance: Tolerance for convergence.
+        :type tolerance: Optional[float]
+        :param tolerated_agents: Number of agents allowed to tolerate deviations.
+        :type tolerated_agents: Optional[int]
+        :param title_ads: Additional titles for the plot.
+        :type title_ads: List[str]
+        :param name_ads: Additional names for saved files.
+        :type name_ads: List[str]
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param save_types: File types to save the plot.
+        :type save_types: List[str]
+        :param return_pos: Whether to return the final positions.
+        :type return_pos: bool
+        :param parallel: Whether to use parallel processing.
+        :type parallel: bool
+        :param max_workers: Maximum number of parallel workers (defaults to CPU count).
+        :type max_workers: Optional[int]
+        :param batch_size: Batch size for processing (auto-calculated if None).
+        :type batch_size: Optional[int]
+        :param paper_figure: Paper figure configuration dictionary.
+        :type paper_figure: dict
+        :param font: Font configuration dictionary.
+        :type font: dict
+
+        :return: The generated plot figure or final positions.
+        :rtype: Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]
+        """
+        og_iterations=self.time_steps
+        og_pos=self.agents_pos.clone()
+        self.field.time_steps=time_steps
+        
+        if not torch.is_tensor(initial_pos):
+            initial_pos=general._to_tensor(initial_pos, "initial_pos", device=self.device)
+        self.agents_pos=initial_pos.clone()
+        self.field.agents_pos=initial_pos.clone()
+        
+        if tolerated_agents==None:
+            tolerated_agents=self.tolerated_agents
+        if tolerance==None:
+            tolerance=self.tolerance
+
+        self.setup_bifurcation_env()
+        if self.domain_type=="1d":
+            reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_parameter,reach_end = reach_parameter,reach_num_points = 1)
+            final_pos_vector=self.bif_field.final_pos_over_reach(reach_parameters, tolerance=tolerance, tolerated_agents=tolerated_agents, parallel=True,time_steps=time_steps)
+            fig=one_plots.final_position_histogram_1d(num_agents=self.num_agents,domain_bounds=self.domain_bounds,current_alpha=current_alpha,reach_parameter=reach_parameter,final_pos_vector=final_pos_vector,title_ads=title_ads,font=font)
+        else:
+            ValueError("Histogram is limited to 1d domains")
+            
+        self.field.time_steps=og_iterations
+        self.field.agents_pos=og_pos.clone()
+        self.agents_pos=og_pos.clone()
+
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'positional_histogram','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','position_at_equalibirum_histogram')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            for file_name in file_names:
+                fig.savefig(file_name,bbox_inches='tight')
+        if return_pos==True:
+            return fig,final_pos_vector
+        else:
+            return fig
+
+    def agent_density_3d(
+        self,
+        pos_matrix: Union[torch.Tensor, np.ndarray, None] = None,
+        bins: int = 25,
+        distance_threshold: float = 0.05,
+        cmap: str = 'viridis',
+        font: dict = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif', 'label_pad': 10, 'title_pad': 10, 'cbar_label_pad': 15},
+        figsize: tuple = (20, 16),
+        xlabel: str = None,
+        ylabel: str = None,
+        zlabel: str = 'Number of Agents',
+        axis_return: bool = False,
+        edgecolor: Optional[str] = 'black',
+        linewidth: float = 0.2,
+        alpha: float = 0.9,
+        title_ads: List[str] = [],
+        save: bool = False,
+        name_ads: List[str] = [],
+        save_types: List[str] = ['.png', '.svg'],
+        paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'agent_density_3d'},
+        id: int = 0,
+        cap_z_axis: bool = True,
+        integer_ticks: bool = True
+    ) -> matplotlib.figure.Figure:
+        r"""
+        Create a 3D histogram showing agent counts at final positions.
+        
+        Automatically selects the appropriate implementation based on domain type:
+        - For '2d' domains: Uses rectangular histogram binning
+        - For 'simplex' domains: Converts barycentric to Cartesian and uses triangular binning with clustering
+        
+        :param pos_matrix: Position matrix. If None, uses self.field.pos_matrix.
+        :type pos_matrix: Union[torch.Tensor, np.ndarray, None]
+        :param bins: Number of bins in each dimension.
+        :type bins: int
+        :param distance_threshold: Distance threshold for clustering nearby agents (simplex only).
+        :type distance_threshold: float
+        :param cmap: Colormap name.
+        :type cmap: str
+        :param font: Font configuration dictionary.
+        :type font: dict
+        :param figsize: Figure size as (width, height).
+        :type figsize: tuple
+        :param xlabel: Label for x-axis.
+        :type xlabel: str
+        :param ylabel: Label for y-axis.
+        :type ylabel: str
+        :param zlabel: Label for z-axis.
+        :type zlabel: str
+        :param axis_return: If True, return axes object; if False, return figure object.
+        :type axis_return: bool
+        :param edgecolor: Color of outlines around bars.
+        :type edgecolor: Optional[str]
+        :param linewidth: Width of bar edge lines.
+        :type linewidth: float
+        :param alpha: Bar transparency.
+        :type alpha: float
+        :param title_ads: Additional titles for the plot.
+        :type title_ads: List[str]
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param name_ads: Additional names for saved files.
+        :type name_ads: List[str]
+        :param save_types: File types to save the plot.
+        :type save_types: List[str]
+        :param paper_figure: Dictionary for paper figure naming.
+        :type paper_figure: dict
+        :param id: Identifier for file naming.
+        :type id: int
+        :param cap_z_axis: If True, cap the z-axis maximum at num_agents.
+        :type cap_z_axis: bool
+        :param integer_ticks: If True, only show integer ticks on the z-axis.
+        :type integer_ticks: bool
+        
+        :return: The generated plot figure.
+        :rtype: matplotlib.figure.Figure
+        """
+        if pos_matrix is None:
+            pos_matrix = self.field.pos_matrix
+        
+        if self.domain_type == 'simplex':
+            from InflGame.domains.simplex.simplex_plots import agent_density_3d_simplex
+            return agent_density_3d_simplex(
+                pos_matrix=pos_matrix,
+                num_agents=self.num_agents,
+                domain_bounds=self.domain_bounds,
+                bins=bins,
+                distance_threshold=distance_threshold,
+                cmap=cmap,
+                font=font,
+                figsize=figsize,
+                xlabel=xlabel if xlabel else r'$x$',
+                ylabel=ylabel if ylabel else r'$y$',
+                zlabel=zlabel,
+                axis_return=axis_return,
+                edgecolor=edgecolor,
+                linewidth=linewidth,
+                alpha=alpha,
+                title_ads=title_ads,
+                save=save,
+                name_ads=name_ads,
+                save_types=save_types,
+                paper_figure=paper_figure,
+                id=id,
+                cap_z_axis=cap_z_axis,
+                integer_ticks=integer_ticks
+            )
+        elif self.domain_type == '2d':
+            from InflGame.domains.two_d.two_plots import agent_density_3d_2d
+            return agent_density_3d_2d(
+                pos_matrix=pos_matrix,
+                num_agents=self.num_agents,
+                domain_bounds=self.domain_bounds,
+                bins=bins,
+                distance_threshold=distance_threshold,
+                cmap=cmap,
+                font=font,
+                figsize=figsize,
+                xlabel=xlabel if xlabel else r'$x_1$',
+                ylabel=ylabel if ylabel else r'$x_2$',
+                zlabel=zlabel,
+                axis_return=axis_return,
+                edgecolor=edgecolor,
+                linewidth=linewidth,
+                alpha=alpha,
+                title_ads=title_ads,
+                save=save,
+                name_ads=name_ads,
+                save_types=save_types,
+                paper_figure=paper_figure,
+                id=id,
+                cap_z_axis=cap_z_axis,
+                integer_ticks=integer_ticks
+            )
+        else:
+            raise ValueError(f"agent_density_3d is not supported for domain_type '{self.domain_type}'. Use '2d' or 'simplex'.")
+
+    def _barycentric_to_cartesian(self, bary_coords: np.ndarray, corners: np.ndarray = None) -> np.ndarray:
+        """
+        Convert barycentric coordinates to 2D Cartesian coordinates.
+        
+        :param bary_coords: Barycentric coordinates of shape (N, 3)
+        :param corners: Triangle vertices of shape (3, 2). Default is standard simplex.
+        :return: Cartesian coordinates of shape (N, 2)
+        """
+        if corners is None:
+            corners = np.array([[0.0, 0.0], [1.0, 0.0], [0.5, np.sqrt(3)/2]])
+        
+        if torch.is_tensor(bary_coords):
+            bary_coords = bary_coords.cpu().numpy()
+        if torch.is_tensor(corners):
+            corners = corners.cpu().numpy()
+        
+        return bary_coords @ corners
+
+    def _cluster_nearby_agents(self, positions: np.ndarray, distance_threshold: float = 0.05) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Cluster nearby agents and return cluster centers with counts.
+        
+        :param positions: Agent positions of shape (N, 2)
+        :param distance_threshold: Maximum distance for agents to be in same cluster
+        :return: (cluster_centers, cluster_counts)
+        """
+        if len(positions) <= 1:
+            return positions, np.array([len(positions)])
+        
+        distances = pdist(positions)
+        if len(distances) == 0:
+            return positions, np.array([len(positions)])
+        
+        Z = linkage(distances, method='complete')
+        clusters = fcluster(Z, t=distance_threshold, criterion='distance')
+        
+        unique_clusters = np.unique(clusters)
+        centers = []
+        counts = []
+        
+        for c in unique_clusters:
+            mask = clusters == c
+            cluster_positions = positions[mask]
+            centers.append(cluster_positions.mean(axis=0))
+            counts.append(mask.sum())
+        
+        return np.array(centers), np.array(counts)
+
+
+    def bifurcation_plot_AD_MARL(self,
+                                  parameters_AD:dict,
+                                  parameters_MARL:dict,
+                                  matrix: Dict = None,
+                                  fontmain= {'default_size': 15, 'axis_size':15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'},
+                                  save: bool = False,
+                                  name_ads: List[str] = [],
+                                  save_types: List[str] = ['.png', '.svg'],
+                                  paper_figure: dict= {'paper':False,'section':'A','figure_id':'pos_plot'},
+                                  envolve: bool = False,
+                                  complete: bool = False,
+                                  bifurcation_key_tolerance: int = 3,
+                                  show_legend: bool = True,
+                                  svg_options: dict = None
+                                  ) -> matplotlib.figure.Figure:
+        """
+        Create side-by-side bifurcation plots comparing Adaptive Dynamics (AD) and Multi-Agent Reinforcement Learning (MARL) approaches.
+        
+        This method generates comparative visualization showing how equilibrium positions change with parameter variation
+        for both gradient-based adaptive dynamics and reinforcement learning methods.
+        
+        :param parameters_AD: Configuration dictionary for adaptive dynamics bifurcation with keys:
+            - 'reach_start': Starting reach parameter value
+            - 'reach_end': Ending reach parameter value
+            - 'reach_num_points': Number of parameter points
+            - 'time_steps': Gradient ascent iterations
+            - 'tolerance': Convergence tolerance
+            - 'tolerated_agents': Number of agents for convergence check
+            - 'plot_type': Type of bifurcation plot
+            - 'refinements': Plot refinement level
+            - 'title_ads': Additional title strings
+            - 'cmaps': Color map configuration
+            - 'cbar_config': Colorbar configuration
+            - 'parallel_configs': Parallel processing settings
+            - 'font': Font configuration
+        :type parameters_AD: dict
+        :param parameters_MARL: Configuration dictionary for MARL bifurcation with keys:
+            - 'step_size': Step size for RL environment
+            - 'resource': Resource distribution type
+            - 'reach_start': Starting reach parameter
+            - 'reach_end': Ending reach parameter
+            - 'reach_parameters': Array of reach parameter values
+            - 'refinements': Plot refinement level
+            - 'plot_type': Type of bifurcation plot
+            - 'infl_type': Influence kernel type
+            - 'title_ads': Additional title strings
+            - 'font': Font configuration
+            - 'cbar_config': Colorbar configuration
+        :type parameters_MARL: dict
+        :param fontmain: Main font configuration for combined plot.
+        :type fontmain: dict
+        :param save: Whether to save the plot.
+        :type save: bool
+        :param name_ads: Additional filename components for saving.
+        :type name_ads: List[str]
+        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
+        :type paper_figure: dict
+        
+        :return: Combined matplotlib figure with AD and MARL bifurcation plots.
+        :rtype: matplotlib.figure.Figure
+        """
+
+
+
+        import hickle as hkl  
+        self.setup_bifurcation_env()
+
+        # AD bifurcation plot
+
+        reach_start = parameters_AD.get('reach_start', 0.03)
+        reach_end = parameters_AD.get('reach_end', 0.3)
+        reach_num_points = parameters_AD.get('reach_num_points', 200)
+        time_steps = parameters_AD.get('time_steps', 10000)
+        tolerance = parameters_AD.get('tolerance', None)
+        tolerated_agents = parameters_AD.get('tolerated_agents', None)
+        plot_type = parameters_AD.get('plot_type', 'heat')
+        refinements = parameters_AD.get('refinements', 10)
+        title_ads = parameters_AD.get('title_ads', [])
+        cmaps = parameters_AD.get('cmaps', {'heat': 'Blues', 'trajectory': '#851321', 'crit': 'Greys'})
+        cbar_config = parameters_AD.get('cbar_config', {'center_labels': True, 'label_alignment': 'center', 'shrink': 1.0})
+        parallel_configs = parameters_AD.get('parallel_configs', {})
+        parallel = parallel_configs.get('parallel', True)
+        max_workers = parallel_configs.get('max_workers', 6)
+        batch_size = parallel_configs.get('batch_size', 4)
+        font= parameters_AD.get('font', fontmain)
+        
+        if tolerated_agents==None:
+            tolerated_agents=self.tolerated_agents
+        if tolerance==None:
+            tolerance=self.tolerance
+
+
+
+        reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+        ax1=self.equilibrium_bifurcation_plot(matrix=matrix,
+                                         reach_start=reach_start,
+                                         reach_end=reach_end,
+                                         reach_num_points=reach_num_points,
+                                         time_steps=time_steps,
+                                         tolerance=tolerance,
+                                         tolerated_agents=tolerated_agents,
+                                         refinements=refinements,
+                                         plot_type=plot_type,
+                                         envelope=envolve,
+                                         complete=complete, 
+                                         title_ads=[],
+                                         name_ads=[],
+                                         save=False,
+                                         save_types=[],
+                                         return_matrix=False,
+                                         parallel_configs=parallel_configs,
+                                         cmaps=cmaps,
+                                         font=font,
+                                         cbar_config=cbar_config,
+                                         paper_figure={'paper':False,'section':'A','figure_id':'equilibrium_bifurcation_plot_AD'},
+                                         bifurcation_key_tolerance=bifurcation_key_tolerance,
+                                         short_title=True
+                                         )
+
+        # MARL bifurcation plot this is only done if the MARL data is available
+
+        step = parameters_MARL.get('step_size', 0.1)
+        resource = parameters_MARL.get('resource', "gauss_mix_2m")
+        
+
+        env_config_main = {"num_agents":self.num_agents,"parameters":[self.parameters[0].item()],"step_size":step}
+        configs={"env_config_main":env_config_main}
+        params=data_management.data_parameters(configs=configs,data_type="configs",resource_type=resource)
+        config_name=data_management.data_final_name(data_parameters=params,name_ads=[])
+        params=data_management.data_parameters(configs=configs,data_type="final_positions",resource_type=resource)
+        data_name=data_management.data_final_name(data_parameters=params,name_ads=["test"])
+        params=data_management.data_parameters(configs=configs,data_type="final_mad",resource_type=resource)
+        data_name2=data_management.data_final_name(data_parameters=params,name_ads=["test"])
+        mean=hkl.load(data_name[0])
+        mean=general._to_tensor(mean, "mean", device=self.device)
+        mad=hkl.load(data_name2[0])
+        mad=general._to_tensor(mad, "mad", device=self.device)
+
+
+        reach_start_marl = parameters_MARL.get('reach_start', 0.03)
+        reach_end_marl = parameters_MARL.get('reach_end', 0.3)
+        refinements_marl = parameters_MARL.get('refinements', 10)
+        from InflGame.MARL.MARL_plots import bifurcation_over_parameters
+        ax2=bifurcation_over_parameters(positions=mean,
+                                    reach_parameters=parameters_MARL.get('reach_parameters', np.linspace(reach_start_marl, reach_end_marl, 96)),
+                                    num_agents=self.num_agents,
+                                    bin_points=self.bin_points,
+                                    resource_distribution=self.resource_distribution,
+                                    refinements=refinements_marl,
+                                    plot_type=parameters_MARL.get('plot_type', 'gaussian'),
+                                    infl_cshift=self.infl_cshift,
+                                    infl_type=parameters_MARL.get('infl_type', 'gaussian'),
+                                    name_ads=[],
+                                    title_ads=parameters_MARL.get('title_ads', []),
+                                    short_title=True,
+                                    font=parameters_MARL.get('font', fontmain),
+                                    cbar_config=parameters_MARL.get('cbar_config', {'center_labels': True, 'label_alignment': 'center', 'shrink': 1.0}),
+                                    save=False,
+                                    axis_return=True,
+                                    marker_size=parameters_MARL.get('marker_size', 30),
+                                    )
+        # Combine plots
+        # Extract axes from figures if they are Figure objects
+        if hasattr(ax1, 'get_axes'):
+            # ax1 is a Figure, extract its first axes
+            ax1_axes = ax1.get_axes()[0]
+        else:
+            ax1_axes = ax1
+            
+        if hasattr(ax2, 'get_axes'):
+            # ax2 is a Figure, extract its first axes
+            ax2_axes = ax2.get_axes()[0]
+        else:
+            ax2_axes = ax2
+        
+        # Set tight axis limits based on parameters
+        # Y-axis is always 0-1 for agent positions in 1D domain
+        # X-axis is based on reach parameters (separate for AD and MARL)
+        fig=plot_utils.side_by_side_plots(ax1_axes, ax2_axes, title_ads=[f'{self.num_agents} Agents']+title_ads, font=fontmain, title_main='Adaptive vs MARL Dynamcis Bifurcations', cbar_params={'common_cbar':True,'cbar_title':'Number of Agents'}, axis_params={'common_axis':True,'axis_ylabel':'Agent Position','axis_xlabel':r'$\sigma$ (reach)'}, legend_params={'show_legend': show_legend, 'external_legend':show_legend, 'legend_title':'Legend'}, limits_params={'xlim_left': (reach_start, reach_end), 'xlim_right': (reach_start_marl, reach_end_marl), 'ylim': (0, 1)})
+
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bif_adp_marl','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','pos_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            for file_name in file_names:
+                if svg_options and file_name.endswith('.svg'):
+                    old_fonttype = mpl.rcParams.get('svg.fonttype', 'path')
+                    old_simplify = mpl.rcParams.get('path.simplify', True)
+                    old_threshold = mpl.rcParams.get('path.simplify_threshold', 1.0/9)
+                    if svg_options.get('text_as_objects', False):
+                        mpl.rcParams['svg.fonttype'] = 'none'
+                    if 'simplify_paths' in svg_options:
+                        mpl.rcParams['path.simplify'] = svg_options['simplify_paths']
+                    if 'simplify_threshold' in svg_options:
+                        mpl.rcParams['path.simplify_threshold'] = svg_options['simplify_threshold']
+                    fig.savefig(file_name, bbox_inches='tight')
+                    mpl.rcParams['svg.fonttype'] = old_fonttype
+                    mpl.rcParams['path.simplify'] = old_simplify
+                    mpl.rcParams['path.simplify_threshold'] = old_threshold
+                else:
+                    fig.savefig(file_name,bbox_inches='tight')
+        return fig
+
+    def plot_equilibrium_heatmap(self,
+                                newton_search_data,
+                                title_ads: List[str] = [],
+                                save: bool = False,
+                                name_ads: List[str] = [],
+                                font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'table_size':15,'label_size':10,'font_family': 'sans-serif',},
+                                save_types: List[str] = ['.png', '.svg'],
+                                paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'equil_heat'}):
+        
+        r"""
+        Generate and plot a heatmap of equilibrium positions in a 1D influence game.
+        This method visualizes the equilibrium positions of agents in a 1D influence game
+        as a heatmap, with optional stability analysis overlay.
+        :param unique_results: Unique equilibrium results to plot.
+        :type unique_results: np.ndarray
+        :param num_agents: Number of agents in the game.
+        :type num_agents: int
+        :param stability_analysis: Optional stability analysis data.
+        :type stability_analysis: Optional[dict]
+        :param title_ads: Additional text to append to plot title.
+        :type title_ads: List[str]
+        :param save: Whether to save the plot to file.
+        :type save: bool
+        :param name_ads: Additional text for saved filename.
+        :type name_ads: List[str]
+        :param font: Font configuration dictionary with keys
+                        'default_size', 'cbar_size', 'title_size', 
+                        'legend_size', 'table_size', 'label_size', 'font_family'.
+        :type font: Dict
+        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
+        :type save_types: List[str]
+        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
+                            'section' (str), 'figure_id' (str).
+        :type paper_figure: dict
+        :return: The generated matplotlib figure object.
+        :rtype: matplotlib.figure.Figure
+        """
+        if self.domain_type!='1d':
+            raise ValueError("This function is only implemented for 1D influence games.")
+        
+        stability_analysis=one_utils.stability_analysis(num_agents=self.num_agents,field=self.field,results=newton_search_data)
+        
+        fig = one_plots.plot_equilibrium_heatmap_1d(unique_results=newton_search_data['unique_final_positions'],
+                                                    num_agents=self.num_agents,
+                                                    stability_analysis=stability_analysis,
+                                                    title_ads=title_ads,
+                                                    font=font)
+
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'equil_heat','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','equil_heat')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            for file_name in file_names:
+                fig.savefig(file_name,bbox_inches='tight')
+        return fig
+    
+    def bifurcation_tree(self,
+                         main_matrix: Dict,
+                         left_matrices: List[Dict],
+                         right_matrices: List[Dict], 
+                         reach_start,
+                         reach_end, 
+                         reach_num_points,
+                         label_to_color=None, 
+                         figsize=(20, 24),
+                         rect_width=0.8,
+                         horizontal_spacing=2.5,
+                         box_height=10,
+                         box_width=0.1,
+                         key_tolerance=2,
+                         image_zoom=0.15,
+                         box_space=None,
+                         image_offset=(0,0),
+                         branch_spacing=1.5,
+                         label_offset: float = 0.1,
+                         show_labels=False,
+                         hide_text: bool = False,
+                         max_reward: Optional[float] = None,
+                         display_type='tree',
+                         title_ads: List[str] = [],
+                         save: bool = False,
+                         name_ads: List[str] = [],
+                         font = {'default_size': 30, 'cbar_size': 16, 'title_size': 60, 'legend_size': 12, 'table_size':15,'label_size':10,'font_family': 'sans-serif',},
+                         font_sub = {'default_size': 24, 'cbar_size': 16, 'title_size': 32, 'legend_size': 12, 'table_size':15,'label_size':24,'font_family': 'sans-serif',},
+                         save_types: List[str] = ['.png', '.svg'],
+                         paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'reward_groups_stacked'},
+                         show_column_labels: bool = True):
+        """
+        Create a vertical tree plot with a main rectangle and left/right branches based on bifurcation changes.
+        
+        Parameters:
+        -----------
+        main_matrix : dict
+            Main bifurcation matrix containing 'max', 'min', etc.
+        left_matrices : list of dict
+            List of matrices for left branches
+        right_matrices : list of dict
+            List of matrices for right branches
+        reach_parameters : list of torch.Tensor
+            Reach parameters for each matrix
+        num_agents : int
+            Number of agents in the system
+        reach_start : float
+            Starting sigma value
+        reach_end : float
+            Ending sigma value
+        label_to_color : dict, optional
+            Mapping of classification labels to colors
+        figsize : tuple
+            Figure size (width, height)
+        rect_width : float
+            Width of each rectangle
+        horizontal_spacing : float
+            Spacing between rectangles
+        box_height : float
+            Total height of each rectangle
+        font_size : int
+            Font size for labels
+        show_labels : bool
+            Whether to show classification labels on rectangles
+        display_type : str
+            'rect' for rectangle display (colored rectangles with legends)
+            'tree' for tree display (text labels at branch points)
+        
+        Returns:
+        --------
+        fig, ax : matplotlib figure and axes
+        """
+        if self.domain_type!='1d':
+            raise ValueError("This function is only implemented for 1D influence games.") 
+        
+        reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+        if display_type == 'tree':
+            node_images=self.node_to_images(main=main_matrix,
+                                            left_matrices=left_matrices,
+                                            right_matrices=right_matrices,
+                                            reach_parameters=reach_parameters,
+                                            reach_start=reach_start,
+                                            reach_end=reach_end,
+                                            key_tolerance = key_tolerance,
+                                            box_width=box_width,
+                                            space=box_space,
+                                            title_ads=title_ads,
+                                            font=font_sub,
+                                            hide_text=hide_text,
+                                            max_reward=max_reward,
+                                            show_column_labels=show_column_labels)
+            fig=one_plots.bifurcation_tree_plot_with_images(main_matrix = main_matrix,
+                                                            left_matrices = left_matrices,
+                                                            right_matrices = right_matrices, 
+                                                            num_agents = self.num_agents,
+                                                            reach_parameters = reach_parameters, 
+                                                            reach_start=reach_start,
+                                                            reach_end=reach_end,
+                                                            node_images=node_images,
+                                                            label_to_color=None, 
+                                                            figsize=figsize,
+                                                            font=font,
+                                                            image_zoom=image_zoom,
+                                                            show_labels=True,
+                                                            image_offset=image_offset,
+                                                            branch_spacing=branch_spacing,
+                                                            label_offset=label_offset,
+                                                            hide_text=hide_text)
+        elif display_type == 'rect':  # 'rect' mode
+            fig = one_plots.bifurcation_rectangle_plot(
+                main_matrix, left_matrices, right_matrices,
+                reach_parameters, self.num_agents, reach_start, reach_end,
+                label_to_color, figsize, rect_width, horizontal_spacing,
+                box_height, font, show_labels
+            )
+        else:
+            raise ValueError("Invalid display_type. Choose 'rect' or 'tree'.")
+        
+        if save==True:
+            file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'bif_adp_marl','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','pos_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+            # Collect placed sub-figures (available when display_type == 'tree')
+            # fig[3] is a list of (gid_str, matplotlib_Figure) tuples
+            placed_figures = fig[3] if (display_type == 'tree' and len(fig) > 3) else []
+            for file_name in file_names:
+                if str(file_name).lower().endswith('.svg') and placed_figures:
+                    # Build a gid -> svg_bytes dict so the compositor can match by
+                    # identity rather than z-order (fixing the node/image mismatch).
+                    subfig_svg_dict = {}
+                    all_figs_ok = True
+                    for entry in placed_figures:
+                        if isinstance(entry, tuple) and len(entry) == 2:
+                            gid_str, pf = entry
+                        else:
+                            # Legacy bare-figure entry — fall back to sequential list
+                            all_figs_ok = False
+                            break
+                        if isinstance(pf, plt.Figure):
+                            subfig_svg_dict[gid_str] = one_utils.fig_to_svg_bytes(pf)
+                        else:
+                            all_figs_ok = False
+                            break
+                    # Save main figure to SVG bytes, then composite with sub-figure SVGs
+                    main_buf = io.BytesIO()
+                    fig[0].savefig(main_buf, format='svg', bbox_inches='tight')
+                    main_svg_bytes = main_buf.getvalue()
+                    if all_figs_ok and subfig_svg_dict:
+                        composed_bytes = one_utils.compose_svg_with_subfigures(main_svg_bytes, subfig_svg_dict)
+                    else:
+                        composed_bytes = main_svg_bytes
+                    with open(file_name, 'wb') as f:
+                        f.write(composed_bytes)
+                else:
+                    fig[0].savefig(file_name, bbox_inches='tight')
+        return fig
+    
+    ## reward plots
+
+    def reward_groups_stacked(self,
+                              idx: int = 0,
+                              rwd_type: str = 'bifurication',
+                              max_reward: Optional[float] = None,
+                              box_width: float = 0.01,
+                              matrix: Optional[dict] = None,
+                              space: Optional[float] = None,
+                              title_ads: List[str] = [],
+                              save: bool = False,
+                              name_ads: List[str] = [],
+                              reach_start: float = 0.03,
+                              reach_end: float = 0.3,
+                              reach_num_points: int = 200,
+                              font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'table_size':15,'label_size':10,'font_family': 'sans-serif',},
+                              show_outline: bool = True,
+                              show_total_outline: bool = True,
+                              show_label_box: bool = True,
+                              aspect: float = 1,
+                              save_types: List[str] = ['.png', '.svg'],
+                              paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'reward_groups_stacked'}):
+       
+        if self.domain_type!='1d':
+            raise ValueError("This function is only implemented for 1D influence games.")
+        else:
+            if rwd_type=='bifurication':
+                if matrix is None:
+                    raise ValueError("For bifurication type, pos matrix must be provided.")
+                reach_parameters=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_type,setup_type="parameter_space",reach_start = reach_start,reach_end = reach_end,reach_num_points = reach_num_points)
+                reward_bifurcation_matrix=self.reward_bifurcation_matrix_setup(matrix=matrix,reach_parameters=reach_parameters)
+                fig = one_plots.bifurication_rewards_stacked_rectangle_plot(idx=idx,
+                                                                      matrix=matrix,
+                                                                      reward_bifurcation_matrix=reward_bifurcation_matrix,
+                                                                      max_reward=max_reward,
+                                                                      box_width=box_width,
+                                                                      space=space,
+                                                                      title_ads=title_ads,
+                                                                      font=font,
+                                                                      show_outline=show_outline,
+                                                                      show_total_outline=show_total_outline,
+                                                                      show_label_box=show_label_box,
+                                                                      aspect=aspect)
+            elif rwd_type=='positions':
+                if self.field.reward_matrix is None:
+                    raise ValueError("For positions type, reward matrix must be computed in the field.")
+                if self.field.pos_matrix is None:
+                    raise ValueError("For positions type, pos matrix must be computed in the field.")
+                fig=one_plots.pos_rewards_stacked_rectangle_plot(idx=idx,
+                                                                 matrix=self.field.pos_matrix,
+                                                                 reward_matrix=self.field.reward_matrix,
+                                                                 max_reward=max_reward,
+                                                                 box_width=box_width,
+                                                                 space=space,
+                                                                 title_ads=title_ads,
+                                                                 font=font)
+            if save==True:
+                if name_ads is None:
+                    name_ads=[]
+                name_ads.append(rwd_type)
+                file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'reward_groups_stacked','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','reward_groups_stacked')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+                for file_name in file_names:
+                    if file_name.endswith('.svg'):
+                        import matplotlib
+                        orig = matplotlib.rcParams.get('svg.fonttype', 'path')
+                        matplotlib.rcParams['svg.fonttype'] = 'none'
+                        fig.savefig(file_name,bbox_inches='tight')
+                        matplotlib.rcParams['svg.fonttype'] = orig
+                    else:
+                        fig.savefig(file_name,bbox_inches='tight')
+            return fig
+
+    # Utils integrated into the class for simplicity
+
+    def node_to_images(self,main,left_matrices, right_matrices,reach_parameters,reach_start,reach_end,key_tolerance=2,box_width=0.05,space=None,title_ads: List[str] = [],font = {'default_size': 24, 'cbar_size': 12, 'title_size': 64, 'legend_size': 12,'font_family': 'sans-serif','label_size':24},hide_text: bool = False,max_reward: Optional[float] = None,show_column_labels: bool = True):
+        """process all matrices and create images for each node
+        
+        Parameters:
+        -----------
+        main : dict
+            Main bifurcation matrix
+        left_matrices : list
+            List of left branch matrices
+        right_matrices : list
+            List of right branch matrices
+        reach_parameters : torch.Tensor
+            Reach parameters
+        key_tolerance : int
+            Minimum distance between keys to process. If next key is closer than this, skip current key.
+        """
+        main_proc=one_utils.process_matrix_tree(main, num_agents=self.num_agents, reach_parameters=reach_parameters, reach_start=reach_start, reach_end=reach_end,key_tolerance=key_tolerance)
+        main_labels = main_proc['labels'][::-1]
+        left_labels_list = [one_utils.process_matrix_tree(mat, num_agents=self.num_agents, reach_parameters=reach_parameters, reach_start=reach_start, reach_end=reach_end, key_tolerance=key_tolerance)['labels'][::-1] for mat in left_matrices]
+        right_labels_list = [one_utils.process_matrix_tree(mat, num_agents=self.num_agents, reach_parameters=reach_parameters, reach_start=reach_start, reach_end=reach_end, key_tolerance=key_tolerance)['labels'][::-1] for mat in right_matrices]
+        main_locs=one_utils.bifurcation_type_helper(matrix=main,reach_parameters=reach_parameters,tolerance=1e-2)
+        main_rewards=self.reward_bifurcation_matrix_setup(matrix=main,reach_parameters=reach_parameters)
+        node_images = {}
+        
+        # Get sorted keys for main_locs to check distances
+        main_keys_sorted = sorted([int(k) for k in main_locs.keys()])
+        
+        # Track last processed label for main branch to skip consecutive duplicates
+        last_main_label = None
+        
+        for label in main_labels:
+            # Skip if this is a consecutive duplicate
+            if label == last_main_label:
+                continue
+            last_main_label = label
+            
+            if label==f'({self.num_agents})':
+                fig=one_plots.bifurication_rewards_stacked_rectangle_plot(idx=len(reach_parameters)-1,matrix=main,reward_bifurcation_matrix=main_rewards,max_reward=max_reward,space=space,box_width=box_width,title_ads=title_ads,font=font,hide_text=hide_text,show_column_labels=show_column_labels)
+                node_images[f'{label}_m']=fig
+            elif label=='Cycles':
+                # Find the index where label=='Cycles' in main_proc
+                cycle_idx = [i for i, lbl in enumerate(main_proc['labels']) if lbl == 'Cycles']
+                if cycle_idx:
+                    main_proc_cycles_boundaries = main_proc['boundaries'][cycle_idx[0]]
+                    avg_sigma=main_proc_cycles_boundaries[0]-.001
+                    exp_params=main['exp_params']
+                    params=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_configs["infl_type"],setup_type="initial_symmetric_setup",reach=avg_sigma)
+                    og_pos=self.agents_pos.clone()
+                    og_params=self.parameters.clone()
+                    og_time_steps=self.time_steps
+                    og_learning_rate=self.learning_rate
+                    self.learning_rate=[1/100000,1/10000,500]
+                    self.time_steps=1000
+                    agents_pos=general._to_tensor(exp_params['agent_pos'], "agents_pos", device=self.device),
+                    self.agents_pos=agents_pos[0].clone()
+                    self.parameters=params.clone()
+                    self.setup_adaptive_env()
+                    self.field.gradient_ascent()
+                    fig=self.pos_plot(font=font,line_thickness=2,fig_size=(12,8))
+                    if hide_text:
+                        import matplotlib.text as _mtext
+                        for _t in fig.findobj(match=_mtext.Text):
+                            _t.set_alpha(0)
+                    node_images[f'{label}_m']=fig
+                    self.agents_pos=og_pos.clone()
+                    self.parameters=og_params.clone()
+                    self.time_steps=og_time_steps
+                    self.learning_rate=og_learning_rate     
+            else:
+                for key in main_locs:
+                    # Check if next key is too close
+                    key_int = int(key)
+                    key_idx = main_keys_sorted.index(key_int)
+                    if key_idx < len(main_keys_sorted) - 1:
+                        next_key = main_keys_sorted[key_idx + 1]
+                        if next_key - key_int < key_tolerance:
+                            continue  # Skip this key, too close to next
+                    
+                    if main_locs[key]['classification_new']==label:
+                        fig=one_plots.bifurication_rewards_stacked_rectangle_plot(idx=int(key),matrix=main,reward_bifurcation_matrix=main_rewards,max_reward=max_reward,space=space,box_width=box_width,title_ads=title_ads,font=font,hide_text=hide_text,show_column_labels=show_column_labels)
+                        node_images[f'{label}_m']=fig
+                        break   
+        # Add left branches
+        prev_labels = main_labels
+        label_counts = {}
+        for i, left_labels in enumerate(left_labels_list):
+            left_matrix=left_matrices[i]
+            left_proc = one_utils.process_matrix_tree(left_matrix,num_agents=self.num_agents,reach_parameters=reach_parameters,reach_start=reach_start,reach_end=reach_end,key_tolerance=key_tolerance)
+            left_locs=one_utils.bifurcation_type_helper(matrix=left_matrix,reach_parameters=reach_parameters,tolerance=1e-2)
+            left_rewards=self.reward_bifurcation_matrix_setup(matrix=left_matrix,reach_parameters=reach_parameters)
+            
+            # Get sorted keys for left_locs to check distances
+            left_keys_sorted = sorted([int(k) for k in left_locs.keys()])
+            
+            id=0
+            new_labels, j = one_utils.get_new_labels(prev_labels, left_labels)
+
+            # Include the shared parent label as the FIRST node of the new branch so each
+            # branch generates its own image for the branch-point state from its own matrix,
+            # preventing cross-branch image inheritance.
+            if j > 0 and j <= len(left_labels):
+                branch_labels = [prev_labels[j-1]] + list(new_labels)
+            elif j == -1 and len(left_labels) > 0:
+                branch_labels = [left_labels[-1]]
+            else:
+                branch_labels = list(new_labels)
+
+            # Track which keys have been used for each label to handle duplicates
+            used_keys_per_label = {}
+
+            for label in branch_labels:
+                # Create nodes and edges with unique names
+                node = one_utils.make_unique_node_name(label, f'_l{i}', label_counts)
+                id+=1
+                if label=='Cycles':
+                    # Find the index where label=='Cycles' in left_proc
+                    cycle_idx = [idx for idx, lbl in enumerate(left_proc['labels']) if lbl == 'Cycles']
+                    if cycle_idx:
+                        left_proc_cycles_boundaries = left_proc['boundaries'][cycle_idx[0]]
+                        avg_sigma=left_proc_cycles_boundaries[0]-.001
+                        exp_params=left_matrices[i]['exp_params']
+                        #specific params for this avg sigma
+                        params=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_configs["infl_type"],setup_type="initial_symmetric_setup",reach=avg_sigma)
+                        og_params=self.parameters.clone()
+                        og_pos=self.agents_pos.clone()
+                        og_time_steps=self.time_steps
+                        og_learning_rate=self.learning_rate
+                        self.learning_rate=[1/100000,1/10000,500]
+                        self.time_steps=1000
+                        agents_pos=exp_params['agent_pos'].clone()
+                        self.agents_pos=agents_pos.clone()
+                        self.parameters=params.clone()
+                        self.setup_adaptive_env()
+                        self.field.gradient_ascent()
+                        #make the figure
+                        fig=self.pos_plot(font=font, line_thickness=2, fig_size=(12,8))
+                        if hide_text:
+                            import matplotlib.text as _mtext
+                            for _t in fig.findobj(match=_mtext.Text):
+                                _t.set_alpha(0)
+                        node_images[f'{node}']=fig  
+                        self.agents_pos=og_pos.clone()
+                        self.parameters=og_params.clone()
+                        self.time_steps=og_time_steps
+                        self.learning_rate=og_learning_rate
+                else:
+                    # Initialize used keys set for this label if not exists
+                    if label not in used_keys_per_label:
+                        used_keys_per_label[label] = set()
+                    
+                    for key in left_locs:
+                        # Skip keys already used for this label
+                        if key in used_keys_per_label[label]:
+                            continue
+                        
+                        # Check if next key is too close
+                        key_int = int(key)
+                        key_idx = left_keys_sorted.index(key_int)
+                        if key_idx < len(left_keys_sorted) - 1:
+                            next_key = left_keys_sorted[key_idx + 1]
+                            if next_key - key_int < key_tolerance:
+                                continue  # Skip this key, too close to next
+                        
+                        if left_locs[key]['classification_new']==label:
+                            fig=one_plots.bifurication_rewards_stacked_rectangle_plot(idx=int(key),reward_bifurcation_matrix=left_rewards,matrix=left_matrix,max_reward=max_reward,box_width=box_width,space=space,title_ads=title_ads,font=font,hide_text=hide_text,show_column_labels=show_column_labels)
+                            node_images[f'{node}']=fig
+                            used_keys_per_label[label].add(key)  # Mark this key as used for this label
+                            break
+                    
+                    # Fallback: if no transition entry found in left_locs, use process_matrix_tree
+                    # boundary info to find the correct sigma index in the branch matrix.
+                    # This ensures branch nodes always use their own matrix data.
+                    if f'{node}' not in node_images:
+                        proc_labels = left_proc['labels'][::-1]
+                        proc_boundaries = left_proc['boundaries'][::-1]
+                        for proc_idx, proc_label in enumerate(proc_labels):
+                            if proc_label == label and proc_idx < len(proc_boundaries):
+                                sigma_start, sigma_end = proc_boundaries[proc_idx]
+                                sigma_mid = (sigma_start + sigma_end) / 2
+                                # Find nearest reach_parameters index for this sigma
+                                reach_sigmas = [rp[0].item() if hasattr(rp[0], 'item') else float(rp[0]) for rp in reach_parameters]
+                                closest_idx = min(range(len(reach_sigmas)), key=lambda k: abs(reach_sigmas[k] - sigma_mid))
+                                fig = one_plots.bifurication_rewards_stacked_rectangle_plot(idx=closest_idx, reward_bifurcation_matrix=left_rewards, matrix=left_matrix, max_reward=max_reward, box_width=box_width, space=space, title_ads=title_ads, font=font, hide_text=hide_text, show_column_labels=show_column_labels)
+                                node_images[f'{node}'] = fig
+                                break
+                            
+            prev_labels=left_labels
+        
+        # Add right branches
+        prev_labels = main_labels
+        for i, right_labels in enumerate(right_labels_list):
+            right_matrix=right_matrices[i]
+            right_proc = one_utils.process_matrix_tree(right_matrix, num_agents=self.num_agents, reach_parameters=reach_parameters, reach_start=reach_start, reach_end=reach_end,key_tolerance=key_tolerance)
+            right_locs=one_utils.bifurcation_type_helper(matrix=right_matrix,reach_parameters=reach_parameters,tolerance=1e-2)
+            right_rewards=self.reward_bifurcation_matrix_setup(matrix=right_matrix,reach_parameters=reach_parameters)
+            
+            # Get sorted keys for right_locs to check distances
+            right_keys_sorted = sorted([int(k) for k in right_locs.keys()])
+            
+            id=0
+            new_labels, j = one_utils.get_new_labels(prev_labels, right_labels)
+
+            # Include the shared parent label as the FIRST node of the new branch so each
+            # branch generates its own image for the branch-point state from its own matrix,
+            # preventing cross-branch image inheritance.
+            if j > 0 and j <= len(right_labels):
+                branch_labels = [prev_labels[j-1]] + list(new_labels)
+            elif j == -1 and len(right_labels) > 0:
+                branch_labels = [right_labels[-1]]
+            else:
+                branch_labels = list(new_labels)
+
+            # Track which keys have been used for each label to handle duplicates
+            used_keys_per_label = {}
+
+            for label in branch_labels:
+                # Create nodes and edges with unique names
+                node = one_utils.make_unique_node_name(label, f'_r{i}', label_counts)
+                id+=1
+                if label=='Cycles':
+                    # Find the index where label=='Cycles' in right_proc
+                    cycle_idx = [idx for idx, lbl in enumerate(right_proc['labels']) if lbl == 'Cycles']
+                    if cycle_idx:
+                        right_proc_cycles_boundaries = right_proc['boundaries'][cycle_idx[0]]
+                        avg_sigma=right_proc_cycles_boundaries[0]-.001
+                        exp_params=right_matrices[i]['exp_params']
+                        params=general.agent_parameter_setup(num_agents=self.num_agents,infl_type=self.infl_configs["infl_type"],setup_type="initial_symmetric_setup",reach=avg_sigma)
+                        #original
+                        og_params=self.parameters.clone()
+                        og_pos=self.agents_pos.clone()
+                        og_time_steps=self.time_steps
+                        og_learning_rate=self.learning_rate
+                        #speicific params
+                        self.learning_rate=[1/100000,1/10000,500]
+                        self.time_steps=1000
+                        agents_pos=exp_params['agent_pos'].clone()
+                        self.agents_pos=agents_pos.clone()
+                        self.parameters=params
+                        #plot generation
+                        self.setup_adaptive_env()
+                        self.field.gradient_ascent()
+                        fig=self.pos_plot(font=font, line_thickness=2, fig_size=(12,8))
+                        if hide_text:
+                            import matplotlib.text as _mtext
+                            for _t in fig.findobj(match=_mtext.Text):
+                                _t.set_alpha(0)
+                        node_images[f'{node}']=fig
+                        #restore original state
+                        self.agents_pos=og_pos.clone()
+                        self.parameters=og_params.clone()
+                        self.time_steps=og_time_steps
+                        self.learning_rate=og_learning_rate
+
+                else:
+                    # Initialize used keys set for this label if not exists
+                    if label not in used_keys_per_label:
+                        used_keys_per_label[label] = set()
+                    
+                    for key in right_locs:
+                        # Skip keys already used for this label
+                        if key in used_keys_per_label[label]:
+                            continue
+                        
+                        # Check if next key is too close
+                        key_int = int(key)
+                        key_idx = right_keys_sorted.index(key_int)
+                        if key_idx < len(right_keys_sorted) - 1:
+                            next_key = right_keys_sorted[key_idx + 1]
+                            if next_key - key_int < key_tolerance:
+                                continue  # Skip this key, too close to next
+                        
+                        if right_locs[key]['classification_new']==label:
+                            fig=one_plots.bifurication_rewards_stacked_rectangle_plot(idx=int(key),reward_bifurcation_matrix=right_rewards,matrix=right_matrix,max_reward=max_reward,box_width=box_width,space=space,title_ads=title_ads,font=font,hide_text=hide_text,show_column_labels=show_column_labels)
+                            node_images[f'{node}']=fig
+                            used_keys_per_label[label].add(key)  # Mark this key as used for this label
+                            break
+                    
+                    # Fallback: if no transition entry found in right_locs, use process_matrix_tree
+                    # boundary info to find the correct sigma index in the branch matrix.
+                    # This ensures branch nodes always use their own matrix data.
+                    if f'{node}' not in node_images:
+                        proc_labels = right_proc['labels'][::-1]
+                        proc_boundaries = right_proc['boundaries'][::-1]
+                        for proc_idx, proc_label in enumerate(proc_labels):
+                            if proc_label == label and proc_idx < len(proc_boundaries):
+                                sigma_start, sigma_end = proc_boundaries[proc_idx]
+                                sigma_mid = (sigma_start + sigma_end) / 2
+                                # Find nearest reach_parameters index for this sigma
+                                reach_sigmas = [rp[0].item() if hasattr(rp[0], 'item') else float(rp[0]) for rp in reach_parameters]
+                                closest_idx = min(range(len(reach_sigmas)), key=lambda k: abs(reach_sigmas[k] - sigma_mid))
+                                fig = one_plots.bifurication_rewards_stacked_rectangle_plot(idx=closest_idx, reward_bifurcation_matrix=right_rewards, matrix=right_matrix, max_reward=max_reward, box_width=box_width, space=space, title_ads=title_ads, font=font, hide_text=hide_text, show_column_labels=show_column_labels)
+                                node_images[f'{node}'] = fig
+                                break
+                
+            prev_labels=right_labels
+                
+        return node_images
+    
+    def reward_bifurcation_matrix_setup(self, matrix,reach_parameters):
+        reward_bifurcation_matrix={'max':[], 'min':[], 'reach_parameters':[],'same':[]}
+        # check if the max and the min are equal
+        for i in range(len(matrix['max'])):
+            if torch.all(torch.round(matrix['max'][i],decimals=2)==torch.round(matrix['min'][i],decimals=2)):
+                self.field.agents_pos=matrix['max'][i]
+                reward_bifurcation_matrix['max'].append(self.field.reward_F(parameter_instance=self.parameters))
+                reward_bifurcation_matrix['min'].append(self.field.reward_F(parameter_instance=self.parameters))
+                reward_bifurcation_matrix['same'].append(1)
+                reward_bifurcation_matrix['reach_parameters'].append(reach_parameters[i][0])
+            else:
+                self.field.agents_pos=matrix['max'][i]
+                reward_bifurcation_matrix['max'].append(self.field.reward_F(parameter_instance=self.parameters))
+                self.field.agents_pos=matrix['min'][i]
+                reward_bifurcation_matrix['min'].append(self.field.reward_F(parameter_instance=self.parameters))
+                reward_bifurcation_matrix['same'].append(0)
+                reward_bifurcation_matrix['reach_parameters'].append(reach_parameters[i][0])
+        reward_bifurcation_matrix['max']=torch.stack(reward_bifurcation_matrix['max'],dim=0)
+        reward_bifurcation_matrix['min']=torch.stack(reward_bifurcation_matrix['min'],dim=0)
+        reward_bifurcation_matrix['reach_parameters']=torch.stack(reward_bifurcation_matrix['reach_parameters'])
+        return reward_bifurcation_matrix
+
     def calc_infl_dist(self,
                        pos: torch.Tensor,
                        parameter_instance: Union[List[float], np.ndarray, torch.Tensor]) -> torch.Tensor:
@@ -2881,11 +3783,11 @@ class Shell:
         
         if self.domain_type=='simplex':
             direction= np.array([self.field.gradient_function(np.array([simplex_utils.xy2ba(x,y,corners=self.corners)+.001]*self.num_agents),parameter_instance,agent_id).nan_to_num().detach() for x,y in zip(self.trimesh.x, self.trimesh.y)])
-            self.direction_norm=np.array([simplex_utils.ba2xy(torch.tensor(v),corners=self.corners).detach()/np.linalg.norm(v) if np.linalg.norm(v)>0 else np.array([0,0]) for v in direction[:,agent_id]])
+            self.direction_norm=np.array([simplex_utils.ba2xy(general._to_tensor(v, "v", device=self.device),corners=self.corners).detach()/np.linalg.norm(v) if np.linalg.norm(v)>0 else np.array([0,0]) for v in direction[:,agent_id]])
             
             #print(direction_ba_norm)
             self.pvals =[np.linalg.norm(v)+.0001 for v in direction[:,agent_id]]
-            self.direction=np.array([simplex_utils.ba2xy(torch.tensor(v),corners=self.corners).detach() for v in direction[:,agent_id]])
+            self.direction=np.array([simplex_utils.ba2xy(general._to_tensor(v, "v", device=self.device),corners=self.corners).detach() for v in direction[:,agent_id]])
 
         elif self.domain_type=='2d':
             direction= np.array([self.field.gradient_function(np.array(list(value)*self.num_agents),parameter_instance,agent_id).nan_to_num().detach() for value in self.rect_positions])
@@ -3051,7 +3953,7 @@ class Shell:
         
         for i in range(3):
             ax = axes[i]
-            ax.plot(param_indices.numpy(), real_parts[:, i].numpy(), 
+            ax.plot(param_indices.cpu().numpy(), real_parts[:, i].cpu().numpy(), 
                 color=colors[i], linewidth=2)
             ax.axhline(y=0, color='black', linestyle='--', alpha=0.5)
             
@@ -3073,7 +3975,7 @@ class Shell:
             ax.grid(True, alpha=0.3)
             
             # Zoom in on y-axis around zero
-            y_range = np.max(np.abs(real_parts[:, i].numpy())) * 1.5
+            y_range = np.max(np.abs(real_parts[:, i].cpu().numpy())) * 1.5
             ax.set_ylim(-y_range, y_range)
         
         plt.tight_layout()
@@ -3094,9 +3996,9 @@ class Shell:
             mask = torch.abs(real_parts[:, i]) < 5.0
             if torch.any(mask):
                 scatter = ax.scatter(
-                    real_parts[mask, i].numpy(), 
-                    imag_parts[mask, i].numpy(),
-                    c=param_indices[mask].numpy(), 
+                    real_parts[mask, i].cpu().numpy(), 
+                    imag_parts[mask, i].cpu().numpy(),
+                    c=param_indices[mask].cpu().numpy(), 
                     cmap='viridis', 
                     s=80, 
                     alpha=0.7,
@@ -3122,7 +4024,6 @@ class Shell:
         
         return results
     
-    # Add these methods to the Shell class
     def analyze_near_critical_point(self, x_star, padding=0.01, num_points=50):
         """
         Perform high-resolution analysis near the theoretical critical point x*.
@@ -3225,7 +4126,7 @@ class Shell:
         eigenvalue_labels = ['Eigenvalue 1', 'Eigenvalue 2', 'Eigenvalue 3']
         
         for i in range(3):
-            ax1.plot(param_indices.numpy(), real_parts[:, i].numpy(), 
+            ax1.plot(param_indices.cpu().numpy(), real_parts[:, i].cpu().numpy(), 
                 color=colors[i], linewidth=2, label=eigenvalue_labels[i])
         
         ax1.axhline(y=0, color='black', linestyle='-', alpha=0.5, label='Stability Boundary')
@@ -3252,7 +4153,7 @@ class Shell:
         # Plot imaginary parts
         ax2 = axes[1]
         for i in range(3):
-            ax2.plot(param_indices.numpy(), imag_parts[:, i].numpy(), 
+            ax2.plot(param_indices.cpu().numpy(), imag_parts[:, i].cpu().numpy(), 
                 color=colors[i], linewidth=2, label=eigenvalue_labels[i])
         
         ax2.axvline(x=x_star.item(), color='orange', linestyle='-', 
@@ -3278,8 +4179,8 @@ class Shell:
         plt.tight_layout()
         
         # Calculate properties exactly at x*
-        x_star_real = real_parts[x_star_idx].numpy()
-        x_star_imag = imag_parts[x_star_idx].numpy()
+        x_star_real = real_parts[x_star_idx].cpu().numpy()
+        x_star_imag = imag_parts[x_star_idx].cpu().numpy()
         
         print(f"Eigenvalues at critical point x* = {x_star.item():.6f}:")
         for i in range(3):
@@ -3366,7 +4267,7 @@ class Shell:
         
         for i in range(self.num_agents):
             ax = axes[i]
-            ax.plot(param_indices.numpy(), real_parts[:, i].numpy(), 
+            ax.plot(param_indices.cpu().numpy(), real_parts[:, i].cpu().numpy(), 
                 color=colors[i], linewidth=2)
             ax.axhline(y=0, color='black', linestyle='--', alpha=0.5)
             
@@ -3391,7 +4292,7 @@ class Shell:
             ax.grid(True, alpha=0.3)
             
             # Zoom in on y-axis around zero
-            y_range = np.max(np.abs(real_parts[:, i].numpy())) * 1.5
+            y_range = np.max(np.abs(real_parts[:, i].cpu().numpy())) * 1.5
             ax.set_ylim(-y_range, y_range)
         
         plt.tight_layout()
@@ -3413,9 +4314,176 @@ class Shell:
         return results
 
     
+    # Outdated need to remove or archive (too slow but generalizable if you know x_star)
+
+    def first_order_bifurcation_plot_old(self,
+                                      agent_parameter_instance: Union[List[float], np.ndarray],
+                                      resource_distribution_type: str,
+                                      resource_entropy: bool = False,
+                                      infl_entropy: bool = False,
+                                      alpha_current: float = .5,
+                                      alpha_st: float = 0,
+                                      alpha_end: float = 1,
+                                      varying_parameter_type: str = 'mean',
+                                      fixed_parameters_lst: Optional[List[float]] = None,
+                                      name_ads: List[str] = [],
+                                      title_ads: List[str] = [],
+                                      save_types: List[str] = ['.png', '.svg'],
+                                      paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'first_order_bifurcation_plot'},
+                                      font = {'default_size': 15, 'cbar_size': 16, 'title_size': 18, 'legend_size': 12, 'font_family': 'sans-serif'}) -> matplotlib.figure.Figure:
+        r"""
+        Plots the first-order bifurcation for agents over a range of alpha values (resource parameters) via func:`jacobian_stability_fast`. Currently only works for 
+        Gaussian influence and multi-variate Gaussian influence kernels. 
+
+        **Gaussian example**
+
+        .. figure:: examples/first_order.png
+            :scale: 75 %
+
+            This is a first order bifurcations plot for 5 players using symmetric Gaussian influence kernels.
+             
+
+        :param agent_parameter_instance: Parameters for the influence function.
+        :type agent_parameter_instance: Union[List[float], np.ndarray]
+        :param resource_distribution_type: Type of resource distribution.
+        :type resource_distribution_type: str
+        :param resource_entropy: Whether to calculate resource entropy.
+        :type resource_entropy: bool
+        :param infl_entropy: Whether to calculate influence entropy.
+        :type infl_entropy: bool
+        :param alpha_current: Current alpha value.
+        :type alpha_current: float
+        :param alpha_st: Starting value of alpha.
+        :type alpha_st: float
+        :param alpha_end: Ending value of alpha.
+        :type alpha_end: float
+        :param varying_parameter_type: Type of varying parameter (e.g., 'mean').
+        :type varying_parameter_type: str
+        :param fixed_parameters_lst: List of fixed parameters.
+        :type fixed_parameters_lst: Optional[List[float]]
+        :param name_ads: Additional names for saved files.
+        :type name_ads: List[str]
+        :param title_ads: Additional titles for the plot.
+        :type title_ads: List[str]
+        :param save_types: File types to save the plot.
+        :type save_types: List[str]
+
+        :return: The generated plot figure.
+        :rtype: matplotlib.figure.Figure
+        """
+        resource_parameters,alpha=general.resource_parameter_setup(resource_distribution_type=resource_distribution_type,varying_parameter_type=varying_parameter_type,alpha_st=alpha_st, alpha_end=alpha_end, fixed_parameters_lst=fixed_parameters_lst)
+        y=self.jacobian_stability_fast(agent_parameter_instance=agent_parameter_instance,resource_distribution_type=resource_distribution_type,resource_parameters=resource_parameters,resource_entropy=resource_entropy,infl_entropy=infl_entropy)[0]
+        fig,ax=plt.subplots(figsize=(24, 16))
+        ax.set_box_aspect(1)
         
-    
-    ##Outdated need to remove or archive (too slow but generalizable if you know x_star)
+        # Apply font settings
+        plt.rcParams.update({'font.size': font['default_size'], 'font.family': font['font_family']})
+        
+        #plots the line where the e-values of the jacobian becomes postive
+        ax.plot(alpha,y)
+        ax.fill_between(alpha, 0, y, where=(alpha >= alpha_st), color='red', alpha=0.3)
+        ax.fill_between(alpha, y,max(max(y),.3), where=(alpha <= alpha_end), color='blue', alpha=0.3)
+        ax.vlines([alpha_current],ymin=max(min(y),0),ymax=max(max(y),.3),label=r'Current $\alpha$ value= '+str(alpha_current),colors='black',linestyles='--' )
+        
+        plt.ylim(max(min(y),0),max(max(y),.3))
+        red_p = mpatches.Patch(color='red', label='unstable')
+        blue_p = mpatches.Patch(color='blue', label='stable')
+        plt.legend()
+        old_handles, labels = ax.get_legend_handles_labels()
+        plt.legend(handles=[red_p, blue_p]+old_handles)
+        plt.ylabel("$\sigma$ (reach)", fontsize=font['default_size'])
+        plt.xlabel(r"$\alpha$ (mode distance)", fontsize=font['default_size'])
+        
+        title=r"$(\alpha,\sigma)$ $x^{*}$ stability bifurication for "+str(self.num_agents)+" players"
+        if len(title_ads)>0:
+            for title_additon in title_ads:
+                title=title+" "+title_additon
+        plt.title(title, fontsize=font['title_size'])
+        plt.xlim(alpha_st,alpha_end) 
+        plt.close()
+        
+        file_names=data_management.data_final_name({'data_type':'plot',"plot_type":'stability_bifurcation_plot_fast','domain_type':self.domain_type,'num_agents':self.num_agents,'section':paper_figure['section'],'figure_id':paper_figure.get('figure_id','first_order_bifurcation_plot')},name_ads=name_ads,save_types=save_types,paper_figure=paper_figure['paper'])
+        for file_name in file_names:
+            fig.savefig(file_name,bbox_inches='tight')
+        return fig
+
+    def generate_combined_figure(
+            self,
+            alpha,
+            test_processed: dict,
+            results_list: List,
+            search,
+            figsize: Tuple[float, float] = (32, 22),
+            width_ratios: List[float] = [1, 1],
+            height_ratios: List[float] = [1, 1, 1],
+            hspace: float = 0.4,
+            wspace: float = 0.12,
+            region_labels: List[str] = ['a', 'b', 'c', 'd'],
+            save: bool = False,
+            save_types: List[str] = ['.png', '.svg'],
+            paper_figure: dict = {'paper': True, 'section': '3_2_6', 'figure_id': 'fig_combined'},
+            font: dict = {'default_size': 32, 'cbar_size': 16, 'title_size': 40,
+                          'legend_size': 12, 'font_family': 'sans-serif'}
+    ) -> matplotlib.figure.Figure:
+        """
+        Generate the standardized combined bifurcation and equilibrium analysis figure.
+
+        Delegates to :func:`InflGame.domains.one_d.one_plots.generate_combined_bifurcation_figure`.
+
+        Parameters
+        ----------
+        alpha : array-like
+            Alpha (resource) parameter values for the bifurcation sweep.
+        test_processed : dict
+            Pre-processed bifurcation data (output of the bifurcation pipeline).
+        results_list : List[dict]
+            Exactly four region result dicts ``[results1, results2, results3, results4]``.
+        search : search_env
+            Configured ``monte_search.search_env`` instance used to render equilibrium panels.
+        figsize : Tuple[float, float]
+            Figure size in inches ``(width, height)``.
+        width_ratios : List[float]
+            Column width ratios for the 3×2 GridSpec layout.
+        height_ratios : List[float]
+            Row height ratios for the 3×2 GridSpec layout.
+        hspace : float
+            Vertical spacing between subplot rows.
+        wspace : float
+            Horizontal spacing between subplot columns.
+        region_labels : List[str]
+            Labels placed on both the bifurcation diagram and the panel headers.
+        save : bool
+            Whether to save the figure to disk.
+        save_types : List[str]
+            File extensions used when saving.
+        paper_figure : dict
+            Paper metadata: ``{'paper': bool, 'section': str, 'figure_id': str}``.
+        font : dict
+            Font configuration:
+            ``{'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'}``.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+        """
+        return one_plots.generate_combined_bifurcation_figure(
+            vis=self,
+            alpha=alpha,
+            test_processed=test_processed,
+            results_list=results_list,
+            search=search,
+            figsize=figsize,
+            width_ratios=width_ratios,
+            height_ratios=height_ratios,
+            hspace=hspace,
+            wspace=wspace,
+            region_labels=region_labels,
+            save=save,
+            save_types=save_types,
+            paper_figure=paper_figure,
+            font=font
+        )
+
 
     # def jocaobian_classifier_alt(self,
     #                              param_list: List[Union[List[float], np.ndarray]]) -> List[int]:

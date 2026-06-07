@@ -87,7 +87,9 @@ def run_experiment(action_type: str = "sync",
                    algo_epoch: bool = True,
                    checkpoints: bool = False,
                    save_positions: bool = False,
-                   name_ads: list[str] = []) -> None:
+                   return_positions: bool = False,
+                   name_ads: list[str] = [],
+                   fresh_start: bool = True) -> None:
     """
     Runs a reinforcement learning experiment using the Influencer Games framework and an independent Q-learning algorithm.
 
@@ -144,21 +146,19 @@ def run_experiment(action_type: str = "sync",
     if epsilon_configs==None:
       epsilon_configs={"TYPE":"cosine_annealing","epsilon_max":.8,"epsilon_min":.3}
 
-    if action_type == "sync":
-        env=influencer_env_sync(config=env_configs)
-        algo_config = {"random_seed":random_seed,"env":env, "epsilon_configs":epsilon_configs,"gamma":gamma,"alpha":alpha,"epochs":epochs,
-                       "episode_configs":episode_configs,"random_initialize":random_initialization,"soft_max":smoothing,"temperature_configs":temperature_configs,}
-        if algo_epoch == False:
-            from InflGame.MARL.IQL_sync_no_epochs import IQL_sync_no_epochs
-            algo=IQL_sync_no_epochs(algo_config)
-        else:
-            algo=IQL_sync(algo_config)
-            
-    elif action_type=="async":
-        env=influencer_env_async(config=env_configs)
-        algo_config = {"random_seed":random_seed,"env":env, "epsilon_configs":epsilon_configs,"gamma":gamma,"alpha":alpha,"epochs":epochs,"episode_configs":episode_configs,"random_initialize":random_initialization,"soft_max":smoothing,"temperature_configs":temperature_configs}
-        algo=IQL_async(algo_config)
-
+    # Build algo_config template (env will be set per-trial)
+    algo_config = {
+        "random_seed": random_seed,
+        "env": None,  # Will be set per trial
+        "epsilon_configs": epsilon_configs,
+        "gamma": gamma,
+        "alpha": alpha,
+        "epochs": epochs,
+        "episode_configs": episode_configs,
+        "random_initialize": random_initialization,
+        "soft_max": smoothing,
+        "temperature_configs": temperature_configs,
+    }
         
     configs={"env_config_main":env_configs,
       "epsilon_configs":epsilon_configs,
@@ -178,17 +178,49 @@ def run_experiment(action_type: str = "sync",
 
     # Training step
     data={}
-    random.seed(random_seed)
     if save_positions == True:
         position_lis = []
         
     for trial in range(trials):
+        # Seed at the start of EACH trial for reproducibility
+        trial_seed = random_seed + trial
+        random.seed(trial_seed)
+        np.random.seed(trial_seed)
+        torch.manual_seed(trial_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(trial_seed)
+        
+        # Re-create env and algo with fresh seeded state
+        
+        if action_type == "sync":
+            if fresh_start==True:
+                env = influencer_env_sync(config=env_configs)
+            # Seed gym spaces for reproducibility
+            for agent in env.possible_agents:
+                env.action_spaces[agent].seed(trial_seed)
+                env.observation_spaces[agent].seed(trial_seed)
+            algo_config["env"] = env
+            if algo_epoch == False:
+                from InflGame.MARL.IQL_sync_no_epochs import IQL_sync_no_epochs
+                algo = IQL_sync_no_epochs(algo_config)
+            else:
+                algo = IQL_sync(algo_config)
+        elif action_type == "async":
+            if fresh_start==True:
+                env = influencer_env_async(config=env_configs)
+            # Seed gym spaces for reproducibility
+            for agent in env.possible_agents:
+                env.action_spaces[agent].seed(trial_seed)
+                env.observation_spaces[agent].seed(trial_seed)
+            algo_config["env"] = env
+            algo = IQL_async(algo_config)
+        
         env.reset()
         if save_positions == True and trials > 1:
             q_table, position_array = algo.train(checkpoints=checkpoints, save_positions=save_positions, data_parameters=q_tables_parameter, trials=trials, name_ads=name_ads)
             position_lis.append(position_array.copy())
         else:
-            q_table=algo.train(checkpoints=checkpoints,save_positions=save_positions,data_parameters=q_tables_parameter,name_ads=name_ads)
+            q_table,position_array=algo.train(checkpoints=checkpoints,save_positions=save_positions, trials=trials, data_parameters=q_tables_parameter,name_ads=name_ads)
         data[f'q_table_{trial}'] = q_table
         hkl.dump(data, q_tables_name, mode='w', compression='gzip')
         print(f"Trial: {trial+1}/{trials} complete")
@@ -200,11 +232,22 @@ def run_experiment(action_type: str = "sync",
                   mode='w', compression='gzip')
         hkl.dump(mad.numpy(), data_management.data_final_name(data_parameters=q_tables_parameter,name_ads=name_ads+["mad_positions"])[0],
                   mode='w', compression='gzip')
-    q_tensor=IQL_utils.q_tables_to_q_tensors(q_tables=data,num_runs=configs['trials'])
-    if trials>=2:
-        q_mean=q_tensor.mean(axis=0)
-        q_tables_name_mean=data_management.data_final_name(data_parameters=q_tables_parameter,name_ads=name_ads+['mean'])[0]
-        hkl.dump(q_mean.numpy(), q_tables_name_mean, mode='w', compression='gzip')
-        return q_tensor,q_mean
-    else:
-        return q_tensor
+    try:
+        q_tensor=IQL_utils.q_tables_to_q_tensors(q_tables=data,num_runs=configs['trials'])
+        if trials>=2:
+            q_mean=q_tensor.mean(axis=0)
+            q_tables_name_mean=data_management.data_final_name(data_parameters=q_tables_parameter,name_ads=name_ads+['mean'])[0]
+            hkl.dump(q_mean.numpy(), q_tables_name_mean, mode='w', compression='gzip')
+            if return_positions == True:
+                return q_tensor,q_mean, position_lis
+            else:
+                return q_tensor,q_mean,None
+        else:
+            if return_positions == True:
+                return q_tensor, None, position_array
+            else:
+                return q_tensor,None, None
+    except:
+        print("Error: Q-tensor and Q-mean could not be computed")
+        return None, data
+    

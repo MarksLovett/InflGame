@@ -42,6 +42,12 @@ def two_dimensional_rectangle_setup(domain_bounds: np.ndarray,
               - rect_positions (np.ndarray): A 2D array of shape (N, 2), where N is the total number of grid points. Each row represents the (X, Y) coordinates of a grid point.
     :rtype: tuple
     """
+    # Convert torch tensors to numpy if needed
+    if hasattr(domain_bounds, 'numpy'):
+        domain_bounds = domain_bounds.detach().cpu().numpy()
+    elif not isinstance(domain_bounds, np.ndarray):
+        domain_bounds = np.array(domain_bounds)
+    
     rect_Y, rect_X = np.mgrid[domain_bounds[0,0]:domain_bounds[0,1]:domain_refinement*1j, domain_bounds[1,0]:domain_bounds[1,1]:domain_refinement*1j]
     rect_positions = np.vstack([rect_X.ravel(), rect_Y.ravel()])
     rect_positions=rect_positions.transpose()

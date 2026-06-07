@@ -84,10 +84,19 @@ from InflGame.domains.one_d import one_utils
 from InflGame.utils import data_management
 
 
-def policy_histogram(q_table: dict = None,
+def policy_histogram(num_agents=2,
+                     q_table: dict = None,
                      q_tensor: torch.Tensor = None,
                      agent_id: int = 0,
                      temperature: float = 1,
+                     title_ads: List[str] = [],
+                     name_ads: List[str] = [],
+                     save: bool = False,
+                     save_types: List[str] = ['.png', '.svg'],
+                     font: dict = {'default_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+                     paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'policy_histogram'},
+                     figsize: Tuple[float, float] = (6, 6),
+                     axis_return: bool = False,
                      ) -> matplotlib.figure.Figure:
     r"""
     Visualizes the Q-table as a policy using a softmax function and plots it as a heatmap.
@@ -107,25 +116,73 @@ def policy_histogram(q_table: dict = None,
     :type q_table: dict, optional
     :param q_tensor: Q-table as a torch.Tensor. Defaults to None.
     :type q_tensor: torch.Tensor, optional
-    :param player_id: Player's ID number. Defaults to 0.
-    :type player_id: int
+    :param agent_id: Agent's ID number. Defaults to 0.
+    :type agent_id: int
     :param temperature: A smoothness factor for the softmax function. Defaults to 1.
     :type temperature: float
-    :return: Figure representing the policy as a heatmap.
-    :rtype: matplotlib.figure.Figure
+    :param title_ads: List of additional title components to append. Default is ``[]``.
+    :type title_ads: List[str], optional
+    :param name_ads: List of additional name components for file saving. Default is ``[]``.
+    :type name_ads: List[str], optional
+    :param save: If ``True``, saves the figure to file. Default is ``False``.
+    :type save: bool, optional
+    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
+    :type save_types: List[str], optional
+    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
+        ``'legend_size'``, and ``'font_family'``.
+    :type font: dict, optional
+    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
+        and ``'figure_id'``.
+    :type paper_figure: dict, optional
+    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
+    :type figsize: Tuple[float, float], optional
+    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
+    :type axis_return: bool, optional
+    :return: Figure representing the policy as a heatmap (or Axes if ``axis_return=True``).
+    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
     """
+    font_family = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font_family})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
+
     if q_table is not None:
         q_tensor = IQL_utils.Q_table_to_tensor(q_table)
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     policy = IQL_utils.Q_tensor_to_policy(q_tensor=q_tensor, agent_id=agent_id, temperature=temperature)
-    ax = sns.heatmap(policy, xticklabels=['left', 'stay', 'right'], yticklabels=5, cmap=sns.cubehelix_palette(as_cmap=True),vmax=1, vmin=0)
+    ax = sns.heatmap(policy, xticklabels=['left', 'stay', 'right'], yticklabels=5, cmap=sns.cubehelix_palette(as_cmap=True), vmax=1, vmin=0, ax=ax)
     ax.invert_yaxis()
     ax.set_box_aspect(1)
     plt.ylabel('States')
     plt.xlabel('Actions')
-    plt.title('Policy Average for Player ' + str(agent_id + 1))
+    title = 'Policy Average for Player ' + str(agent_id + 1)
+    if len(title_ads) > 0:
+        for title_addition in title_ads:
+            title = title + ' ' + title_addition
+    ax.set_title(title, fontsize=title_font_size)
+    plt.tight_layout()
     plt.close()
-    return fig
+    if save:
+        file_names = data_management.data_final_name(
+            {'data_type': 'plot',
+             'plot_type': 'policy_histogram',
+             'domain_type': '1d',
+             'num_agents': num_agents,
+             'section': paper_figure['section'],
+             'figure_id': paper_figure.get('figure_id', 'policy_histogram')},
+            name_ads=name_ads,
+            save_types=save_types,
+            paper_figure=paper_figure['paper']
+        )
+        for file_name in file_names:
+            fig.savefig(file_name, bbox_inches='tight')
+    if axis_return:
+        return ax
+    else:
+        return fig
 
 
 def policy_deterministically_to_actions(env: influencer_env_async,
@@ -206,7 +263,16 @@ def policy_deterministically_to_actions(env: influencer_env_async,
 
 
 def reward_plot(reward_matrix: torch.Tensor,
-                possible_agents: dict) -> matplotlib.figure.Figure:
+                possible_agents: dict,
+                title_ads: List[str] = [],
+                name_ads: List[str] = [],
+                save: bool = False,
+                save_types: List[str] = ['.png', '.svg'],
+                font: dict = {'default_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+                paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'reward_plot'},
+                figsize: Tuple[float, float] = (6, 6),
+                axis_return: bool = False,
+                ) -> matplotlib.figure.Figure:
     r"""
     Plots the rewards for all players over time.
 
@@ -214,26 +280,85 @@ def reward_plot(reward_matrix: torch.Tensor,
     :type reward_matrix: torch.Tensor
     :param possible_agents: Dictionary of possible agents in the environment.
     :type possible_agents: dict
-    :return: A figure of the reward through time using the optimal policy.
-    :rtype: matplotlib.figure.Figure
+    :param title_ads: List of additional title components to append. Default is ``[]``.
+    :type title_ads: List[str], optional
+    :param name_ads: List of additional name components for file saving. Default is ``[]``.
+    :type name_ads: List[str], optional
+    :param save: If ``True``, saves the figure to file. Default is ``False``.
+    :type save: bool, optional
+    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
+    :type save_types: List[str], optional
+    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
+        ``'legend_size'``, and ``'font_family'``.
+    :type font: dict, optional
+    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
+        and ``'figure_id'``.
+    :type paper_figure: dict, optional
+    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
+    :type figsize: Tuple[float, float], optional
+    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
+    :type axis_return: bool, optional
+    :return: A figure of the reward through time using the optimal policy (or Axes if ``axis_return=True``).
+    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
     """
-    fig, ax = plt.subplots()
+    font_family = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font_family})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
+
+    fig, ax = plt.subplots(figsize=figsize)
     ax.set_box_aspect(1)
     agent_id = 0
+    num_agents = 0
     for agent in possible_agents:
         ax.plot(reward_matrix[:, agent_id], label=f"{agent}")
         agent_id += 1
-    plt.xlabel("Steps")
-    plt.ylabel("Reward")
-    plt.title("Player Reward")
-    plt.legend()
+        num_agents += 1
+    ax.set_xlabel("Steps")
+    ax.set_ylabel("Reward")
+    title = "Player Reward"
+    if len(title_ads) > 0:
+        for title_addition in title_ads:
+            title = title + ' ' + title_addition
+    ax.set_title(title, fontsize=title_font_size)
+    ax.legend()
+    plt.tight_layout()
     plt.close()
-    return fig
+    if save:
+        file_names = data_management.data_final_name(
+            {'data_type': 'plot',
+             'plot_type': 'MARL_reward',
+             'domain_type': '1d',
+             'num_agents': num_agents,
+             'section': paper_figure['section'],
+             'figure_id': paper_figure.get('figure_id', 'reward_plot')},
+            name_ads=name_ads,
+            save_types=save_types,
+            paper_figure=paper_figure['paper']
+        )
+        for file_name in file_names:
+            fig.savefig(file_name, bbox_inches='tight')
+    if axis_return:
+        return ax
+    else:
+        return fig
 
 
 def pos_plot(pos_matrix: torch.Tensor,
              possible_agents: dict,
-             domain_bounds: list) -> matplotlib.figure.Figure:
+             domain_bounds: list,
+             title_ads: List[str] = [],
+             name_ads: List[str] = [],
+             save: bool = False,
+             save_types: List[str] = ['.png', '.svg'],
+             font: dict = {'default_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+             paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'pos_plot'},
+             figsize: Tuple[float, float] = (6, 6),
+             axis_return: bool = False,
+             ) -> matplotlib.figure.Figure:
     r"""
     Plots the positions of all players over time.
 
@@ -243,22 +368,219 @@ def pos_plot(pos_matrix: torch.Tensor,
     :type possible_agents: dict
     :param domain_bounds: List containing the lower and upper bounds of the domain.
     :type domain_bounds: list
-    :return: A figure of the agent positions through time using the optimal policy.
-    :rtype: matplotlib.figure.Figure
+    :param title_ads: List of additional title components to append. Default is ``[]``.
+    :type title_ads: List[str], optional
+    :param name_ads: List of additional name components for file saving. Default is ``[]``.
+    :type name_ads: List[str], optional
+    :param save: If ``True``, saves the figure to file. Default is ``False``.
+    :type save: bool, optional
+    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
+    :type save_types: List[str], optional
+    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
+        ``'legend_size'``, and ``'font_family'``.
+    :type font: dict, optional
+    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
+        and ``'figure_id'``.
+    :type paper_figure: dict, optional
+    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
+    :type figsize: Tuple[float, float], optional
+    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
+    :type axis_return: bool, optional
+    :return: A figure of the agent positions through time using the optimal policy (or Axes if ``axis_return=True``).
+    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
     """
-    fig, ax = plt.subplots()
+    font_family = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font_family})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
+
+    fig, ax = plt.subplots(figsize=figsize)
     ax.set_box_aspect(1)
     agent_id = 0
+    num_agents = 0
     for agent in possible_agents:
         ax.plot(pos_matrix[:, agent_id], label=f"{agent}")
         agent_id += 1
-    plt.xlabel("Steps")
-    plt.ylabel("Position")
-    plt.ylim(domain_bounds[0], domain_bounds[1])
-    plt.title("Player Position")
-    plt.legend()
+        num_agents += 1
+    ax.set_xlabel("Steps")
+    ax.set_ylabel("Position")
+    ax.set_ylim(domain_bounds[0], domain_bounds[1])
+    title = "Player Position"
+    if len(title_ads) > 0:
+        for title_addition in title_ads:
+            title = title + ' ' + title_addition
+    ax.set_title(title, fontsize=title_font_size)
+    ax.legend()
+    plt.tight_layout()
     plt.close()
-    return fig
+    if save:
+        file_names = data_management.data_final_name(
+            {'data_type': 'plot',
+             'plot_type': 'MARL_pos',
+             'domain_type': '1d',
+             'num_agents': num_agents,
+             'section': paper_figure['section'],
+             'figure_id': paper_figure.get('figure_id', 'pos_plot')},
+            name_ads=name_ads,
+            save_types=save_types,
+            paper_figure=paper_figure['paper']
+        )
+        for file_name in file_names:
+            fig.savefig(file_name, bbox_inches='tight')
+    if axis_return:
+        return ax
+    else:
+        return fig
+
+
+def agent_position_trajectory(pos_data: np.ndarray,
+                               window_size: int = 10000,
+                               num_agents: int = None,
+                               title_ads: List[str] = [],
+                               name_ads: List[str] = [],
+                               short_title:bool=False,
+                               save: bool = False,
+                               save_types: List[str] = ['.png', '.svg'],
+                               font: dict = {'default_size': 12, 'cbar_size': 12, 'title_size': 14, 'legend_size': 12, 'font_family': 'sans-serif'},
+                               paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'agent_trajectory'},
+                               figsize: Tuple[float, float] = (10, 6),
+                               num_ticks: int = 6,
+                               axis_return: bool = False,
+                               ) -> matplotlib.figure.Figure:
+    r"""
+    Plots agent positions over time with scientific notation x-axis labels.
+    
+    This function visualizes the trajectory of agent positions throughout training,
+    with x-axis labels showing the actual episode count (accounting for window averaging).
+    The x-axis uses scientific notation for readability with large episode counts.
+
+    Parameters
+    ----------
+    pos_data : np.ndarray
+        Position data with shape ``(time_steps, num_agents)``. Assumes data is already 
+        window-averaged (each row represents ``window_size`` episodes).
+    window_size : int, optional
+        The number of episodes averaged per data point (for x-axis labeling). Default is 10000.
+    num_agents : int, optional
+        Number of agents. If None, inferred from ``pos_data.shape[1]``.
+    title_ads : List[str], optional
+        List of additional title components to append. Default is ``[]``.
+    name_ads : List[str], optional
+        List of additional name components for file saving. Default is ``[]``.
+    save : bool, optional
+        If ``True``, saves the figure to file. Default is ``False``.
+    save_types : List[str], optional
+        List of file extensions for saving. Default is ``['.png', '.svg']``.
+    font : dict, optional
+        Font configuration dictionary with keys:
+        
+        - ``'default_size'``: Default font size (default: 12)
+        - ``'title_size'``: Title font size (default: 14)
+        - ``'legend_size'``: Legend font size (default: 12)
+        - ``'font_family'``: Font family (default: 'sans-serif')
+    paper_figure : dict, optional
+        Paper figure configuration with keys:
+        
+        - ``'paper'``: bool, whether this is a paper figure
+        - ``'section'``: str, section identifier
+        - ``'figure_id'``: str, figure identifier
+    figsize : Tuple[float, float], optional
+        Figure size as (width, height). Default is ``(10, 6)``.
+    num_ticks : int, optional
+        Approximate number of x-axis ticks to display. Default is 6.
+    axis_return : bool, optional
+        If ``True``, returns the axes object instead of figure. Default is ``False``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or matplotlib.axes.Axes
+        Figure object (or Axes if ``axis_return=True``) showing agent position trajectories.
+
+    Examples
+    --------
+    Basic usage with pre-averaged position data:
+
+    >>> import numpy as np
+    >>> pos_averaged = np.random.rand(400, 3)  # 400 windows, 3 agents
+    >>> fig = agent_position_trajectory(pos_averaged, window_size=10000, 
+    ...                                  title_ads=['Experiment 1'])
+
+    Save figure for publication:
+
+    >>> fig = agent_position_trajectory(pos_averaged, window_size=10000,
+    ...                                  save=True, 
+    ...                                  paper_figure={'paper': True, 'section': 'results', 'figure_id': 'trajectory'})
+    """
+    # Font setup
+    font_family = font.get('font_family', 'sans-serif')
+    default_font_size = font.get('default_size', 12)
+    title_font_size = font.get('title_size', 14)
+    legend_font_size = font.get('legend_size', 12)
+    
+    mpl.rcParams.update({'font.size': default_font_size, 'font.family': font_family})
+    mpl.rcParams['legend.fontsize'] = legend_font_size
+    
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_box_aspect(1)
+    
+    if num_agents is None:
+        num_agents = pos_data.shape[1]
+    num_points = len(pos_data)
+    
+    # Create x-values representing actual episode counts
+    x_values = np.arange(1, num_points + 1) * window_size
+    
+    for i in range(num_agents):
+        ax.plot(x_values, pos_data[:, i], label=f'Agent {i+1}')
+    
+    # Set x-ticks with scientific notation
+    tick_spacing = max(1, num_points // num_ticks)
+    tick_positions = np.arange(0, num_points + 1, tick_spacing) * window_size
+    ax.set_xticks(tick_positions)
+    ax.ticklabel_format(axis='x', style='scientific', scilimits=(0, 0))
+    ax.xaxis.get_offset_text().set_fontsize(default_font_size - 2)
+    
+    ax.set_xlabel('Episode')
+    ax.set_ylabel('Position')
+    
+    # Build title
+    if short_title:
+        title="MARL Agents' Trajectories"
+    else:
+        title = f'{num_agents} MARL Agent Positions Over Training'
+    if len(title_ads) > 0:
+        for title_addition in title_ads:
+            title = title + ' ' + title_addition
+    ax.set_title(title, fontsize=title_font_size)
+    
+    ax.legend(loc='best')
+    ax.set_ylim(0, 1)
+    
+    plt.tight_layout()
+    plt.close()
+    
+    if save:
+        file_names = data_management.data_final_name(
+            {'data_type': 'plot', 
+             'plot_type': 'MARL_trajectory', 
+             'domain_type': '1d', 
+             'num_agents': num_agents, 
+             'section': paper_figure['section'], 
+             'figure_id': paper_figure.get('figure_id', 'agent_trajectory')},
+            name_ads=name_ads, 
+            save_types=save_types, 
+            paper_figure=paper_figure['paper']
+        )
+        for file_name in file_names:
+            fig.savefig(file_name, bbox_inches='tight')
+    
+    if axis_return:
+        return ax
+    else:
+        return fig
 
 #
 
@@ -281,6 +603,8 @@ def bifurcation_over_parameters(positions: torch.Tensor,
                                  cbar_config: dict = {'center_labels': True, 'label_alignment': 'center', 'shrink': 0.8},
                                  paper_figure: dict = {'paper': False, 'section': 'A', 'figure_id': 'equilibrium_bifurcation_plot'},
                                  axis_return: bool = False,
+                                 show_pred: bool = False,
+                                 marker_size: int = 30,
                                  ) -> None:
     heat_cmap = cmaps['heat']
     crit_cmap = cmaps['crit']
@@ -311,62 +635,53 @@ def bifurcation_over_parameters(positions: torch.Tensor,
         positions = torch.tensor(positions, dtype=torch.float32)
 
     # Create density heatmap showing number of agents at each position
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_box_aspect(1)
 
-    # 2D array - parameters x agents
-    min_pos = max(0, positions.min() - 0.5)
-    max_pos = min(1, positions.max() + 0.5)
-    position_bins = np.linspace(min_pos, max_pos, 100)
-    
-    # Create density matrix
-    density_matrix = np.zeros((len(position_bins)-1, min(positions.shape[0], len(reach_parameters))))
-    
-    # Count agents in each position bin for each parameter
-    for i in range(min(positions.shape[0], len(reach_parameters))):
-        agent_positions = positions[i, :]
-        # Remove NaN values
-        valid_positions = agent_positions[~torch.isnan(agent_positions).bool()]
-        if len(valid_positions) > 0:
-            counts, _ = np.histogram(valid_positions, bins=position_bins)
+    # Scatter final positions per agent per sigma — compact SVG (mirrors AD approach)
+    positions_np = positions.numpy() if torch.is_tensor(positions) else np.array(positions, dtype=float)
+    reach_param_np = domain.numpy() if torch.is_tensor(domain) else np.array(domain, dtype=float)
+
+    # Coarse density matrix for colormap scaling only (not rendered as image)
+    _n_bins = 50
+    _pos_bins = np.linspace(0, 1, _n_bins + 1)
+    density_matrix = np.zeros((_n_bins, len(domain)))
+    for i in range(min(len(domain), positions_np.shape[0])):
+        valid = positions_np[i, ~np.isnan(positions_np[i, :])]
+        if len(valid) > 0:
+            counts, _ = np.histogram(valid, bins=_pos_bins)
             density_matrix[:, i] = counts
+
+    max_agents = int(density_matrix.max()) if density_matrix.max() > 0 else num_agents
+    levels = np.arange(0, max_agents + 2, 1)
+    norm = mpl.colors.BoundaryNorm(levels, ncolors=256)
+
+    # Gather all scatter coordinates with density-based color
+    scatter_x, scatter_y, scatter_c = [], [], []
+    for i in range(min(len(reach_param_np), positions_np.shape[0])):
+        agent_positions_i = positions_np[i, :]
+        valid_pos = agent_positions_i[~np.isnan(agent_positions_i)]
+        for pos in valid_pos:
+            bin_idx = int(np.clip(np.searchsorted(_pos_bins, pos, side='right') - 1, 0, _n_bins - 1))
+            scatter_x.append(float(reach_param_np[i]))
+            scatter_y.append(float(pos))
+            scatter_c.append(float(density_matrix[bin_idx, i]))
+
+    if len(scatter_x) > 0:
+        im = ax.scatter(scatter_x, scatter_y, c=scatter_c,
+                        cmap=heat_cmap, norm=norm, s=marker_size, linewidths=0, alpha=0.9)
+    else:
+        im = mpl.cm.ScalarMappable(cmap=heat_cmap, norm=norm)
+        im.set_array([])
+
+    # Keep reach_parameters in sync with domain for any downstream use
+    reach_parameters = reach_parameters[:len(domain)]
+
     
-    # Adjust reach_parameters to match data
-    reach_parameters = reach_parameters[:density_matrix.shape[1]]
-
-    # Create the density matrix
-    density_matrix = np.zeros((len(position_bins)-1, len(domain)))
-
-    # For each sigma value, count how many agents are in each position bin
-    for i, sigma_val in enumerate(domain):
-        agent_positions = positions[i, :]  # All 5 agent positions for this sigma
-        counts, _ = np.histogram(agent_positions, bins=position_bins)
-        density_matrix[:, i] = counts
-
-    # Create discrete colormap for agent count
-        max_agents = int(density_matrix.max())
-        if max_agents > 0:
-            # Define discrete levels based on agent count
-            levels = np.arange(0, max_agents + 2, 1)  # 0, 1, 2, ..., max_agents+1
-            
-            norm = mpl.colors.BoundaryNorm(levels, ncolors=256)
-            
-            # Create the heatmap with discrete colormap
-            im = ax.imshow(density_matrix, aspect='auto', cmap=heat_cmap, norm=norm, origin='lower',
-                        extent=[reach_parameters[0], reach_parameters[-1], 
-                                position_bins[0], position_bins[-1]],
-                        interpolation='nearest')  # Use 'nearest' for discrete appearance
-        else:
-            # Fallback for empty data
-            im = ax.imshow(density_matrix, aspect='auto', cmap=heat_cmap, origin='lower',
-                        extent=[reach_parameters[0], reach_parameters[-1], 
-                                position_bins[0], position_bins[-1]],
-                        interpolation='nearest')
-        
 
 
     #Bifurcations critical values (works for gaussian only)
-    if infl_type=='gaussian':
+    if infl_type=='gaussian' and show_pred==True:
         _,means,crit_stds=one_utils.critical_values_plot(num_agents=num_agents,bin_points=bin_points,resource_distribution=resource_distribution,axis=ax,reach_start=reach_start,reach_end=reach_end,refinements=refinements,crit_cs=crit_cmap)
         crit_stds=general.flatten_list(xss=crit_stds)
         crit_stds.sort()
@@ -443,7 +758,8 @@ def bifurcation_over_parameters(positions: torch.Tensor,
 
     handles, labels = plt.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys(),loc='lower center')
+    if show_pred==True:
+        plt.legend(by_label.values(), by_label.keys(),loc='lower center')
     if short_title:
         title= 'MARL Agents'
     else:

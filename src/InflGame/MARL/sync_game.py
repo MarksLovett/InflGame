@@ -136,8 +136,11 @@ class influencer_env_sync(MultiAgentEnv):
             - **NUM_ITERS** (*int*): Maximum number of iterations per episode.
             - **normalize_reward** (*bool*): Whether to normalize rewards (default: True).
         """
-        super().__init__()
         self.num_agent = config.get('num_agents')
+        # Set agents/possible_agents BEFORE super() so MultiAgentEnv.__init__ doesn't overwrite with []
+        self.agents = [f"player{i}" for i in range(self.num_agent)]
+        self.possible_agents = self.agents.copy()
+        super().__init__()
         self.initial_position = config.get('initial_position')
         self.bin_points = config.get('bin_points')
         self.resource_distribution = config.get('resource_distribution')
@@ -159,7 +162,6 @@ class influencer_env_sync(MultiAgentEnv):
 
         self.domain_points_num = int((self.domain_bounds[1] - self.domain_bounds[0]) / self.step_size) + 1
         self.possible_positions = np.linspace(self.domain_bounds[0], self.domain_bounds[1], num=self.domain_points_num)
-        self.agents = self.possible_agents = [f"player{i}" for i in range(self.num_agent)]
 
         # Precalculate the reward dictionary for all possible agents and positions
         if self.precalculate_reward:
@@ -255,7 +257,9 @@ class influencer_env_sync(MultiAgentEnv):
         """
         observations_list = []
         for pos in self.initial_position:
-            idx = int(np.where(np.around(self.possible_positions, decimals=5) == pos)[0][0])
+            # Use nearest neighbor matching instead of exact matching
+            # This handles floating-point precision issues
+            idx = int(np.argmin(np.abs(self.possible_positions - pos)))
             observations_list.append(idx)
         return observations_list
 

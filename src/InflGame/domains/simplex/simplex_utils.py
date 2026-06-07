@@ -62,7 +62,7 @@ Example:
 import numpy as np
 import torch
 import matplotlib.tri as tri
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 
 
 # ========================= VECTORIZED FUNCTIONS =========================
