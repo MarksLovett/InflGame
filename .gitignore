@@ -12,10 +12,9 @@ src/InflGame/utils/paper_plots/
 
 # Ignore paper directory
 paper/
-# Track only main.tex in SI subdirectory
+# Do not ignore the SI directory and its contents
 !paper/SI/
-paper/SI/*
-!paper/SI/main.tex
+!paper/SI/**
 
 # Ignore demo directory
 demo/
