@@ -8,7 +8,7 @@ The main focus of this package is to provide a framework to studying the dynmaic
 
 The project is based on the work of Mark Lovett, Feng Fu, and Alex McAvoy at Dartmouth Mathematics. 
     
-- [Paper](https://www.google.com/): Original paper with theoretical results.
+- [Paper](https://www.dropbox.com/scl/fi/bwfizhrisros02darawoc/main-v12.pdf?rlkey=m4pxtr25rbxiw6lcomf0b6q0i&dl=0): Original paper with theoretical results.
 ## An influence game form 
 The payoff for player $i$ ( $`u_i(\mathbf{x})`$ ) of an influence game over a resource distribution $`B=\{B(b)|b\in \mathbb B\}`$ is the expected return of resources for a player. Given a discrete resource distribution $`u_i`$ has the following form
 
