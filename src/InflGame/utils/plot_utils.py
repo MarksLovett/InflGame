@@ -21,7 +21,7 @@ Usage:
 The `side_by_side_plots` function can be used to combine two existing plots into a single figure
 with optional shared colorbars and axis labels.
 
-Example:
+Examples
 --------
 
 .. code-block:: python

@@ -19,7 +19,7 @@ The `policy_histogram` function visualizes the Q-table as a policy heatmap, whil
 functions plot the rewards and positions of agents over time, respectively. The `policy_deterministically_to_actions` 
 function simulates deterministic actions for agents based on their policies.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -62,7 +62,6 @@ Example:
     # Plot positions over time
     pos_fig = pos_plot(pos_matrix=pos_matrix, possible_agents=env.possible_agents, domain_bounds=env_config["domain_bounds"])
     pos_fig.show()
-
 
 """
 
@@ -107,39 +106,44 @@ def policy_histogram(num_agents=2,
     where:
       - :math:`a` is the action 
       - :math:`s` is the current state
-      - :math:`a'` is the next state 
+      - :math:`a'` is an alternate action
       - :math:`T` is the temperature parameter
       - :math:`P(a|s)` is the probability of taking action :math:`a` in state :math:`s`
       - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`        
 
-    :param q_table: Q-table in dictionary format. Defaults to None.
-    :type q_table: dict, optional
-    :param q_tensor: Q-table as a torch.Tensor. Defaults to None.
-    :type q_tensor: torch.Tensor, optional
-    :param agent_id: Agent's ID number. Defaults to 0.
-    :type agent_id: int
-    :param temperature: A smoothness factor for the softmax function. Defaults to 1.
-    :type temperature: float
-    :param title_ads: List of additional title components to append. Default is ``[]``.
-    :type title_ads: List[str], optional
-    :param name_ads: List of additional name components for file saving. Default is ``[]``.
-    :type name_ads: List[str], optional
-    :param save: If ``True``, saves the figure to file. Default is ``False``.
-    :type save: bool, optional
-    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
-    :type save_types: List[str], optional
-    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
-        ``'legend_size'``, and ``'font_family'``.
-    :type font: dict, optional
-    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
-        and ``'figure_id'``.
-    :type paper_figure: dict, optional
-    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
-    :type figsize: Tuple[float, float], optional
-    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
-    :type axis_return: bool, optional
-    :return: Figure representing the policy as a heatmap (or Axes if ``axis_return=True``).
-    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents (used for saving metadata / titles). Defaults to 2.
+    q_table : dict, optional
+        Q-table in dictionary format. Defaults to None.
+    q_tensor : torch.Tensor, optional
+        Q-table as a torch.Tensor. Defaults to None.
+    agent_id : int
+        Agent's ID number. Defaults to 0.
+    temperature : float
+        A smoothness factor for the softmax function. Defaults to 1.
+    title_ads : List[str], optional
+        List of additional title components to append. Default is ``[]``.
+    name_ads : List[str], optional
+        List of additional name components for file saving. Default is ``[]``.
+    save : bool, optional
+        If ``True``, saves the figure to file. Default is ``False``.
+    save_types : List[str], optional
+        List of file extensions for saving. Default is ``['.png', '.svg']``.
+    font : dict, optional
+        Font configuration dictionary with keys ``'default_size'``, ``'title_size'``, ``'legend_size'``, and ``'font_family'``.
+    paper_figure : dict, optional
+        Paper figure configuration with keys ``'paper'``, ``'section'``, and ``'figure_id'``.
+    figsize : Tuple[float, float], optional
+        Figure size as (width, height). Default is ``(6, 6)``.
+    axis_return : bool, optional
+        If ``True``, returns the axes object instead of figure. Default is ``False``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or matplotlib.axes.Axes
+        Figure representing the policy as a heatmap (or Axes if ``axis_return=True``).
     """
     font_family = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -215,20 +219,25 @@ def policy_deterministically_to_actions(env: influencer_env_async,
     4. The positions and rewards are recorded at each step.
 
 
-    :param env: The environment object.
-    :type env: influencer_env_async
-    :param q_table: Q-table in dictionary format. Defaults to None.
-    :type q_table: dict, optional
-    :param q_tensor: Q-table as a torch.Tensor. Defaults to None.
-    :type q_tensor: torch.Tensor, optional
-    :param initial_position: Initial position of players. Defaults to np.array([0, 1]).
-    :type initial_position: np.ndarray
-    :param num_step: Number of steps to simulate. Defaults to 10.
-    :type num_step: int
-    :param temperature: A smoothness factor for the softmax function. Defaults to 1.
-    :type temperature: float
-    :return: Position matrix and reward matrix as torch.Tensors.
-    :rtype: tuple[torch.Tensor, torch.Tensor]
+    Parameters
+    ----------
+    env : influencer_env_async
+        The environment object.
+    q_table : dict, optional
+        Q-table in dictionary format. Defaults to None.
+    q_tensor : torch.Tensor, optional
+        Q-table as a torch.Tensor. Defaults to None.
+    initial_position : np.ndarray
+        Initial position of players. Defaults to np.array([0, 1]).
+    num_step : int
+        Number of steps to simulate. Defaults to 10.
+    temperature : float
+        A smoothness factor for the softmax function. Defaults to 1.
+
+    Returns
+    -------
+    tuple[torch.Tensor, torch.Tensor]
+        Position matrix and reward matrix as torch.Tensors.
     """
     if q_table is not None:
         q_tensor = IQL_utils.Q_table_to_tensor(q_table)
@@ -276,30 +285,33 @@ def reward_plot(reward_matrix: torch.Tensor,
     r"""
     Plots the rewards for all players over time.
 
-    :param reward_matrix: Matrix containing rewards for each player at each step.
-    :type reward_matrix: torch.Tensor
-    :param possible_agents: Dictionary of possible agents in the environment.
-    :type possible_agents: dict
-    :param title_ads: List of additional title components to append. Default is ``[]``.
-    :type title_ads: List[str], optional
-    :param name_ads: List of additional name components for file saving. Default is ``[]``.
-    :type name_ads: List[str], optional
-    :param save: If ``True``, saves the figure to file. Default is ``False``.
-    :type save: bool, optional
-    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
-    :type save_types: List[str], optional
-    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
-        ``'legend_size'``, and ``'font_family'``.
-    :type font: dict, optional
-    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
-        and ``'figure_id'``.
-    :type paper_figure: dict, optional
-    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
-    :type figsize: Tuple[float, float], optional
-    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
-    :type axis_return: bool, optional
-    :return: A figure of the reward through time using the optimal policy (or Axes if ``axis_return=True``).
-    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
+    Parameters
+    ----------
+    reward_matrix : torch.Tensor
+        Matrix containing rewards for each player at each step.
+    possible_agents : dict
+        Dictionary of possible agents in the environment.
+    title_ads : List[str], optional
+        List of additional title components to append. Default is ``[]``.
+    name_ads : List[str], optional
+        List of additional name components for file saving. Default is ``[]``.
+    save : bool, optional
+        If ``True``, saves the figure to file. Default is ``False``.
+    save_types : List[str], optional
+        List of file extensions for saving. Default is ``['.png', '.svg']``.
+    font : dict, optional
+        Font configuration dictionary with keys ``'default_size'``, ``'title_size'``, ``'legend_size'``, and ``'font_family'``.
+    paper_figure : dict, optional
+        Paper figure configuration with keys ``'paper'``, ``'section'``, and ``'figure_id'``.
+    figsize : Tuple[float, float], optional
+        Figure size as (width, height). Default is ``(6, 6)``.
+    axis_return : bool, optional
+        If ``True``, returns the axes object instead of figure. Default is ``False``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or matplotlib.axes.Axes
+        A figure of the reward through time using the optimal policy (or Axes if ``axis_return=True``).
     """
     font_family = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -362,32 +374,35 @@ def pos_plot(pos_matrix: torch.Tensor,
     r"""
     Plots the positions of all players over time.
 
-    :param pos_matrix: Matrix containing positions for each player at each step.
-    :type pos_matrix: torch.Tensor
-    :param possible_agents: Dictionary of possible agents in the environment.
-    :type possible_agents: dict
-    :param domain_bounds: List containing the lower and upper bounds of the domain.
-    :type domain_bounds: list
-    :param title_ads: List of additional title components to append. Default is ``[]``.
-    :type title_ads: List[str], optional
-    :param name_ads: List of additional name components for file saving. Default is ``[]``.
-    :type name_ads: List[str], optional
-    :param save: If ``True``, saves the figure to file. Default is ``False``.
-    :type save: bool, optional
-    :param save_types: List of file extensions for saving. Default is ``['.png', '.svg']``.
-    :type save_types: List[str], optional
-    :param font: Font configuration dictionary with keys ``'default_size'``, ``'title_size'``,
-        ``'legend_size'``, and ``'font_family'``.
-    :type font: dict, optional
-    :param paper_figure: Paper figure configuration with keys ``'paper'``, ``'section'``,
-        and ``'figure_id'``.
-    :type paper_figure: dict, optional
-    :param figsize: Figure size as (width, height). Default is ``(6, 6)``.
-    :type figsize: Tuple[float, float], optional
-    :param axis_return: If ``True``, returns the axes object instead of figure. Default is ``False``.
-    :type axis_return: bool, optional
-    :return: A figure of the agent positions through time using the optimal policy (or Axes if ``axis_return=True``).
-    :rtype: matplotlib.figure.Figure or matplotlib.axes.Axes
+    Parameters
+    ----------
+    pos_matrix : torch.Tensor
+        Matrix containing positions for each player at each step.
+    possible_agents : dict
+        Dictionary of possible agents in the environment.
+    domain_bounds : list
+        List containing the lower and upper bounds of the domain.
+    title_ads : List[str], optional
+        List of additional title components to append. Default is ``[]``.
+    name_ads : List[str], optional
+        List of additional name components for file saving. Default is ``[]``.
+    save : bool, optional
+        If ``True``, saves the figure to file. Default is ``False``.
+    save_types : List[str], optional
+        List of file extensions for saving. Default is ``['.png', '.svg']``.
+    font : dict, optional
+        Font configuration dictionary with keys ``'default_size'``, ``'title_size'``, ``'legend_size'``, and ``'font_family'``.
+    paper_figure : dict, optional
+        Paper figure configuration with keys ``'paper'``, ``'section'``, and ``'figure_id'``.
+    figsize : Tuple[float, float], optional
+        Figure size as (width, height). Default is ``(6, 6)``.
+    axis_return : bool, optional
+        If ``True``, returns the axes object instead of figure. Default is ``False``.
+
+    Returns
+    -------
+    matplotlib.figure.Figure or matplotlib.axes.Axes
+        A figure of the agent positions through time using the optimal policy (or Axes if ``axis_return=True``).
     """
     font_family = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -470,6 +485,8 @@ def agent_position_trajectory(pos_data: np.ndarray,
         List of additional title components to append. Default is ``[]``.
     name_ads : List[str], optional
         List of additional name components for file saving. Default is ``[]``.
+    short_title : bool, optional
+        If ``True``, use a shorter figure title. Default is ``False``.
     save : bool, optional
         If ``True``, saves the figure to file. Default is ``False``.
     save_types : List[str], optional

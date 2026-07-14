@@ -61,7 +61,8 @@ def gradient_indepth_analysis_plot(bin_points, step_id, pos_matrix, prob_matrix,
         reward_matrix: torch tensor (steps, num_agents)
         fig: matplotlib Figure object (if None, creates new figure and shows it)
         
-    Returns:
+    Returns
+    -------
         fig: matplotlib Figure object
     """
     # Convert bin_points to numpy if needed
@@ -212,8 +213,8 @@ def create_gradient_analysis_gif(
     Create an animated GIF showing full 5-panel gradient analysis over time steps.
     Reuses gradient_indepth_analysis_plot for consistent rendering.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     d_ln_f_tensors : torch.Tensor
         Shape (time_steps, num_agents, bins) - derivative of log fitness
     prob_tensors : torch.Tensor
@@ -243,8 +244,8 @@ def create_gradient_analysis_gif(
     max_frames : int
         Maximum number of frames to include in GIF (samples evenly from all time steps)
         
-    Returns:
-    --------
+    Returns
+    -------
     str : path to saved GIF file
     """
     import matplotlib.animation as animation

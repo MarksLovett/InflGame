@@ -35,7 +35,7 @@ Usage:
 The `experiment_optimized` function is the main entry point for running parameter sweep experiments. 
 It automatically handles parallelization, batch processing, and result management.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -76,15 +76,15 @@ Example:
 
     print(f"Experiment completed. Results shape: {final_positions.shape}")
 
-Notes:
-------
+Notes
+-----
 - Results are automatically saved to disk using hickle format with compression
 - The function maintains parameter order regardless of parallel execution completion order
 - Progress bars provide real-time feedback on experiment status
 - Batch processing significantly reduces multiprocessing overhead for large parameter sets
 
-See Also:
-----------
+See Also
+--------
 - :mod:`InflGame.MARL.utils.experiments` : Single experiment utilities
 - :mod:`InflGame.MARL.utils.MARL_utils` : Core MARL utility functions
 - :mod:`InflGame.utils.data_management` : Data saving and loading utilities

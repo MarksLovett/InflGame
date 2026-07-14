@@ -27,7 +27,7 @@ The `BifurcationEnv` class can be used to analyze bifurcations and equilibrium d
 using the `AdaptiveEnv` class. It supports various analysis types, including equilibrium bifurcation diagrams,
 stability analysis, and multi-order bifurcation detection.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -289,50 +289,52 @@ class BifurcationEnv:
         """
         Initialize the BifurcationEnv with configuration parameters.
 
-        :param num_agents: Number of agents in the environment.
-        :type num_agents: int
-        :param agents_pos: Initial positions of agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for the influence kernel (e.g., reach, variance).
-        :type parameters: torch.Tensor
-        :param resource_distribution: Distribution of resources across the domain.
-        :type resource_distribution: torch.Tensor
-        :param bin_points: Bin points defining resource allocation regions.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param infl_configs: Configuration dictionary for influence kernel type and parameters.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "dirichlet", "beta", "custom").
-            - ``custom_influence`` (callable): Function for a custom influence kernel (see custom kernel guides).
-        :type infl_configs: Dict[str, str]
-        :param learning_rate_type: Type of learning rate schedule (e.g., 'cosine_annealing').
-        :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters [min_lr, max_lr, annealing_period].
-        :type learning_rate: List[float]
-        :param time_steps: Maximum number of gradient ascent iterations.
-        :type time_steps: int
-        :param fp: Whether to use fixed point analysis.
-        :type fp: bool
-        :param infl_cshift: Whether to apply constant shift to influence.
-        :type infl_cshift: bool
-        :param cshift: Constant shift value or tensor.
-        :type cshift: float
-        :param infl_fshift: Whether to apply frequency shift to influence.
-        :type infl_fshift: bool
-        :param Q: Covariance matrix for multivariate Gaussian kernels.
-        :type Q: torch.Tensor
-        :param domain_type: Type of domain ('1d', '2d', or 'simplex').
-        :type domain_type: str
-        :param domain_bounds: Bounds of the domain.
-        :type domain_bounds: Union[List[float], torch.Tensor]
-        :param resource_type: Type of resource distribution.
-        :type resource_type: float
-        :param domain_refinement: Refinement level for 2D domains (number of grid points).
-        :type domain_refinement: int
-        :param tolerance: Convergence tolerance for gradient ascent.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to violate tolerance before convergence.
-        :type tolerated_agents: Optional[int]
-        :param ignore_zero_infl: Whether to ignore agents with zero influence.
-        :type ignore_zero_infl: bool
+        Parameters
+        ----------
+        num_agents : int
+            Number of agents in the environment.
+        agents_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        parameters : torch.Tensor
+            Parameters for the influence kernel (e.g., reach, variance).
+        resource_distribution : torch.Tensor
+            Distribution of resources across the domain.
+        bin_points : Union[List[float], np.ndarray]
+            Bin points defining resource allocation regions.
+        infl_configs : Dict[str, str]
+            Configuration dictionary for influence kernel type and parameters. - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "dirichlet", "beta", "custom"). - ``custom_influence`` (callable): Function for a custom influence kernel (see custom kernel guides).
+        learning_rate_type : str
+            Type of learning rate schedule (e.g., 'cosine_annealing').
+        learning_rate : List[float]
+            Learning rate parameters [min_lr, max_lr, annealing_period].
+        time_steps : int
+            Maximum number of gradient ascent iterations.
+        fp : int
+            Fixed parameter index for Dirichlet-type kernels.
+        infl_cshift : bool
+            Whether to apply constant shift to influence.
+        cshift : Optional[torch.Tensor]
+            Constant shift tensor.
+        infl_fshift : bool
+            Whether to apply frequency shift to influence.
+        Q : Optional[int]
+            Scaling / count parameter for functional shift.
+        domain_type : str
+            Type of domain ('1d', '2d', or 'simplex').
+        domain_bounds : Union[List[float], torch.Tensor]
+            Bounds of the domain.
+        resource_type : str
+            Type of resource distribution.
+        domain_refinement : int
+            Refinement level for 2D domains (number of grid points).
+        tolerance : float
+            Convergence tolerance for gradient ascent.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to violate tolerance before convergence.
+        ignore_zero_infl : bool
+            Whether to ignore agents with zero influence.
+        device : Optional[Union[str, torch.device]]
+            Torch device for computations (e.g. ``'cpu'``, ``'cuda'``).
         """
         validated=validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -439,7 +441,9 @@ class BifurcationEnv:
         creating an :class:`InflGame.adaptive.grad_func_env.AdaptiveEnv` instance that will be
         used for equilibrium computations and bifurcation analysis.
         
-        :return: None
+        Returns
+        -------
+        None
         """
         self.field=grad_func_env.AdaptiveEnv(num_agents=self.num_agents,agents_pos=self.agents_pos,parameters=self.parameters,
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
@@ -469,28 +473,36 @@ class BifurcationEnv:
         - Progress logging for long-running computations
         - Proper state preservation and restoration
 
-        :param reach_parameters: Array of reach/influence parameter values to iterate over.
-        :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Convergence tolerance for gradient ascent at each parameter value.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to violate tolerance before declaring convergence.
-        :type tolerated_agents: int
-        :param parallel: Whether to use parallel processing for parameter sweep.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param time_steps: Maximum iterations for gradient ascent (uses instance default if None).
-        :type time_steps: Optional[int]
+        Parameters
+        ----------
+        reach_parameters : Union[List[float], np.ndarray]
+            Array of reach/influence parameter values to iterate over.
+        tolerance : float
+            Convergence tolerance for gradient ascent at each parameter value.
+        tolerated_agents : int
+            Number of agents allowed to violate tolerance before declaring convergence.
+        parallel : bool
+            Whether to use parallel processing for parameter sweep.
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count if None).
+        batch_size : Optional[int]
+            Batch size for parallel processing (auto-calculated if None).
+        time_steps : Optional[int]
+            Maximum iterations for gradient ascent (uses instance default if None).
 
-        :return: Matrix of final agent positions for each parameter value (shape: len(reach_parameters) x num_agents).
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            Matrix of final agent positions for each parameter value (shape: len(reach_parameters) x num_agents).
         
-        :raises ValueError: If input parameters are invalid (empty arrays, negative values, etc.).
-        :raises RuntimeError: If computation fails during gradient ascent.
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid (empty arrays, negative values, etc.).
+        RuntimeError
+            If computation fails during gradient ascent.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -754,22 +766,20 @@ class BifurcationEnv:
         It creates a temporary AdaptiveEnv instance, runs gradient ascent to convergence, and
         returns the final agent positions.
         
-        :param parameter_data: Dictionary containing all necessary data for computation, including:
-                              - parameter_id: Index of parameter in sweep
-                              - reach_param: Parameter value
-                              - og_pos: Original agent positions
-                              - tolerance: Convergence tolerance
-                              - tolerated_agents: Convergence agent tolerance
-                              - domain_type: Type of domain
-                              - total_params: Total number of parameters in sweep
-                              - time_steps: Maximum gradient ascent iterations
-        :type parameter_data: Dict
+        Parameters
+        ----------
+        parameter_data : Dict
+            Dictionary containing all necessary data for computation, including: - parameter_id: Index of parameter in sweep - reach_param: Parameter value - og_pos: Original agent positions - tolerance: Convergence tolerance - tolerated_agents: Convergence agent tolerance - domain_type: Type of domain - total_params: Total number of parameters in sweep - time_steps: Maximum gradient ascent iterations
         
-        :return: Tuple of (parameter_id, final_position_row) where final_position_row contains
-                 the converged positions of all agents.
-        :rtype: Tuple[int, torch.Tensor]
+        Returns
+        -------
+        Tuple[int, torch.Tensor]
+            Tuple of (parameter_id, final_position_row) where final_position_row contains the converged positions of all agents.
         
-        :raises RuntimeError: If gradient ascent fails to compute equilibrium.
+        Raises
+        ------
+        RuntimeError
+            If gradient ascent fails to compute equilibrium.
         """
 
         try:
@@ -876,34 +886,40 @@ class BifurcationEnv:
         - Memory efficient computation and state management
         - Progress tracking for long-running computations
 
-        :param reach_parameters: Array of reach/influence parameter values to iterate over.
-        :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Convergence tolerance for gradient ascent at each parameter value.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to violate tolerance before declaring convergence.
-        :type tolerated_agents: int
-        :param percentage: Percentage of trajectory to analyze (0.0-1.0, e.g., 0.5 for last 50%, 1.0 for entire trajectory).
-                          Controls which portion of gradient ascent history is examined for extreme values.
-        :type percentage: float
-        :param parallel: Whether to use parallel processing for parameter sweep.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param time_steps: Maximum iterations for gradient ascent (uses instance default if None).
-        :type time_steps: Optional[int]
-        :param learning_rate: Custom learning rate schedule (uses instance default if None).
-        :type learning_rate: Optional[List]
+        Parameters
+        ----------
+        reach_parameters : Union[List[float], np.ndarray]
+            Array of reach/influence parameter values to iterate over.
+        tolerance : float
+            Convergence tolerance for gradient ascent at each parameter value.
+        tolerated_agents : int
+            Number of agents allowed to violate tolerance before declaring convergence.
+        percentage : float
+            Percentage of trajectory to analyze (0.0-1.0, e.g., 0.5 for last 50%, 1.0 for entire trajectory). Controls which portion of gradient ascent history is examined for extreme values.
+        parallel : bool
+            Whether to use parallel processing for parameter sweep.
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count if None).
+        batch_size : Optional[int]
+            Batch size for parallel processing (auto-calculated if None).
+        time_steps : Optional[int]
+            Maximum iterations for gradient ascent (uses instance default if None).
+        learning_rate : Optional[List]
+            Custom learning rate schedule (uses instance default if None).
 
-        :return: Dictionary containing 'max' and 'min' matrices of extreme positions for each parameter.
-                 Each matrix has shape (len(reach_parameters) x num_agents).
-        :rtype: Dict[str, torch.Tensor]
+        Returns
+        -------
+        Dict[str, torch.Tensor]
+            Dictionary containing 'max' and 'min' matrices of extreme positions for each parameter. Each matrix has shape (len(reach_parameters) x num_agents).
         
-        :raises ValueError: If input parameters are invalid (empty arrays, invalid percentage range, etc.).
-        :raises RuntimeError: If computation fails during gradient ascent.
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid (empty arrays, invalid percentage range, etc.).
+        RuntimeError
+            If computation fails during gradient ascent.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -1194,11 +1210,15 @@ class BifurcationEnv:
         but only if convergence was not achieved. For converged cases, returns the final position for both.
         Designed to be used with multiprocessing for the extreme_pos_over_reach_both function.
         
-        :param parameter_data: Dictionary containing parameter data and configuration
-        :type parameter_data: Dict
+        Parameters
+        ----------
+        parameter_data : Dict
+            Dictionary containing parameter data and configuration
         
-        :return: Tuple of parameter_id, max_position_row, and min_position_row
-        :rtype: Tuple[int, torch.Tensor, torch.Tensor]
+        Returns
+        -------
+        Tuple[int, torch.Tensor, torch.Tensor]
+            Tuple of parameter_id, max_position_row, and min_position_row
         """
         try:
             parameter_id = parameter_data['parameter_id']
@@ -1341,34 +1361,35 @@ class BifurcationEnv:
         - Optimized position generation for exploring initial condition space
         - Parallel processing support for large parameter sweeps
         
-        :param reach_start: Starting value of reach parameter range.
-        :type reach_start: float
-        :param reach_end: Ending value of reach parameter range.
-        :type reach_end: float
-        :param reach_num_points: Number of parameter values to sample in the range.
-        :type reach_num_points: int
-        :param time_steps: Maximum iterations for gradient ascent at each parameter value.
-        :type time_steps: int
-        :param initial_pos: Initial agent positions (defaults to current instance positions if None).
-        :type initial_pos: Union[List[float], torch.Tensor]
-        :param tolerance: Convergence tolerance (defaults to instance tolerance if None).
-        :type tolerance: Optional[float]
-        :param tolerated_agents: Convergence agent tolerance (defaults to instance value if None).
-        :type tolerated_agents: Optional[int]
-        :param parallel_configs: Dictionary with parallel processing configuration:
-                                {'parallel': bool, 'max_workers': int, 'batch_size': int}.
-                                Defaults to {'parallel': True, 'max_workers': 4, 'batch_size': 2}.
-        :type parallel_configs: Dict[str, Union[bool, int]]
-        :param envelope: Whether to compute envelope (max/min) of equilibria across initial conditions.
-        :type envelope: bool
-        :param verbose: Whether to print progress information during computation.
-        :type verbose: bool
+        Parameters
+        ----------
+        reach_start : float
+            Starting value of reach parameter range.
+        reach_end : float
+            Ending value of reach parameter range.
+        reach_num_points : int
+            Number of parameter values to sample in the range.
+        time_steps : int
+            Maximum iterations for gradient ascent at each parameter value.
+        initial_pos : Union[List[float], torch.Tensor]
+            Initial agent positions (defaults to current instance positions if None).
+        tolerance : Optional[float]
+            Convergence tolerance (defaults to instance tolerance if None).
+        tolerated_agents : Optional[int]
+            Convergence agent tolerance (defaults to instance value if None).
+        parallel_configs : Dict[str, Union[bool, int]]
+            Dictionary with parallel processing configuration: {'parallel': bool, 'max_workers': int, 'batch_size': int}. Defaults to {'parallel': True, 'max_workers': 4, 'batch_size': 2}.
+        envelope : bool
+            Whether to compute envelope (max/min) of equilibria across initial conditions.
+        verbose : bool
+            Whether to print progress information during computation.
         
-        :return: For envelope=False: torch.Tensor of shape (num_variants, num_params, num_agents).
-                 For envelope=True: List of [max_matrix, min_matrix] each of shape (num_params, num_agents).
-        :rtype: Union[torch.Tensor, List[torch.Tensor]]
+        Returns
+        -------
+        Union[torch.Tensor, List[torch.Tensor]]
+            For envelope=False: torch.Tensor of shape (num_variants, num_params, num_agents). For envelope=True: List of [max_matrix, min_matrix] each of shape (num_params, num_agents).
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -1547,16 +1568,19 @@ class BifurcationEnv:
         trajectories converge to the same position within a specified tolerance. These convergence
         points often indicate bifurcation boundaries or transitions between different equilibrium basins.
         
-        :param matrix_list: List of position matrices, each of shape (num_params, num_agents).
-        :type matrix_list: List[torch.Tensor]
-        :param reach_parameters: Array of parameter values corresponding to matrix rows.
-        :type reach_parameters: torch.Tensor
-        :param tolerance: Distance threshold for considering positions as converged.
-        :type tolerance: float
+        Parameters
+        ----------
+        matrix_list : List[torch.Tensor]
+            List of position matrices, each of shape (num_params, num_agents).
+        reach_parameters : torch.Tensor
+            Array of parameter values corresponding to matrix rows.
+        tolerance : float
+            Distance threshold for considering positions as converged.
         
-        :return: Dictionary containing 'convergence_points' (parameter values where convergence occurs)
-                 and 'parameter_indices' (indices in reach_parameters array).
-        :rtype: Dict[str, torch.Tensor]
+        Returns
+        -------
+        Dict[str, torch.Tensor]
+            Dictionary containing 'convergence_points' (parameter values where convergence occurs) and 'parameter_indices' (indices in reach_parameters array).
         """
         if len(matrix_list) < 2:
             return {'convergence_points': torch.empty(0), 'parameter_indices': torch.empty(0)}
@@ -1606,15 +1630,19 @@ class BifurcationEnv:
         is scaled to ensure convergence while maintaining computational efficiency across
         different parameter regimes.
         
-        :param resource_parameter: Current value of the resource/reach parameter.
-        :type resource_parameter: float
-        :param second_run: Whether this is a refinement run (uses larger learning rate if True).
-        :type second_run: bool
-        :param high_end: Whether this is for high parameter values (further increases learning rate).
-        :type high_end: bool
+        Parameters
+        ----------
+        resource_parameter : float
+            Current value of the resource/reach parameter.
+        second_run : bool
+            Whether this is a refinement run (uses larger learning rate if True).
+        high_end : bool
+            Whether this is for high parameter values (further increases learning rate).
         
-        :return: Computed maximum learning rate value.
-        :rtype: float
+        Returns
+        -------
+        float
+            Computed maximum learning rate value.
         """
         if second_run:
             if resource_parameter <= .2:
@@ -1671,45 +1699,47 @@ class BifurcationEnv:
         
         **Note:** This function is currently applicable only to 1-1-1 equilibria for 3 players.
         
-        :param bin_points: Discretization points defining the domain grid.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param fixed_parameters_lst: Fixed parameters for resource distribution (e.g., means, standard deviations).
-        :type fixed_parameters_lst: List[List[float]]
-        :param agents_pos: Initial agent positions (defaults to instance positions if None).
-        :type agents_pos: Optional[Union[List[float], np.ndarray, torch.Tensor]]
-        :param resource_distribution_type: Type of resource distribution function.
-        :type resource_distribution_type: str
-        :param alpha_st: Starting value of the varying parameter.
-        :type alpha_st: float
-        :param alpha_end: Ending value of the varying parameter.
-        :type alpha_end: float
-        :param varying_parameter_type: Which parameter to vary ('mean', 'std', etc.).
-        :type varying_parameter_type: str
-        :param learning_rate_p: Learning rate parameters [min_lr, max_lr, annealing_period].
-        :type learning_rate_p: List[float]
-        :param parallel: Whether to use parallel processing.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param time_steps: Maximum iterations for gradient ascent.
-        :type time_steps: int
-        :param second_run: Whether this is a refinement run with adjusted learning rates.
-        :type second_run: bool
-        :param data: Pre-computed equilibrium data to refine (used in refinement runs).
-        :type data: Optional[Union[List[float], np.ndarray, torch.Tensor]]
-        :param num_points: Number of parameter values to sample in the search range.
-        :type num_points: int
-        :param direct_method: If True, uses direct gradient=0 solving with symmetric split at 0.5. 
-                             If False, uses gradient ascent method to find equilibria.
-        :type direct_method: bool
+        Parameters
+        ----------
+        bin_points : Union[List[float], np.ndarray]
+            Discretization points defining the domain grid.
+        fixed_parameters_lst : List[List[float]]
+            Fixed parameters for resource distribution (e.g., means, standard deviations).
+        agents_pos : Optional[Union[List[float], np.ndarray, torch.Tensor]]
+            Initial agent positions (defaults to instance positions if None).
+        resource_distribution_type : str
+            Type of resource distribution function.
+        alpha_st : float
+            Starting value of the varying parameter.
+        alpha_end : float
+            Ending value of the varying parameter.
+        varying_parameter_type : str
+            Which parameter to vary ('mean', 'std', etc.).
+        learning_rate_p : List[float]
+            Learning rate parameters [min_lr, max_lr, annealing_period].
+        parallel : bool
+            Whether to use parallel processing.
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count if None).
+        batch_size : Optional[int]
+            Batch size for parallel processing (auto-calculated if None).
+        time_steps : int
+            Maximum iterations for gradient ascent.
+        second_run : bool
+            Whether this is a refinement run with adjusted learning rates.
+        data : Optional[Union[List[float], np.ndarray, torch.Tensor]]
+            Pre-computed equilibrium data to refine (used in refinement runs).
+        num_points : int
+            Number of parameter values to sample in the search range.
+        direct_method : bool
+            If True, uses direct gradient=0 solving with symmetric split at 0.5. If False, uses gradient ascent method to find equilibria.
         
-        :return: Dictionary containing 'sigma_star' (bifurcation parameter values) and 
-                 'final_parameters' (corresponding equilibrium parameters) lists.
-        :rtype: Dict[str, List]
+        Returns
+        -------
+        Dict[str, List]
+            Dictionary containing 'sigma_star' (bifurcation parameter values) and 'final_parameters' (corresponding equilibrium parameters) lists.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -1927,11 +1957,15 @@ class BifurcationEnv:
         Helper function to compute bifurcation parameters for a single resource parameter.
         Designed to be used with multiprocessing.
         
-        :param parameter_data: Dictionary containing parameter data and configuration
-        :type parameter_data: Dict
+        Parameters
+        ----------
+        parameter_data : Dict
+            Dictionary containing parameter data and configuration
         
-        :return: Tuple of parameter_id, critical_parameter, and sigma_star
-        :rtype: Tuple[int, float, float]
+        Returns
+        -------
+        Tuple[int, float, float]
+            Tuple of parameter_id, critical_parameter, and sigma_star
         """
         sigma_indicator=0
         try:
@@ -2241,52 +2275,60 @@ class BifurcationEnv:
         - Memory efficient batch processing
         - Comprehensive logging and progress tracking
         
-        :param int_position: Initial position for agents.
-        :type int_position: torch.Tensor
-        :param second_order_bif: Second-order bifurcation parameters for each resource parameter.
-        :type second_order_bif: List[torch.Tensor]
-        :param guess_distance: Distance parameter for initial guess estimation.
-        :type guess_distance: torch.Tensor
-        :param sig_edge: Minimum sigma value constraint (lower bound on parameter search).
-        :type sig_edge: float
-        :param num_refinements: Number of iterative refinement steps to perform.
-        :type num_refinements: int
-        :param learning_rate_p: Learning rate parameters [min_lr, max_lr, annealing_period].
-        :type learning_rate_p: List[float]
-        :param resource_distribution_type: Type of resource distribution function.
-        :type resource_distribution_type: str
-        :param varying_parameter_type: Which parameter to vary ('mean', 'std', etc.).
-        :type varying_parameter_type: str
-        :param alpha_st: Starting value of the varying parameter.
-        :type alpha_st: float
-        :param alpha_end: Ending value of the varying parameter.
-        :type alpha_end: float
-        :param alpha_num_points: Number of points to sample in the varying parameter range.
-        :type alpha_num_points: int
-        :param fixed_parameters_lst: Fixed parameters for resource distribution.
-        :type fixed_parameters_lst: List[List[float]]
-        :param learning_rate_type: Type of learning rate schedule (uses instance default if None).
-        :type learning_rate_type: str
-        :param method_type: Search strategy ('bottom_up', 'top_down', 'top_down_n1', 'bottom_up_n1').
-        :type method_type: str
-        :param parallel: Whether to use parallel processing.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count if None).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for parallel processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param time_steps: Maximum iterations for gradient ascent.
-        :type time_steps: int
-        :param verbose: Whether to print progress and diagnostic information.
-        :type verbose: bool
+        Parameters
+        ----------
+        int_position : torch.Tensor
+            Initial position for agents.
+        second_order_bif : List[torch.Tensor]
+            Second-order bifurcation parameters for each resource parameter.
+        guess_distance : torch.Tensor
+            Distance parameter for initial guess estimation.
+        sig_edge : float
+            Minimum sigma value constraint (lower bound on parameter search).
+        num_refinements : int
+            Number of iterative refinement steps to perform.
+        learning_rate_p : List[float]
+            Learning rate parameters [min_lr, max_lr, annealing_period].
+        resource_distribution_type : str
+            Type of resource distribution function.
+        varying_parameter_type : str
+            Which parameter to vary ('mean', 'std', etc.).
+        alpha_st : float
+            Starting value of the varying parameter.
+        alpha_end : float
+            Ending value of the varying parameter.
+        alpha_num_points : int
+            Number of points to sample in the varying parameter range.
+        fixed_parameters_lst : List[List[float]]
+            Fixed parameters for resource distribution.
+        learning_rate_type : str
+            Type of learning rate schedule (uses instance default if None).
+        method_type : str
+            Search strategy ('bottom_up', 'top_down', 'top_down_n1', 'bottom_up_n1').
+        parallel : bool
+            Whether to use parallel processing.
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count if None).
+        batch_size : Optional[int]
+            Batch size for parallel processing (auto-calculated if None).
+        time_steps : int
+            Maximum iterations for gradient ascent.
+        verbose : bool
+            Whether to print progress and diagnostic information.
         
-        :return: List of cycle end parameters (bifurcation points) for each resource parameter.
-        :rtype: List[torch.Tensor]
+        Returns
+        -------
+        List[torch.Tensor]
+            List of cycle end parameters (bifurcation points) for each resource parameter.
         
-        :raises ValueError: If input parameters are invalid (negative refinements, invalid method_type, etc.).
-        :raises RuntimeError: If computation fails during bifurcation detection.
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid (negative refinements, invalid method_type, etc.).
+        RuntimeError
+            If computation fails during bifurcation detection.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -2552,13 +2594,20 @@ class BifurcationEnv:
         This method creates a temporary AdaptiveEnv instance and calls find_cycle_ends
         to compute the third-order bifurcation parameter.
         
-        :param parameter_data: Dictionary containing parameter data and configuration
-        :type parameter_data: Dict
+        Parameters
+        ----------
+        parameter_data : Dict
+            Dictionary containing parameter data and configuration
         
-        :return: Tuple of parameter_id and cycle_end_result
-        :rtype: Tuple[int, torch.Tensor]
+        Returns
+        -------
+        Tuple[int, torch.Tensor]
+            Tuple of parameter_id and cycle_end_result
         
-        :raises RuntimeError: If computation fails
+        Raises
+        ------
+        RuntimeError
+            If computation fails
         """
         try:
             # Extract parameters from the data dictionary
@@ -2923,37 +2972,39 @@ class BifurcationEnv:
             First-order bifurcation plot for 5 players using symmetric Gaussian influence kernels.
                 
 
-        :param infl_type: Type of influence kernel ('gaussian', 'beta', etc.).
-        :type infl_type: str
-        :param alpha_st: Starting value of the resource parameter range.
-        :type alpha_st: float
-        :param alpha_end: Ending value of the resource parameter range.
-        :type alpha_end: float
-        :param processed_data: Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
-        :type processed_data: Optional[dict]
-        :param alpha_values: Array of alpha (parameter) values corresponding to equilibria.
-        :type alpha_values: Optional[np.ndarray]
-        :param cutoff_index: Index to truncate the data (useful for focusing on specific parameter ranges).
-        :type cutoff_index: Optional[int]
-        :param title_ads: Additional text to append to plot title.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot to file.
-        :type save: bool
-        :param name_ads: Additional text for saved filename.
-        :type name_ads: List[str]
-        :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 
-                     'legend_size', 'table_size', 'label_size', 'font_family'.
-        :type font: Dict
-        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
-                            'section' (str), 'figure_id' (str).
-        :type paper_figure: dict
+        Parameters
+        ----------
+        infl_type : str
+            Type of influence kernel ('gaussian', 'beta', etc.).
+        alpha_st : float
+            Starting value of the resource parameter range.
+        alpha_end : float
+            Ending value of the resource parameter range.
+        processed_data : Optional[dict]
+            Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
+        alpha_values : Optional[np.ndarray]
+            Array of alpha (parameter) values corresponding to equilibria.
+        cutoff_index : Optional[int]
+            Index to truncate the data (useful for focusing on specific parameter ranges).
+        title_ads : List[str]
+            Additional text to append to plot title.
+        save : bool
+            Whether to save the plot to file.
+        name_ads : List[str]
+            Additional text for saved filename.
+        font : Dict
+            Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'table_size', 'label_size', 'font_family'.
+        save_types : List[str]
+            List of file formats for saving (e.g., ['.png', '.svg']).
+        paper_figure : dict
+            Configuration for paper figure saving with keys: 'paper' (bool), 'section' (str), 'figure_id' (str).
 
-        :return: The generated matplotlib figure object.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated matplotlib figure object.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python

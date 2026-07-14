@@ -46,7 +46,6 @@ Usage:
 The `prob_matrix` function computes the probability matrix for agents influencing resource points, while the 
 `influence_matrix` function calculates the influence matrix for all agents. The `influence` function computes 
 the influence of a specific agent's kernel over resource points.
-
 """
 
 
@@ -146,14 +145,14 @@ def influence_matrix_optimized(num_agents: int,
                               cshift: torch.Tensor = None,
                               Q: float = 0.0) -> torch.Tensor:
     r"""
-    Compute the influence of a specific agent's influence kernel over the bin points.
-    
-    i.e.
+    Compute the influence matrix of all agents over the bin points.
+
+    Returns a matrix whose rows are per-agent influence kernels
 
     .. math::
         f_{i}(x_i,b)
 
-    Where :math:`x_i` is the position of the :math:`i` th agent and :math:`b \in \mathbb{B}` is the resource/bin points in the environment.
+    for each agent :math:`i` and resource/bin points :math:`b \in \mathbb{B}`.
 
     There are several types of preset influence kernels, including:
 
@@ -173,7 +172,7 @@ def influence_matrix_optimized(num_agents: int,
             f_i(\mathbb{\alpha},b)=\frac{1}{\beta(\alpha)}\prod_{l=1}^{L} b_l^{(\alpha_l-1)}
 
     where :math:`L` is the number of dimensions and :math:`b_l` is the :math:`l` th component of the bin point :math:`b`.
-    
+
     Here :math:`\mathbf{\alpha}` is the parameter vector for the Dirichlet influence kernel, but :math:`\alpha_\phi` is the fixed parameter such that
 
         .. math::
@@ -193,20 +192,33 @@ def influence_matrix_optimized(num_agents: int,
     This influence kernel is defined by the user and can be any function that takes in the agent's position, bin points, and parameters.
     Examples of custom influence kernels are provided in the demos.
 
-    :param agent_id: The ID of the agent for which influence is being calculated.
-    :type agent_id: int
-    :param agents_pos: Positions of the agents.
-    :type agents_pos: torch.Tensor | numpy.ndarray
-    :param bin_points: Positions of the resource points.
-    :type bin_points: torch.Tensor | numpy.ndarray
-    :param infl_configs: Configuration for the influence type.
-    :type infl_configs: dict
-    :param parameters: Parameters for the influence function.
-    :type parameters: list | numpy.ndarray | torch.Tensor
-    :param alpha_matrix: Alpha parameters for Dirichlet influence. Defaults to 0.
-    :type alpha_matrix: torch.Tensor, optional
-    :return: A vector representing the influence of the agent over all resource points.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    agents_pos : torch.Tensor | numpy.ndarray
+        Positions of the agents.
+    bin_points : torch.Tensor | numpy.ndarray
+        Positions of the resource points.
+    infl_configs : dict
+        Configuration for the influence type.
+    parameters : list | numpy.ndarray | torch.Tensor
+        Parameters for the influence function.
+    fixed_pa : int
+        Fixed parameter index for Dirichlet-type kernels.
+    infl_cshift : bool
+        Whether to apply a constant influence shift.
+    infl_fshift : bool
+        Whether to apply a functional influence shift.
+    cshift : torch.Tensor, optional
+        Constant shift tensor (used when ``infl_cshift`` is True).
+    Q : float
+        Scaling factor for functional shift (used when ``infl_fshift`` is True).
+
+    Returns
+    -------
+    torch.Tensor
+        Influence matrix of shape ``(num_agents, num_bins)``.
     """
 
     # Convert to tensors
@@ -433,14 +445,19 @@ def possible_observations(possible_agents: list[str],
     """
     Generates all possible observations for the agents.
 
-    :param possible_agents: A list of agent identifiers.
-    :type possible_agents: list[str]
-    :param num_observations: The number of observations in the environment.
-    :type num_observations: int
-    :param num_agents: The number of players in the environment.
-    :type num_agents: int
-    :return: A list of dictionaries representing all possible observations for the agents.
-    :rtype: list[dict[str, int]]
+    Parameters
+    ----------
+    possible_agents : list[str]
+        A list of agent identifiers.
+    num_observations : int
+        The number of observations in the environment.
+    num_agents : int
+        The number of players in the environment.
+
+    Returns
+    -------
+    list[dict[str, int]]
+        A list of dictionaries representing all possible observations for the agents.
     """
     positions_lists = positions_list(num_observations=num_observations, num_agents=num_agents)
     observations = []
@@ -453,10 +470,15 @@ def remove_tuples(input_list: list) -> list:
     """
     Removes tuples from a list, returning a new list with only integers.
 
-    :param input_list: A list that may contain tuples and integers.
-    :type input_list: list
-    :return: A new list with tuples flattened into integers.
-    :rtype: list
+    Parameters
+    ----------
+    input_list : list
+        A list that may contain tuples and integers.
+
+    Returns
+    -------
+    list
+        A new list with tuples flattened into integers.
     """
     li = []
     for item in input_list:
@@ -472,12 +494,17 @@ def remove_all_tuples(input_list: list,
     """
     Recursively removes tuples from a list a specified number of times.
 
-    :param input_list: A list that may contain tuples and integers.
-    :type input_list: list
-    :param times: The number of times to recursively remove tuples.
-    :type times: int
-    :return: A new list with tuples flattened into integers.
-    :rtype: list
+    Parameters
+    ----------
+    input_list : list
+        A list that may contain tuples and integers.
+    times : int
+        The number of times to recursively remove tuples.
+
+    Returns
+    -------
+    list
+        A new list with tuples flattened into integers.
     """
     li = input_list.copy()
     for _ in range(times):
@@ -490,12 +517,17 @@ def positions_list(num_observations: int,
     """
     Generates a list of all possible positions for players based on the number of observations.
 
-    :param num_observations: The number of observations in the environment.
-    :type num_observations: int
-    :param num_agents: The number of players in the environment.
-    :type num_agents: int
-    :return: A list of all possible positions for the players.
-    :rtype: list
+    Parameters
+    ----------
+    num_observations : int
+        The number of observations in the environment.
+    num_agents : int
+        The number of players in the environment.
+
+    Returns
+    -------
+    list
+        A list of all possible positions for the players.
     """
     a = [i for i in range(num_observations)]
     b = a.copy()
@@ -513,10 +545,17 @@ def observation_to_position(observations: dict[str, int],
     r"""
     Convert observations to positions in the domain.
 
-    :param observations: Current observations of all agents.
-    :type observations: dict[str, int]
-    :return: List of positions corresponding to the observations.
-    :rtype: list[list[int]]
+    Parameters
+    ----------
+    observations : dict[str, int]
+        Current observations of all agents.
+    possible_positions : list[list[int]]
+        Lookup table mapping observation indices to positions.
+
+    Returns
+    -------
+    list[list[int]]
+        List of positions corresponding to the observations.
     """
     pos_list = []
     for key in observations:

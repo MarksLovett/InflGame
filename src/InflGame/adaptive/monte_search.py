@@ -29,7 +29,7 @@ The `search_env` class can be used to search for equilibria across the strategy 
 grid-based or Monte Carlo sampling. It supports parallel processing for computational efficiency
 and provides detailed classification of equilibrium types.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -72,7 +72,6 @@ Example:
     # Visualize equilibrium distribution
     fig = searcher.plot_equilibrium_analysis()
     fig.show()
-
 """
 
 import numpy as np
@@ -187,52 +186,52 @@ class search_env:
                  tolerated_agents: Optional[int] = None,
                  ignore_zero_infl: bool = False) -> None:
         """
-        Initialize the Shell class with simulation parameters.
+        Initialize the search_env class with simulation parameters.
 
-        :param num_agents: Number of agents in the simulation.
-        :type num_agents: int
-        :param agents_pos: Initial positions of agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for the influence function.
-        :type parameters: torch.Tensor
-        :param resource_distribution: Resource distribution over the domain.
-        :type resource_distribution: torch.Tensor
-        :param bin_points: Discretized points in the domain.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param mean: Mean value for certain influence functions.
-        :type mean: Optional[int]
-        :param infl_configs: Configuration for influence kernels.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "custom").
-            - ``custom_influence`` (callable): Function for a custom influence (see guides).
-        :type infl_configs: Dict[str, str]
-        :param learning_rate_type: Learning rate type (e.g., 'cosine_annealing').
-        :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters.
-        :type learning_rate: List[float]
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param fp: Fixed parameter for influence function.
-        :type fp: int
-        :param infl_cshift: Whether to apply a center shift to influence.
-        :type infl_cshift: bool
-        :param cshift: Center shift tensor.
-        :type cshift: Optional[torch.Tensor]
-        :param infl_fshift: Whether to apply a fixed shift to influence.
-        :type infl_fshift: bool
-        :param Q: Additional parameter for influence function.
-        :type Q: Optional[int]
-        :param domain_type: Type of domain ('1d', '2d', or 'simplex').
-        :type domain_type: str
-        :param domain_bounds: Bounds of the domain.
-        :type domain_bounds: Union[List[float], torch.Tensor]
-        :param resource_type: Type of resource distribution.
-        :type resource_type: float
-        :param domain_refinement: Refinement level for 2D domains.
-        :type domain_refinement: int
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
+        Parameters
+        ----------
+        num_agents : int
+            Number of agents in the simulation.
+        agents_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        parameters : torch.Tensor
+            Parameters for the influence function.
+        resource_distribution : torch.Tensor
+            Resource distribution over the domain.
+        bin_points : Union[List[float], np.ndarray]
+            Discretized points in the domain.
+        infl_configs : Dict[str, str]
+            Configuration for influence kernels. - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "custom"). - ``custom_influence`` (callable): Function for a custom influence (see guides).
+        learning_rate_type : str
+            Learning rate type (e.g., 'cosine_annealing').
+        learning_rate : List[float]
+            Learning rate parameters.
+        time_steps : int
+            Number of gradient ascent steps.
+        fp : int
+            Fixed parameter for influence function.
+        infl_cshift : bool
+            Whether to apply a center shift to influence.
+        cshift : Optional[torch.Tensor]
+            Center shift tensor.
+        infl_fshift : bool
+            Whether to apply a fixed shift to influence.
+        Q : Optional[int]
+            Additional parameter for influence function.
+        domain_type : str
+            Type of domain ('1d', '2d', or 'simplex').
+        domain_bounds : Union[List[float], torch.Tensor]
+            Bounds of the domain.
+        resource_type : str
+            Type of resource distribution.
+        domain_refinement : int
+            Refinement level for 2D domains.
+        tolerance : float
+            Tolerance for convergence.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to tolerate deviations.
+        ignore_zero_infl : bool
+            If True, skip agents/bins with non-positive total influence.
         """
         validated=validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -316,12 +315,17 @@ class search_env:
         This method generates uniformly distributed random starting positions in the
         n-dimensional unit hypercube [0,1]^n, where n is the number of agents.
         
-        :param number_samples: Number of random samples to generate.
-        :type number_samples: int
-        :param seed: Random seed for reproducibility.
-        :type seed: int
-        :return: Tensor of random positions with shape (number_samples, num_agents).
-        :rtype: torch.Tensor
+        Parameters
+        ----------
+        number_samples : int
+            Number of random samples to generate.
+        seed : int
+            Random seed for reproducibility.
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor of random positions with shape (number_samples, num_agents).
         """
         # Generate m random (x1, x2,...,xn) coordinates in [0, 1]^n
         torch.manual_seed(seed)
@@ -335,10 +339,15 @@ class search_env:
         This method creates a uniform grid of points in [0,1]^3 space, excluding boundary
         points to focus on interior equilibria.
         
-        :param resolution: Number of points per dimension (excluding boundaries).
-        :type resolution: int
-        :return: Tensor of grid points with shape (n_points, 3).
-        :rtype: torch.Tensor
+        Parameters
+        ----------
+        resolution : int
+            Number of points per dimension (excluding boundaries).
+
+        Returns
+        -------
+        torch.Tensor
+            Tensor of grid points with shape (n_points, 3).
         """
         lin = torch.linspace(0, 1, resolution + 2)[1:-1]
         grid_x, grid_y, grid_z = torch.meshgrid(lin, lin, lin, indexing='ij')
@@ -367,20 +376,21 @@ class search_env:
         Uses autocorrelation to detect periodicity, computing correlation between
         the sequence and shifted versions of itself to find the best matching period.
         
-        :param sequence: Time series of positions or values to analyze.
-        :type sequence: np.ndarray
-        :param tolerance: Tolerance for considering patterns as similar.
-        :type tolerance: float
-        :param min_period: Minimum period length to consider.
-        :type min_period: int
-        :param max_period: Maximum period length to consider. Defaults to half sequence length.
-        :type max_period: Optional[int]
-        :return: Dictionary containing cycle detection results with keys:
-            - ``has_approximate_cycle`` (bool): Whether a cycle was detected
-            - ``period`` (int): Detected period length (None if no cycle)
-            - ``correlation_score`` (float): Quality of the detected cycle
-            - ``confidence`` (float): Confidence in cycle detection (0-1)
-        :rtype: Dict
+        Parameters
+        ----------
+        sequence : np.ndarray
+            Time series of positions or values to analyze.
+        tolerance : float
+            Tolerance for considering patterns as similar.
+        min_period : int
+            Minimum period length to consider.
+        max_period : Optional[int]
+            Maximum period length to consider. Defaults to half sequence length.
+
+        Returns
+        -------
+        Dict
+            Dictionary containing cycle detection results with keys: - ``has_approximate_cycle`` (bool): Whether a cycle was detected - ``period`` (int): Detected period length (None if no cycle) - ``correlation_score`` (float): Quality of the detected cycle - ``confidence`` (float): Confidence in cycle detection (0-1)
         """
         if max_period is None:
             max_period = len(sequence) // 3
@@ -429,10 +439,15 @@ class search_env:
         convergence behavior from a single starting point. It performs gradient ascent
         and classifies the resulting equilibrium or limit cycle.
         
-        :param args: Tuple containing (point, shell_params, time_steps).
-        :type args: Tuple
-        :return: Tuple of (point_key, result_dict) where result_dict contains convergence info.
-        :rtype: Tuple[str, Dict]
+        Parameters
+        ----------
+        args : Tuple
+            Tuple containing (point, shell_params, time_steps).
+
+        Returns
+        -------
+        Tuple[str, Dict]
+            Tuple of (point_key, result_dict) where result_dict contains convergence info.
         """
         point, shell_params, time_steps = args
         try:
@@ -576,22 +591,27 @@ class search_env:
                 seed=42
             )
         
-        :param resolution: Grid resolution (points per dimension). Required for grid search.
-        :type resolution: Optional[int]
-        :param number_samples: Number of random samples. Required for Monte Carlo search.
-        :type number_samples: Optional[int]
-        :param time_steps: Maximum gradient ascent iterations per starting point.
-        :type time_steps: int
-        :param use_parallel: Whether to use parallel processing for efficiency.
-        :type use_parallel: bool
-        :param num_workers: Number of parallel workers. Defaults to CPU count.
-        :type num_workers: Optional[int]
-        :param use_monte_carlo: Use Monte Carlo sampling instead of grid.
-        :type use_monte_carlo: bool
-        :param seed: Random seed for reproducibility (Monte Carlo only).
-        :type seed: int
-        :return: Dictionary mapping starting points to convergence results.
-        :rtype: Dict
+        Parameters
+        ----------
+        resolution : Optional[int]
+            Grid resolution (points per dimension). Required for grid search.
+        number_samples : Optional[int]
+            Number of random samples. Required for Monte Carlo search.
+        time_steps : int
+            Maximum gradient ascent iterations per starting point.
+        use_parallel : bool
+            Whether to use parallel processing for efficiency.
+        num_workers : Optional[int]
+            Number of parallel workers. Defaults to CPU count.
+        use_monte_carlo : bool
+            Use Monte Carlo sampling instead of grid.
+        seed : int
+            Random seed for reproducibility (Monte Carlo only).
+
+        Returns
+        -------
+        Dict
+            Dictionary mapping starting points to convergence results.
         """
     
         # Generate cube points
@@ -772,18 +792,17 @@ class search_env:
             print(f"Convergence rate: {stats['converged_percentage']:.1f}%")
             print(f"Equilibrium types: {stats['equilibrium_types']}")
         
-        :param results_dict: Results dictionary from search_Eq(). Uses self.results_dict if None.
-        :type results_dict: Optional[Dict]
-        :param position_tolerance: Tolerance for grouping agents at similar positions.
-        :type position_tolerance: float
-        :return: Dictionary containing:
-            - ``total_points`` (int): Total starting points analyzed
-            - ``converged`` (int): Number of converged points
-            - ``cycles`` (int): Number of cycling trajectories
-            - ``converged_percentage`` (float): Percentage that converged
-            - ``equilibrium_types`` (Dict): Counts of each equilibrium type
-            - ``equilibrium_type_percentages`` (Dict): Percentages of each type
-        :rtype: Dict
+        Parameters
+        ----------
+        results_dict : Optional[Dict]
+            Results dictionary from search_Eq(). Uses self.results_dict if None.
+        position_tolerance : float
+            Tolerance for grouping agents at similar positions.
+
+        Returns
+        -------
+        Dict
+            Dictionary containing: - ``total_points`` (int): Total starting points analyzed - ``converged`` (int): Number of converged points - ``cycles`` (int): Number of cycling trajectories - ``converged_percentage`` (float): Percentage that converged - ``equilibrium_types`` (Dict): Counts of each equilibrium type - ``equilibrium_type_percentages`` (Dict): Percentages of each type
         """
         if results_dict==None:
             results_dict = self.results_dict
@@ -872,12 +891,17 @@ class search_env:
             eq_type = searcher.classify_equilibrium_type(positions)
             # Returns: '(1,2,1)' for symmetric 4-player equilibrium
         
-        :param positions: Array of agent positions at equilibrium.
-        :type positions: np.ndarray
-        :param tolerance: Maximum distance to consider positions as equal.
-        :type tolerance: float
-        :return: String describing the equilibrium type and spatial arrangement.
-        :rtype: str
+        Parameters
+        ----------
+        positions : np.ndarray
+            Array of agent positions at equilibrium.
+        tolerance : float
+            Maximum distance to consider positions as equal.
+
+        Returns
+        -------
+        str
+            String describing the equilibrium type and spatial arrangement.
         """
         positions = np.array(positions)
         n_agents = self.num_agents
@@ -982,7 +1006,10 @@ class search_env:
             searcher.analyze_grid_search_results(results)
             searcher.print_results_summary()
         
-        :raises AttributeError: If analyze_grid_search_results() hasn't been called yet.
+        Raises
+        ------
+        AttributeError
+            If analyze_grid_search_results() hasn't been called yet.
         """
         if not hasattr(self, 'stats'):
             print("No analysis statistics available. Please run analyze_grid_search_results() first.")
@@ -1438,28 +1465,36 @@ class search_env:
         and then runs gradient ascent for each position in parallel, similar to final_pos_over_reach
         but using random initial positions instead of varying parameters.
 
-        :param number_samples: Number of Monte Carlo samples to generate
-        :type number_samples: int
-        :param seed: Random seed for reproducibility
-        :type seed: int
-        :param tolerance: Tolerance for convergence
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations
-        :type tolerated_agents: Optional[int]
-        :param parallel: Whether to use parallel processing
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count)
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None)
-        :type batch_size: Optional[int]
-        :param time_steps: Maximum time steps for gradient ascent
-        :type time_steps: Optional[int]
+        Parameters
+        ----------
+        number_samples : int
+            Number of Monte Carlo samples to generate
+        seed : int
+            Random seed for reproducibility
+        tolerance : float
+            Tolerance for convergence
+        tolerated_agents : Optional[int]
+            Number of agents allowed to tolerate deviations
+        parallel : bool
+            Whether to use parallel processing
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count)
+        batch_size : Optional[int]
+            Batch size for processing (auto-calculated if None)
+        time_steps : Optional[int]
+            Maximum time steps for gradient ascent
 
-        :return: The final positions of agents for each Monte Carlo sample
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            The final positions of agents for each Monte Carlo sample
         
-        :raises ValueError: If input parameters are invalid
-        :raises RuntimeError: If computation fails
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid
+        RuntimeError
+            If computation fails
         """
         # Input validation
         if number_samples <= 0:
@@ -1657,11 +1692,15 @@ class search_env:
         Helper function to compute final position for a single Monte Carlo sample.
         Designed to be used with multiprocessing.
         
-        :param sample_data: Dictionary containing sample data and configuration
-        :type sample_data: Dict
+        Parameters
+        ----------
+        sample_data : Dict
+            Dictionary containing sample data and configuration
         
-        :return: Tuple of sample_id and final position row
-        :rtype: Tuple[int, torch.Tensor]
+        Returns
+        -------
+        Tuple[int, torch.Tensor]
+            Tuple of sample_id and final position row
         """
         try:
             sample_id = sample_data['sample_id']
@@ -1736,13 +1775,17 @@ def analyze_unique_equilibria(result_tensor, tolerance=1e-4):
     """
     Analyze Monte Carlo results to find unique equilibria and their frequencies.
     
-    :param result_tensor: Tensor of final positions from Monte Carlo runs
-    :type result_tensor: torch.Tensor
-    :param tolerance: Tolerance for considering positions as "near-unique"
-    :type tolerance: float
+    Parameters
+    ----------
+    result_tensor : torch.Tensor
+        Tensor of final positions from Monte Carlo runs
+    tolerance : float
+        Tolerance for considering positions as "near-unique"
     
-    :return: Dictionary with unique equilibria, frequencies, and statistics
-    :rtype: dict
+    Returns
+    -------
+    dict
+        Dictionary with unique equilibria, frequencies, and statistics
     """
     
     if result_tensor.dim() == 1:
@@ -1824,8 +1867,10 @@ def print_equilibrium_analysis(analysis_results):
     """
     Print a detailed analysis of the equilibrium results.
     
-    :param analysis_results: Results from analyze_unique_equilibria
-    :type analysis_results: dict
+    Parameters
+    ----------
+    analysis_results : dict
+        Results from analyze_unique_equilibria
     """
     
     print("="*60)
@@ -1866,8 +1911,12 @@ def visualize_equilibrium_clustering(analysis_results, original_results):
     """
     Create visualizations for the equilibrium clustering analysis.
     
-    :param analysis_results: Results from analyze_unique_equilibria
-    :param original_results: Original Monte Carlo results tensor
+    Parameters
+    ----------
+    analysis_results
+        Results from analyze_unique_equilibria
+    original_results
+        Original Monte Carlo results tensor
     """
     
     # Create figure with 2x2 subplot layout

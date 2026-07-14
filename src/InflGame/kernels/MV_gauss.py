@@ -44,7 +44,7 @@ while the `d_ln_f` function calculates the gradient of the logarithm of the mult
 The `symmetric_nash_stability` function computes the parameter for the symmetric Nash's stability using the multivariate Gaussian influence kernel with 
 diagonal covariance matrices.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -76,7 +76,6 @@ Example:
     # Vectorized gradients (all agents at once)
     all_gradients = d_ln_f_vectorized(agents_pos=agents_pos, bin_points=bin_points, sigma_inv=sigma_inv)
     print("All gradients shape:", all_gradients.shape)  # (num_agents, num_dims, num_bins)
-
 """
 
 import numpy as np
@@ -101,7 +100,8 @@ def _influence_vectorized_core(
         bin_points: Bin points (num_bins, num_dims)
         sigma_inv: Inverse covariance matrices (num_agents, num_dims, num_dims)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Influence matrix (num_agents, num_bins)
     """
     num_agents, agent_dims = agents_pos.shape
@@ -152,7 +152,8 @@ def _d_ln_f_vectorized_core(
         bin_points: Bin points (num_bins, num_dims)
         sigma_inv: Inverse covariance matrices (num_agents, num_dims, num_dims)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient tensor (num_agents, num_dims, num_bins)
     """
     # Compute differences: (num_agents, 1, num_dims) - (1, num_bins, num_dims) = (num_agents, num_bins, num_dims)
@@ -183,7 +184,8 @@ def _symmetric_nash_vectorized_core(
         bin_points: Bin points (num_bins, num_dims)
         resource_distribution: Resource distribution (num_bins,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Nash equilibrium point (num_dims,)
     """
     # Total resources: (num_bins,)
@@ -404,7 +406,7 @@ def d_ln_f_vectorized(agents_pos: Union[np.ndarray, torch.Tensor],
     The gradient is calculated as:
 
     .. math::
-        d_{i}(x_i, b) = -\\Sigma_i^{-1} (b - x_i)
+        d_{i}(x_i, b) = \\Sigma_i^{-1} (b - x_i)
 
     Parameters
     ----------
@@ -573,10 +575,15 @@ def cov_matrix(parameter_instance: torch.Tensor) -> torch.Tensor:
     r"""
     Computes the inverse of a multivariate Gaussian covariance matrix.
 
-    :param parameter_instance: Covariance matrix for a player (:math:`\Sigma`).
-    :type parameter_instance: torch.Tensor
-    :return: Inverse of the covariance matrix (:math:`\Sigma^{-1}`).
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    parameter_instance : torch.Tensor
+        Covariance matrix for a player (:math:`\Sigma`).
+
+    Returns
+    -------
+    torch.Tensor
+        Inverse of the covariance matrix (:math:`\Sigma^{-1}`).
     """
     return torch.inverse(parameter_instance.float())
 
@@ -597,16 +604,21 @@ def influence(agent_id: int,
       - :math:`b` is the bin point
       - :math:`\Sigma_i^{-1}` is the inverse covariance matrix for agent :math:`i`
 
-    :param agent_id: The current player's ID (:math:`i`).
-    :type agent_id: int
-    :param agents_pos: Positions of all agents (:math:`x_i`).
-    :type agents_pos: np.ndarray
-    :param bin_points: Locations of the resource/bin points (:math:`b`).
-    :type bin_points: np.ndarray
-    :param sigma_inv: Inverse of the covariance matrix (:math:`\Sigma_i^{-1}`).
-    :type sigma_inv: torch.Tensor
-    :return: The influence values for the agent.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    agent_id : int
+        The current player's ID (:math:`i`).
+    agents_pos : np.ndarray
+        Positions of all agents (:math:`x_i`).
+    bin_points : np.ndarray
+        Locations of the resource/bin points (:math:`b`).
+    sigma_inv : torch.Tensor
+        Inverse of the covariance matrix (:math:`\Sigma_i^{-1}`).
+
+    Returns
+    -------
+    torch.Tensor
+        The influence values for the agent.
     """
     infl = []
     x_vec = torch.tensor((bin_points - agents_pos[agent_id])).float()
@@ -620,30 +632,35 @@ def influence(agent_id: int,
 def d_ln_f(agent_id: int,
            agents_pos: np.ndarray,
            bin_points: np.ndarray,
-           sigma_inv: torch.Tensor) -> int | torch.Tensor:
+           sigma_inv: torch.Tensor) -> torch.Tensor:
     r"""
     .. rubric:: Computes the gradient of the logarithm of the multivariate Gaussian influence kernel.
 
     The gradient is calculated as:
 
     .. math::
-        d_{i}(x_i, b) = -\Sigma_i^{-1} (b - x_i)
+        d_{i}(x_i, b) = \Sigma_i^{-1} (b - x_i)
 
     where:
       - :math:`x_i` is the position of agent :math:`i`
       - :math:`b` is the bin point
       - :math:`\Sigma_i^{-1}` is the inverse covariance matrix for agent :math:`i`
 
-    :param agent_id: The current player's ID (:math:`i`).
-    :type agent_id: int
-    :param agents_pos: Positions of all agents (:math:`x_i`).
-    :type agents_pos: np.ndarray
-    :param bin_points: Locations of the resource/bin points (:math:`b`).
-    :type bin_points: np.ndarray
-    :param sigma_inv: Inverse of the covariance matrix (:math:`\Sigma_i^{-1}`).
-    :type sigma_inv: torch.Tensor
-    :return: The gradient values for all bin points.
-    :rtype: int | torch.Tensor
+    Parameters
+    ----------
+    agent_id : int
+        The current player's ID (:math:`i`).
+    agents_pos : np.ndarray
+        Positions of all agents (:math:`x_i`).
+    bin_points : np.ndarray
+        Locations of the resource/bin points (:math:`b`).
+    sigma_inv : torch.Tensor
+        Inverse of the covariance matrix (:math:`\Sigma_i^{-1}`).
+
+    Returns
+    -------
+    torch.Tensor
+        The gradient values for all bin points.
     """
     x_vec = torch.tensor((bin_points - agents_pos[agent_id])).T.float()
     d_row = torch.matmul(sigma_inv[agent_id], x_vec)
@@ -666,12 +683,17 @@ def symmetric_nash(bin_points: np.ndarray, resource_distribution: np.ndarray) ->
       - :math:`\mathbb{B}` is the set of bin points
       - :math:`B(b_i)` is the distribution of resources across the bin points
 
-    :param bin_points: Locations of the resource/bin points in 2D.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Distribution of resources across the bin points.
-    :type resource_distribution: np.ndarray
-    :return: The symmetric stability point as [x_star1, x_star2].
-    :rtype: list
+    Parameters
+    ----------
+    bin_points : np.ndarray
+        Locations of the resource/bin points in 2D.
+    resource_distribution : np.ndarray
+        Distribution of resources across the bin points.
+
+    Returns
+    -------
+    list
+        The symmetric stability point as [x_star1, x_star2].
     """
     x_star1 = np.dot(bin_points[:, 0], resource_distribution) / np.sum(resource_distribution)
     x_star2 = np.dot(bin_points[:, 1], resource_distribution) / np.sum(resource_distribution)
@@ -681,18 +703,23 @@ def gaussian_symmetric_stability_2d(num_agents: int,
                                     e_values: list | np.ndarray,
                                     resource_distribution: np.ndarray) -> list[float]:
     r"""
-    ..deprecated:: 
+    .. deprecated:: 0.1
         This function is deprecated. Use `symmetric_nash_stability` instead.
         Computes the symmetric stability in 2D using the multivariate Gaussian influence kernel.
 
-    :param num_agents: Number of agents in the system (:math:`N`).
-    :type num_agents: int
-    :param e_values: Eigenvalues of the covariance matrix (:math:`\lambda`).
-    :type e_values: list | np.ndarray
-    :param resource_distribution: Distribution of resources across the bin points (:math:`B(b)`).
-    :type resource_distribution: np.ndarray
-    :return: The stability values [sigma_star_1, sigma_star_2] sorted in descending order.
-    :rtype: list
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the system (:math:`N`).
+    e_values : list | np.ndarray
+        Eigenvalues of the covariance matrix (:math:`\lambda`).
+    resource_distribution : np.ndarray
+        Distribution of resources across the bin points (:math:`B(b)`).
+
+    Returns
+    -------
+    list
+        The stability values [sigma_star_1, sigma_star_2] sorted in descending order.
     """
     e_star_1 = e_values[0]
     e_star_2 = e_values[1]
@@ -727,14 +754,19 @@ def symmetric_nash_stability(num_agents: int,
       - :math:`x` is the symmetric stability point
       - :math:`B(b)` is the resource distribution at bin point :math:`b`
 
-    :param num_agents: Number of agents in the system (:math:`N`).
-    :type num_agents: int
-    :param bin_points: Locations of the resource/bin points in 2D (:math:`b`).
-    :type bin_points: np.ndarray
-    :param resource_distribution: Distribution of resources across the bin points (:math:`B(b)`).
-    :type resource_distribution: np.ndarray
-    :return: The computed stability value for the system.
-    :rtype: float
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the system (:math:`N`).
+    bin_points : np.ndarray
+        Locations of the resource/bin points in 2D (:math:`b`).
+    resource_distribution : np.ndarray
+        Distribution of resources across the bin points (:math:`B(b)`).
+
+    Returns
+    -------
+    float
+        The computed stability value for the system.
     """
     mean_0 = general.discrete_mean(bin_points=bin_points[:, 0], resource_distribution=resource_distribution)
     var_0 = general.discrete_variance(bin_points=bin_points[:, 0], resource_distribution=resource_distribution, mean=mean_0)

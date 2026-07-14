@@ -16,7 +16,6 @@ Usage:
 ------
 The functions in this module can be used to visualize agent dynamics and resource distributions in 2D domains. For example, the `dist_and_pos_plot_2d_simple` function
 can be used to plot agent positions over time and their influence distributions.
-
 """
 
 from typing import Optional, Tuple
@@ -48,28 +47,37 @@ def dist_and_pos_plot_2d_simple(num_agents: int,
     """
     Plots the positions of agents over time and their influence distributions.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param bin_points: Points representing resource bins.
-    :type bin_points: np.ndarray
-    :param rect_X: X-coordinates of the rectangular grid.
-    :type rect_X: np.ndarray
-    :param rect_Y: Y-coordinates of the rectangular grid.
-    :type rect_Y: np.ndarray
-    :param cmap1: Colormap for agent positions.
-    :type cmap1: Any
-    :param cmap2: Colormap for influence distributions.
-    :type cmap2: Any
-    :param pos_matrix: Tensor containing agent positions over time.
-    :type pos_matrix: torch.Tensor
-    :param infl_dist: Tensor containing influence distributions.
-    :type infl_dist: torch.Tensor
-    :param resource_type: Type of resource distribution.
-    :type resource_type: str
-    :param resources: Resource values, defaults to 0.
-    :type resources: str, optional
-    :returns: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    bin_points : np.ndarray
+        Points representing resource bins (``N x 2``).
+    cmap1 : Any
+        Colormap for agent positions.
+    cmap2 : Any
+        Colormap for influence distributions.
+    pos_matrix : torch.Tensor
+        Tensor containing agent positions over time.
+    infl_dist : torch.Tensor
+        Tensor containing influence distributions.
+    resource_type : str
+        Type of resource distribution.
+    x_min : float, optional
+        Optional lower x bound for the plot window.
+    y_min : float, optional
+        Optional lower y bound for the plot window.
+    domain_bounds : torch.Tensor, optional
+        Optional domain bounds tensor for axis limits.
+    resources : torch.Tensor, optional
+        Resource values over bins, defaults to 0.
+    font : dict, optional
+        Font sizing / family dictionary for the figure.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -291,25 +299,29 @@ def pos_plot_2d(num_agents: int,
     in a 2D space. Each agent's trajectory is plotted as a separate line with a distinct
     color. Start positions are marked with open circles and end positions with filled circles.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents, 2]).
-    :type pos_matrix: torch.Tensor
-    :param domain_bounds: Bounds of the 2D domain as [[x_min, x_max], [y_min, y_max]].
-    :type domain_bounds: np.ndarray
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[list]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: Optional[bool]
-    :param line_thickness: Thickness of trajectory lines.
-    :type line_thickness: float
-    :param marker_size: Size of start/end markers.
-    :type marker_size: float
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    pos_matrix : torch.Tensor
+        Matrix of agent positions over time (shape: [time_steps, num_agents, 2]).
+    domain_bounds : np.ndarray
+        Bounds of the 2D domain as [[x_min, x_max], [y_min, y_max]].
+    title_ads : Optional[list]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    axis_return : Optional[bool]
+        If True, return axes object; if False, return figure object.
+    line_thickness : float
+        Thickness of trajectory lines.
+    marker_size : float
+        Size of start/end markers.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -383,16 +395,21 @@ def dist_plot_2d(agent_id: int,
     """
     Plots the influence distribution of a single agent.
 
-    :param agent_id: ID of the agent.
-    :type agent_id: int
-    :param infl_dist: Tensor containing influence distributions.
-    :type infl_dist: torch.Tensor
-    :param rect_Y: Y-coordinates of the rectangular grid.
-    :type rect_Y: np.ndarray
-    :param rect_X: X-coordinates of the rectangular grid.
-    :type rect_X: np.ndarray
-    :returns: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    agent_id : int
+        ID of the agent.
+    infl_dist : torch.Tensor
+        Tensor containing influence distributions.
+    rect_Y : np.ndarray
+        Y-coordinates of the rectangular grid.
+    rect_X : np.ndarray
+        X-coordinates of the rectangular grid.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -424,18 +441,23 @@ def equilibrium_bifurcation_plot_2d_simple(num_agents: int,
     """
     Plots the bifurcation of agents' final positions for different parameter values.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param domain_bounds: Bounds of the domain.
-    :type domain_bounds: np.ndarray
-    :param reach_num_points: Number of points in the reach.
-    :type reach_num_points: int
-    :param final_pos_matrix: Tensor containing final positions of agents.
-    :type final_pos_matrix: torch.Tensor
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: list
-    :returns: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    domain_bounds : np.ndarray
+        Bounds of the domain.
+    reach_num_points : int
+        Number of points in the reach.
+    final_pos_matrix : torch.Tensor
+        Tensor containing final positions of agents.
+    title_ads : list
+        Additional strings to append to the plot title.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -502,54 +524,59 @@ def agent_density_3d_2d(
     """
     Create a 3D histogram showing agent density at final positions for 2D rectangular domain.
     
-    :param pos_matrix: Position matrix of shape (time_steps, num_agents, 2).
-    :type pos_matrix: np.ndarray or torch.Tensor
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param domain_bounds: Domain bounds of shape (2, 2) as [[x_min, x_max], [y_min, y_max]].
-    :type domain_bounds: np.ndarray
-    :param bins: Number of bins in each dimension.
-    :type bins: int
-    :param distance_threshold: Distance threshold for clustering nearby agents.
-    :type distance_threshold: float
-    :param cmap: Colormap name.
-    :type cmap: str
-    :param font: Font configuration dictionary.
-    :type font: dict
-    :param figsize: Figure size as (width, height).
-    :type figsize: tuple
-    :param xlabel: Label for x-axis.
-    :type xlabel: str
-    :param ylabel: Label for y-axis.
-    :type ylabel: str
-    :param zlabel: Label for z-axis.
-    :type zlabel: str
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: bool
-    :param edgecolor: Color of outlines around bars.
-    :type edgecolor: str
-    :param linewidth: Width of bar edge lines.
-    :type linewidth: float
-    :param alpha: Bar transparency.
-    :type alpha: float
-    :param title_ads: Additional titles for the plot.
-    :type title_ads: list
-    :param save: Whether to save the plot.
-    :type save: bool
-    :param name_ads: Additional names for saved files.
-    :type name_ads: list
-    :param save_types: File types to save the plot.
-    :type save_types: list
-    :param paper_figure: Dictionary for paper figure naming.
-    :type paper_figure: dict
-    :param id: Identifier for file naming.
-    :type id: int
-    :param cap_z_axis: If True, cap the z-axis maximum at num_agents.
-    :type cap_z_axis: bool
-    :param integer_ticks: If True, only show integer ticks on the z-axis.
-    :type integer_ticks: bool
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    pos_matrix : np.ndarray or torch.Tensor
+        Position matrix of shape (time_steps, num_agents, 2).
+    num_agents : int
+        Number of agents.
+    domain_bounds : np.ndarray
+        Domain bounds of shape (2, 2) as [[x_min, x_max], [y_min, y_max]].
+    bins : int
+        Number of bins in each dimension.
+    distance_threshold : float
+        Distance threshold for clustering nearby agents.
+    cmap : str
+        Colormap name.
+    font : dict
+        Font configuration dictionary.
+    figsize : tuple
+        Figure size as (width, height).
+    xlabel : str
+        Label for x-axis.
+    ylabel : str
+        Label for y-axis.
+    zlabel : str
+        Label for z-axis.
+    axis_return : bool
+        If True, return axes object; if False, return figure object.
+    edgecolor : str
+        Color of outlines around bars.
+    linewidth : float
+        Width of bar edge lines.
+    alpha : float
+        Bar transparency.
+    title_ads : list
+        Additional titles for the plot.
+    save : bool
+        Whether to save the plot.
+    name_ads : list
+        Additional names for saved files.
+    save_types : list
+        File types to save the plot.
+    paper_figure : dict
+        Dictionary for paper figure naming.
+    id : int
+        Identifier for file naming.
+    cap_z_axis : bool
+        If True, cap the z-axis maximum at num_agents.
+    integer_ticks : bool
+        If True, only show integer ticks on the z-axis.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     from matplotlib.colors import Normalize
     from matplotlib.ticker import MaxNLocator

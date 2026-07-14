@@ -36,7 +36,7 @@ Usage:
 The `IQL_async` class provides an implementation of the IQL algorithm with asynchronous updates. It supports 
 custom configurations for learning rate, discount factor, epsilon decay, and more.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -81,7 +81,6 @@ Example:
     final_q_table = iql_agent.train()
 
     print("Training completed. Final Q-table:", final_q_table)
-
 """
 import numpy as np
 import torch
@@ -94,15 +93,15 @@ class IQL_async():
     r"""
     Implements Independent Q-Learning (IQL) with asynchronous updates for multi-agent reinforcement learning.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     - `configs`: Configuration dictionary containing parameters such as random seed, environment, epsilon configurations, 
       gamma, alpha, epochs, and others.
     - `Q_table`: The Q-value table for all agents.
     - `observations`: Current observations for all agents.
 
-    Methods:
-    --------
+    Notes
+    -----
     - `Q_table_initiation`: Initializes the Q-table for all agents.
     - `observation_initialized`: Resets the environment and initializes observations.
     - `action_choice`: Chooses actions for a specific agent using epsilon-greedy or softmax policies.
@@ -116,9 +115,10 @@ class IQL_async():
         r"""
         Initializes the IQL_async class with the given configuration.
 
-        :param config: Configuration dictionary containing parameters such as random seed, environment,
-                       epsilon configurations, gamma, alpha, epochs, and others.
-        :type config: dict
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary containing parameters such as random seed, environment, epsilon configurations, gamma, alpha, epochs, and others.
         """
         super().__init__()
         self.configs = config
@@ -170,12 +170,17 @@ class IQL_async():
         If a random value is less than :math:`\epsilon`, a random action is chosen. Otherwise, the action is selected 
         based on the Q-values using either a softmax or max policy.
 
-        :param episode: The current episode number.
-        :type episode: int
-        :param agent: The player for whom the action is being chosen.
-        :type agent: str
-        :return: The chosen action.
-        :rtype: int
+        Parameters
+        ----------
+        episode : int
+            The current episode number.
+        agent : str
+            The player for whom the action is being chosen.
+
+        Returns
+        -------
+        int
+            The chosen action.
         """
         epsilon_f = IQL_utils.adjusted_epsilon(configs=self.epsilon_configs, num_agents=self.env.num_agents, episode=episode, episodes=self.episodes)
         epsilon = np.random.rand()
@@ -206,10 +211,15 @@ class IQL_async():
           - :math:`P(a|s)` is the probability of taking action :math:`a` in state :math:`s`
           - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`
 
-        :param agent: The player for whom the action is being chosen.
-        :type agent: str
-        :return: The chosen action.
-        :rtype: int
+        Parameters
+        ----------
+        agent : str
+            The player for whom the action is being chosen.
+
+        Returns
+        -------
+        int
+            The chosen action.
         """
         observation = self.observations[agent]
         self.temperature = IQL_utils.adjusted_temperature(configs=self.configs["temperature_configs"], observation=observation, observation_space_size=self.env.observation_spaces[agent].n)
@@ -230,10 +240,15 @@ class IQL_async():
           - :math:`a^*` is the action with the highest Q-value
           - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`
 
-        :param agent: The player for whom the action is being chosen.
-        :type agent: str
-        :return: The chosen action.
-        :rtype: int
+        Parameters
+        ----------
+        agent : str
+            The player for whom the action is being chosen.
+
+        Returns
+        -------
+        int
+            The chosen action.
         """
         observation = self.observations[agent]
         LEFT = 0
@@ -268,10 +283,15 @@ class IQL_async():
         after this loop agent_order is shuffled and the loop is repeated until all episodes are passed through for the epoch.
 
         
-        :param episode: The current episode number.
-        :type episode: int
-        :return: The updated Q-table.
-        :rtype: dict
+        Parameters
+        ----------
+        episode : int
+            The current episode number.
+
+        Returns
+        -------
+        dict
+            The updated Q-table.
         """
         self.action_dict = {}
         agents = self.env.possible_agents
@@ -292,8 +312,10 @@ class IQL_async():
 
         At the end of an epoch, the environment is reset and the observations are reinitialized randomly.
 
-        :return: The final Q-table after training.
-        :rtype: dict
+        Returns
+        -------
+        dict
+            The final Q-table after training.
         """
         for epoch in range(self.epochs):
             self.episodes = IQL_utils.adjusted_episodes(configs=self.episode_configs, epoch=epoch, epochs=self.epochs)

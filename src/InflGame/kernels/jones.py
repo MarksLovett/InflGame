@@ -29,7 +29,7 @@ New vectorized functions are available for improved performance:
 - `influence_vectorized` : Compute influence for all agents simultaneously
 - `d_ln_f_vectorized` : Compute gradients for all agents simultaneously
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -88,7 +88,8 @@ def _influence_vectorized_core(
         bin_points_tensor: Bin points (K,)
         parameter_tensor: Jones parameters (N,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Influence matrix (N, K)
     """
     # Reshape for broadcasting:
@@ -125,7 +126,8 @@ def _d_ln_f_vectorized_core(
         bin_points_tensor: Bin points (K,)
         parameter_tensor: Jones parameters (N,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient matrix (N, K)
     """
     # Reshape for broadcasting

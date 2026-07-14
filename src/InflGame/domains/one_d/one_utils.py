@@ -1365,8 +1365,8 @@ def load_image(img_source):
 def process_matrix_tree(matrix,num_agents, reach_parameters,reach_start,reach_end,key_tolerance=2):
         """Process a matrix and extract segment info for tree visualization.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         matrix : dict
             Bifurcation matrix containing 'max', 'min', etc.
         key_tolerance : int
@@ -1511,7 +1511,8 @@ def make_unique_node_name(label, suffix, label_counts):
         suffix: The branch suffix (e.g., '_m', '_l0', '_r1')
         label_counts: A dict tracking how many times each label has been used for this branch suffix
     
-    Returns:
+    Returns
+    -------
         A unique node name
     """
     # Create a key for tracking this label on this branch type
@@ -1629,8 +1630,8 @@ def draw_rectangle(segments, x_pos, label_to_color,rect_width, edge_color='black
         """
         Draw rectangles, optionally starting only from a specific sigma value.
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         segments : dict
             Segment boundaries and labels
         x_pos : float
@@ -1764,15 +1765,15 @@ def get_ordered_labels(segments, start_from_sigma=None):
     """
     Get ordered labels from segments, optionally filtering by start_from_sigma.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     segments : dict
         Segment boundaries and labels
     start_from_sigma : float, optional
         Only include segments below this sigma value
     
-    Returns:
-    --------
+    Returns
+    -------
     list : Ordered labels from high sigma to low sigma (top to bottom)
     """
     ordered_labels = []

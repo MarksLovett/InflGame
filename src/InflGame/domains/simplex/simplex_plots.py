@@ -21,7 +21,6 @@ Usage:
 ------
 The functions in this module can be used to visualize agent dynamics and resource distributions on simplex domains. For example, the `pos_plot_simplex` function
 can be used to plot agent positions on a simplex, while the `dist_and_pos_plot_simplex` function can visualize both agent positions and influence distributions.
-
 """
 
 
@@ -48,18 +47,23 @@ def pos_plot_simplex(num_agents: int,
     """
     Plots the positions of agents and bin points on a simplex.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param bin_points: Array of bin points in barycentric coordinates.
-    :type bin_points: numpy.ndarray
-    :param corners: Coordinates of the simplex corners.
-    :type corners: numpy.ndarray
-    :param triangle: Triangulation object for the simplex.
-    :type triangle: matplotlib.tri.Triangulation
-    :param pos_matrix: Position matrix of agents in barycentric coordinates.
-    :type pos_matrix: torch.Tensor
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    bin_points : numpy.ndarray
+        Array of bin points in barycentric coordinates.
+    corners : numpy.ndarray
+        Coordinates of the simplex corners.
+    triangle : matplotlib.tri.Triangulation
+        Triangulation object for the simplex.
+    pos_matrix : torch.Tensor
+        Position matrix of agents in barycentric coordinates.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -99,26 +103,32 @@ def dist_plot_simplex(agent_id: int,
     """
     Plots the influence distribution of a single agent on a simplex.
 
-    :param agent_id: ID of the agent.
-    :type agent_id: int
-    :param r2: Range of the simplex.
-    :type r2: list[float]
-    :param corners: Coordinates of the simplex corners.
-    :type corners: numpy.ndarray
-    :param triangle: Triangulation object for the simplex.
-    :type triangle: matplotlib.tri.Triangulation
-    :param trimesh: Triangulation mesh for contour plotting.
-    :type trimesh: matplotlib.tri.Triangulation
-    :param infl_dist: Influence distribution tensor.
-    :type infl_dist: torch.Tensor
-    :param cmap: Colormap for the plot.
-    :type cmap: matplotlib.colors.Colormap
-    :param typelabels: Labels for the simplex corners.
-    :type typelabels: list[str]
-    :param margin: Margin for the plot axes.
-    :type margin: float
-    :param kwargs: Additional arguments for contour plotting.
-    :return: None
+    Parameters
+    ----------
+    agent_id : int
+        ID of the agent.
+    r2 : list[float]
+        Range of the simplex.
+    corners : numpy.ndarray
+        Coordinates of the simplex corners.
+    triangle : matplotlib.tri.Triangulation
+        Triangulation object for the simplex.
+    trimesh : matplotlib.tri.Triangulation
+        Triangulation mesh for contour plotting.
+    infl_dist : torch.Tensor
+        Influence distribution tensor.
+    cmap : matplotlib.colors.Colormap
+        Colormap for the plot.
+    typelabels : list[str]
+        Labels for the simplex corners.
+    margin : float
+        Margin for the plot axes.
+    kwargs
+        Additional arguments for contour plotting.
+
+    Returns
+    -------
+    None
     """
 
     font['font.family'] = font.get('font_family', 'sans-serif')
@@ -165,34 +175,39 @@ def dist_and_pos_plot_simplex(num_agents: int,
     """
     Plots both the positions of agents and their influence distributions on a simplex.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param bin_points: Array of bin points in barycentric coordinates.
-    :type bin_points: numpy.ndarray
-    :param r2: Range of the simplex.
-    :type r2: list[float]
-    :param corners: Coordinates of the simplex corners.
-    :type corners: numpy.ndarray
-    :param triangle: Triangulation object for the simplex.
-    :type triangle: matplotlib.tri.Triangulation
-    :param trimesh: Triangulation mesh for contour plotting.
-    :type trimesh: matplotlib.tri.Triangulation
-    :param typelabels: Labels for the simplex corners.
-    :type typelabels: list[str]
-    :param cmap1: Colormap for agent positions.
-    :type cmap1: matplotlib.colors.Colormap
-    :param cmap2: Colormap for influence distributions.
-    :type cmap2: matplotlib.colors.Colormap
-    :param pos_matrix: Position matrix of agents in barycentric coordinates.
-    :type pos_matrix: torch.Tensor
-    :param infl_dist: Influence distribution tensor.
-    :type infl_dist: torch.Tensor
-    :param resource_type: Type of resource distribution.
-    :type resource_type: str
-    :param resources: Resource distribution values.
-    :type resources: numpy.ndarray
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    bin_points : numpy.ndarray
+        Array of bin points in barycentric coordinates.
+    r2 : list[float]
+        Range of the simplex.
+    corners : numpy.ndarray
+        Coordinates of the simplex corners.
+    triangle : matplotlib.tri.Triangulation
+        Triangulation object for the simplex.
+    trimesh : matplotlib.tri.Triangulation
+        Triangulation mesh for contour plotting.
+    typelabels : list[str]
+        Labels for the simplex corners.
+    cmap1 : matplotlib.colors.Colormap
+        Colormap for agent positions.
+    cmap2 : matplotlib.colors.Colormap
+        Colormap for influence distributions.
+    pos_matrix : torch.Tensor
+        Position matrix of agents in barycentric coordinates.
+    infl_dist : torch.Tensor
+        Influence distribution tensor.
+    resource_type : str
+        Type of resource distribution.
+    resources : numpy.ndarray
+        Resource distribution values.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
 
     
@@ -293,24 +308,29 @@ def equalibirium_bifurication_plot_simplex(num_agents: int,
     """
     Plots the equilibrium bifurcation of agents on a simplex.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param r2: Range of the simplex.
-    :type r2: list[float]
-    :param corners: Coordinates of the simplex corners.
-    :type corners: numpy.ndarray
-    :param triangle: Triangulation object for the simplex.
-    :type triangle: matplotlib.tri.Triangulation
-    :param final_pos_matrix: Final positions of agents in barycentric coordinates.
-    :type final_pos_matrix: torch.Tensor
-    :param reach_num_points: Number of points reached.
-    :type reach_num_points: int
-    :param title_ads: Additional strings for the plot title.
-    :type title_ads: list[str]
-    :param type_labels: Labels for the simplex corners. Defaults to None.
-    :type type_labels: list[str], optional
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    r2 : list[float]
+        Range of the simplex.
+    corners : numpy.ndarray
+        Coordinates of the simplex corners.
+    triangle : matplotlib.tri.Triangulation
+        Triangulation object for the simplex.
+    final_pos_matrix : torch.Tensor
+        Final positions of agents in barycentric coordinates.
+    reach_num_points : int
+        Number of points reached.
+    title_ads : list[str]
+        Additional strings for the plot title.
+    type_labels : list[str], optional
+        Labels for the simplex corners. Defaults to None.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -346,12 +366,17 @@ def simplex_plot_resources(domain_bounds: tuple,
     """
     Plots the resource distribution on a simplex.
 
-    :param domain_bounds: Bounds of the simplex domain.
-    :type domain_bounds: tuple
-    :param resources: Resource distribution values.
-    :type resources: numpy.ndarray
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    domain_bounds : tuple
+        Bounds of the simplex domain.
+    resources : numpy.ndarray
+        Resource distribution values.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     typelabels=["A","B","C"]
     fig,ax = plt.subplots() 
@@ -428,54 +453,59 @@ def agent_density_3d_simplex(
     """
     Create a 3D histogram showing agent density at final positions for simplex domain.
     
-    :param pos_matrix: Position matrix of shape (time_steps, num_agents, 3) in barycentric coordinates.
-    :type pos_matrix: np.ndarray or torch.Tensor
-    :param num_agents: Number of agents.
-    :type num_agents: int  
-    :param domain_bounds: Simplex domain bounds tuple containing (r2, corners, triangle, trimesh).
-    :type domain_bounds: tuple
-    :param bins: Number of bins in each dimension.
-    :type bins: int
-    :param distance_threshold: Distance threshold for clustering nearby agents.
-    :type distance_threshold: float
-    :param cmap: Colormap name.
-    :type cmap: str
-    :param font: Font configuration dictionary.
-    :type font: dict
-    :param figsize: Figure size as (width, height).
-    :type figsize: tuple
-    :param xlabel: Label for x-axis.
-    :type xlabel: str
-    :param ylabel: Label for y-axis.
-    :type ylabel: str
-    :param zlabel: Label for z-axis.
-    :type zlabel: str
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: bool
-    :param edgecolor: Color of outlines around bars.
-    :type edgecolor: str
-    :param linewidth: Width of bar edge lines.
-    :type linewidth: float
-    :param alpha: Bar transparency.
-    :type alpha: float
-    :param title_ads: Additional titles for the plot.
-    :type title_ads: list
-    :param save: Whether to save the plot.
-    :type save: bool
-    :param name_ads: Additional names for saved files.
-    :type name_ads: list
-    :param save_types: File types to save the plot.
-    :type save_types: list
-    :param paper_figure: Dictionary for paper figure naming.
-    :type paper_figure: dict
-    :param id: Identifier for file naming.
-    :type id: int
-    :param cap_z_axis: If True, cap the z-axis maximum at num_agents.
-    :type cap_z_axis: bool
-    :param integer_ticks: If True, only show integer ticks on the z-axis.
-    :type integer_ticks: bool
-    :return: The generated plot figure.
-    :rtype: matplotlib.figure.Figure
+    Parameters
+    ----------
+    pos_matrix : np.ndarray or torch.Tensor
+        Position matrix of shape (time_steps, num_agents, 3) in barycentric coordinates.
+    num_agents : int
+        Number of agents.
+    domain_bounds : tuple
+        Simplex domain bounds tuple containing (r2, corners, triangle, trimesh).
+    bins : int
+        Number of bins in each dimension.
+    distance_threshold : float
+        Distance threshold for clustering nearby agents.
+    cmap : str
+        Colormap name.
+    font : dict
+        Font configuration dictionary.
+    figsize : tuple
+        Figure size as (width, height).
+    xlabel : str
+        Label for x-axis.
+    ylabel : str
+        Label for y-axis.
+    zlabel : str
+        Label for z-axis.
+    axis_return : bool
+        If True, return axes object; if False, return figure object.
+    edgecolor : str
+        Color of outlines around bars.
+    linewidth : float
+        Width of bar edge lines.
+    alpha : float
+        Bar transparency.
+    title_ads : list
+        Additional titles for the plot.
+    save : bool
+        Whether to save the plot.
+    name_ads : list
+        Additional names for saved files.
+    save_types : list
+        File types to save the plot.
+    paper_figure : dict
+        Dictionary for paper figure naming.
+    id : int
+        Identifier for file naming.
+    cap_z_axis : bool
+        If True, cap the z-axis maximum at num_agents.
+    integer_ticks : bool
+        If True, only show integer ticks on the z-axis.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated plot figure.
     """
     from matplotlib.colors import Normalize
     from matplotlib.ticker import MaxNLocator

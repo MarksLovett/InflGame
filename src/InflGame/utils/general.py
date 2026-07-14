@@ -21,7 +21,7 @@ The `matrix_builder` function is used to build or append rows to a matrix, while
 learning rates based on iteration and type. The `agent_position_setup` function initializes agent positions in 
 different domains, and the `discrete_mean` function computes the mean of a discrete distribution.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -45,7 +45,6 @@ Example:
     bin_points = torch.tensor([0.1, 0.3, 0.5, 0.7, 0.9])
     resources = torch.tensor([1.0, 2.0, 3.0, 2.0, 1.0])
     mean = discrete_mean(bin_points, resources)
-
 """
 
 import numpy as np
@@ -70,10 +69,15 @@ def flatten_list(xss: list) -> list:
         result = flatten_list(nested)
         # Returns: [1, 2, 3, 4, 5]
     
-    :param xss: A list containing sublists.
-    :type xss: list
-    :return: A single flattened list containing all elements from the sublists.
-    :rtype: list
+    Parameters
+    ----------
+    xss : list
+        A list containing sublists.
+
+    Returns
+    -------
+    list
+        A single flattened list containing all elements from the sublists.
     """
     return [x for xs in xss for x in xs]
 
@@ -127,14 +131,19 @@ def matrix_builder(row_id: int,
     - If the row dimensions do not match the existing matrix, the function will raise an error.
     - If the matrix is `None`, the function initializes it with the given row.
 
-    :param row_id: The index of the row being added.
-    :type row_id: int
-    :param row: The row to be added.
-    :type row: torch.Tensor
-    :param matrix: The existing matrix. Defaults to None.
-    :type matrix: torch.tensor, optional
-    :return: The updated matrix with the new row added.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    row_id : int
+        The index of the row being added.
+    row : torch.Tensor
+        The row to be added.
+    matrix : torch.tensor, optional
+        The existing matrix. Defaults to None.
+
+    Returns
+    -------
+    torch.Tensor
+        The updated matrix with the new row added.
     """
     if row_id==0:
         matrix=row
@@ -167,6 +176,9 @@ def learning_rate(iter: int,
         * - Trust Region
           - ``'trust_region'``
           - Adapts learning rate based on trust region radius with exponential decay.
+        * - Gradient Magnitude
+          - ``'gradient_magnitude'``
+          - Scales the learning rate using the current gradient magnitude.
 
     The learning rate is computed based on the specified type:
 
@@ -199,14 +211,21 @@ def learning_rate(iter: int,
       and :math:`t` is the current iteration.
 
 
-    :param iter: The current iteration.
-    :type iter: int
-    :param learning_rate_type: The type of learning rate ('cosine_annealing', 'fixed', or 'trust_region').
-    :type learning_rate_type: str
-    :param learning_rate: Learning rate parameters. For trust_region: [initial_lr, min_factor, decay_constant]
-    :type learning_rate: list, np.ndarray, torch.Tensor, or float
-    :return: The computed learning rate.
-    :rtype: float
+    Parameters
+    ----------
+    iter : int
+        The current iteration.
+    learning_rate_type : str
+        The type of learning rate (``'cosine_annealing'``, ``'fixed'``, ``'trust_region'``, or ``'gradient_magnitude'``).
+    learning_rate : list, np.ndarray, torch.Tensor, or float
+        Learning rate parameters. For trust_region: [initial_lr, min_factor, decay_constant]
+    gradient : torch.Tensor, optional
+        Current gradient tensor; required when ``learning_rate_type='gradient_magnitude'``.
+
+    Returns
+    -------
+    float
+        The computed learning rate.
     """
     # Helper function to extract scalar value from tensor or regular value
     def _get_scalar(val):
@@ -262,17 +281,26 @@ def trust_region_learning_rate(iter: int,
     The learning rate is computed as:
     η_t = η_initial × max(η_min_factor, exp(-t/τ))
     
-    :param iter: The current iteration.
-    :type iter: int
-    :param initial_lr: Initial learning rate.
-    :type initial_lr: float
-    :param min_factor: Minimum learning rate factor (prevents learning rate from going too small).
-    :type min_factor: float
-    :param decay_constant: Decay time constant (controls how fast the learning rate decays).
-    :type decay_constant: float
-    :return: The computed trust region learning rate.
-    :rtype: float
-    :raises ValueError: If parameters are invalid (negative values, etc.).
+    Parameters
+    ----------
+    iter : int
+        The current iteration.
+    initial_lr : float
+        Initial learning rate.
+    min_factor : float
+        Minimum learning rate factor (prevents learning rate from going too small).
+    decay_constant : float
+        Decay time constant (controls how fast the learning rate decays).
+
+    Returns
+    -------
+    float
+        The computed trust region learning rate.
+
+    Raises
+    ------
+    ValueError
+        If parameters are invalid (negative values, etc.).
     """
     if initial_lr <= 0:
         raise ValueError(f"initial_lr must be positive, got {initial_lr}")
@@ -296,20 +324,25 @@ def resource_parameter_setup(resource_distribution_type: str = 'multi_modal_gaus
     """
     Sets up resource distribution parameters based on the specified type.
 
-    :param resource_distribution_type: Type of resource distribution.
-    :type resource_distribution_type: str
-    :param varying_parameter_type: Parameter to vary ('mean' or others).
-    :type varying_parameter_type: str
-    :param fixed_parameters_lst: Fixed parameters for the distribution.
-    :type fixed_parameters_lst: list
-    :param alpha_st: Start value for alpha.
-    :type alpha_st: float
-    :param alpha_end: End value for alpha.
-    :type alpha_end: float
-    :param alpha_num_points: Number of alpha points.
-    :type alpha_num_points: int
-    :return: A tuple containing the parameter list and alpha values.
-    :rtype: tuple
+    Parameters
+    ----------
+    resource_distribution_type : str
+        Type of resource distribution.
+    varying_parameter_type : str
+        Parameter to vary ('mean' or others).
+    fixed_parameters_lst : list
+        Fixed parameters for the distribution.
+    alpha_st : float
+        Start value for alpha.
+    alpha_end : float
+        End value for alpha.
+    alpha_num_points : int
+        Number of alpha points.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the parameter list and alpha values.
     """
     param_list=[]
     alpha_values=np.linspace(alpha_st,alpha_end,alpha_num_points)
@@ -363,22 +396,27 @@ def agent_parameter_setup(num_agents: int,
     """
     Sets up agent parameters based on the specified setup type.
 
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param infl_type: Influence type ('gaussian', 'dirichlet', 'diric_mode', 'beta', 'multi_gaussian').
-    :type infl_type: str
-    :param setup_type: Setup type ('initial_symmetric_setup' or 'parameter_space').
-    :type setup_type: str
-    :param reach: Reach value for symmetric setup. Defaults to None.
-    :type reach: float, optional
-    :param reach_start: Start value for reach in parameter space.
-    :type reach_start: float
-    :param reach_end: End value for reach in parameter space.
-    :type reach_end: float
-    :param reach_num_points: Number of points for reach in parameter space.
-    :type reach_num_points: int
-    :return: agent parameters.
-    :rtype: np.ndarray or torch.Tensor
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    infl_type : str
+        Influence type ('gaussian', 'dirichlet', 'diric_mode', 'beta', 'multi_gaussian').
+    setup_type : str
+        Setup type ('initial_symmetric_setup' or 'parameter_space').
+    reach : float, optional
+        Reach value for symmetric setup. Defaults to None.
+    reach_start : float
+        Start value for reach in parameter space.
+    reach_end : float
+        End value for reach in parameter space.
+    reach_num_points : int
+        Number of points for reach in parameter space.
+
+    Returns
+    -------
+    np.ndarray or torch.Tensor
+        agent parameters.
     """
     if setup_type=="initial_symmetric_setup":
         if infl_type in ["gaussian","dirichlet","diric_mode","beta"]:
@@ -416,10 +454,15 @@ def organize_array(arr: list) -> list:
         result = organize_array(arr)
         # Returns: [1, 5, 2, 4, 3]
     
-    :param arr: Input array.
-    :type arr: list
-    :return: Organized array with alternating elements.
-    :rtype: list
+    Parameters
+    ----------
+    arr : list
+        Input array.
+
+    Returns
+    -------
+    list
+        Organized array with alternating elements.
     """
     result = []
     left, right = 0, len(arr) - 1
@@ -487,24 +530,29 @@ def agent_position_setup(num_agents: int,
             random_seed=42
         )
     
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param setup_type: Setup type ('initial_symmetric_setup', 'paper_default', or 'random').
-    :type setup_type: str
-    :param domain_type: Domain type ('1d', '2d', or 'simplex').
-    :type domain_type: str
-    :param domain_bounds: Bounds of the domain.
-    :type domain_bounds: np.ndarray
-    :param dimensions: Number of dimensions for simplex. Defaults to None.
-    :type dimensions: int, optional
-    :param bound_lower: Lower bound for positions. Defaults to 0.1.
-    :type bound_lower: float
-    :param bound_upper: Upper bound for positions. Defaults to 0.9.
-    :type bound_upper: float
-    :param random_seed: Random seed for reproducibility when using 'random' setup. Defaults to None.
-    :type random_seed: int, optional
-    :return: Agent/player positions as tensor.
-    :rtype: Union[np.ndarray, torch.Tensor]
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    setup_type : str
+        Setup type ('initial_symmetric_setup', 'paper_default', or 'random').
+    domain_type : str
+        Domain type ('1d', '2d', or 'simplex').
+    domain_bounds : np.ndarray
+        Bounds of the domain.
+    dimensions : int, optional
+        Number of dimensions for simplex. Defaults to None.
+    bound_lower : float
+        Lower bound for positions. Defaults to 0.1.
+    bound_upper : float
+        Upper bound for positions. Defaults to 0.9.
+    random_seed : int, optional
+        Random seed for reproducibility when using 'random' setup. Defaults to None.
+
+    Returns
+    -------
+    Union[np.ndarray, torch.Tensor]
+        Agent/player positions as tensor.
     """
     if setup_type == "random":
         if random_seed is not None:
@@ -634,20 +682,25 @@ def agent_optimal_position_setup(num_agents: int,
             ids=[0]  # Keep first agent fixed
         )
     
-    :param num_agents: Number of agents.
-    :type num_agents: int
-    :param agents_pos: Current positions of agents.
-    :type agents_pos: np.ndarray
-    :param infl_type: Influence type ('gaussian', 'dirichlet', etc.).
-    :type infl_type: str
-    :param mean: Mean position for non-specified agents.
-    :type mean: float
-    :param domain_type: Domain type ('1d', '2d', or 'simplex').
-    :type domain_type: str
-    :param ids: List of agent IDs to retain their positions.
-    :type ids: List[int]
-    :return: Optimal agent/player positions.
-    :rtype: np.ndarray
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents.
+    agents_pos : np.ndarray
+        Current positions of agents.
+    infl_type : str
+        Influence type ('gaussian', 'dirichlet', etc.).
+    mean : float
+        Mean position for non-specified agents.
+    domain_type : str
+        Domain type ('1d', '2d', or 'simplex').
+    ids : List[int]
+        List of agent IDs to retain their positions.
+
+    Returns
+    -------
+    np.ndarray
+        Optimal agent/player positions.
     """
     if infl_type=='gaussian':
         agent_pos=[]
@@ -677,12 +730,17 @@ def figure_directory(fig_parameters: List,
         fig_params = ['section_A', 'bifurcation', 3]
         dir_path = figure_directory(fig_params, alt_name=False)
     
-    :param fig_parameters: Parameters for the figure (section, type, number of players).
-    :type fig_parameters: List
-    :param alt_name: Whether to use an alternative naming scheme.
-    :type alt_name: bool
-    :return: Path to the final directory.
-    :rtype: str
+    Parameters
+    ----------
+    fig_parameters : List
+        Parameters for the figure (section, type, number of players).
+    alt_name : bool
+        Whether to use an alternative naming scheme.
+
+    Returns
+    -------
+    str
+        Path to the final directory.
     """
     my_path = os.path.dirname(os.path.abspath(__file__))
     cwd=my_path+'\\'+'figures'
@@ -729,14 +787,19 @@ def figure_name(fig_parameters: List,
             save_types=['.png', '.svg']
         )
     
-    :param fig_parameters: Parameters for the figure.
-    :type fig_parameters: List
-    :param name_ads: Additional names to append.
-    :type name_ads: List[str]
-    :param save_types: File extensions for saving.
-    :type save_types: List[str]
-    :return: List of figure names with extensions.
-    :rtype: List[str]
+    Parameters
+    ----------
+    fig_parameters : List
+        Parameters for the figure.
+    name_ads : List[str]
+        Additional names to append.
+    save_types : List[str]
+        File extensions for saving.
+
+    Returns
+    -------
+    List[str]
+        List of figure names with extensions.
     """
     plt_type=fig_parameters[1]
     fig_names=[]
@@ -778,14 +841,19 @@ def figure_final_name(fig_parameters: List,
             save_types=['.png', '.svg']
         )
     
-    :param fig_parameters: Parameters for the figure.
-    :type fig_parameters: List
-    :param name_ads: Additional names to append.
-    :type name_ads: List[str]
-    :param save_types: File extensions for saving.
-    :type save_types: List[str]
-    :return: List of full file paths for the figures.
-    :rtype: List[str]
+    Parameters
+    ----------
+    fig_parameters : List
+        Parameters for the figure.
+    name_ads : List[str]
+        Additional names to append.
+    save_types : List[str]
+        File extensions for saving.
+
+    Returns
+    -------
+    List[str]
+        List of full file paths for the figures.
     """
     if fig_parameters[1] in ['nothingrn']:
         alt=True
@@ -815,12 +883,17 @@ def discrete_mean(bin_points: Union[np.ndarray, torch.Tensor],
         - :math:`B(b)` is the resource value at the bin point :math:`b`.
 
 
-    :param bin_points: Bin points.
-    :type bin_points: Union[np.ndarray, torch.Tensor]
-    :param resource_distribution: Resource distribution.
-    :type resource_distribution: Union[np.ndarray, torch.Tensor]
-    :return: Mean of the distribution.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    bin_points : Union[np.ndarray, torch.Tensor]
+        Bin points.
+    resource_distribution : Union[np.ndarray, torch.Tensor]
+        Resource distribution.
+
+    Returns
+    -------
+    torch.Tensor
+        Mean of the distribution.
     """
     # Convert inputs to tensors if they aren't already
     bin_points_tensor = _to_tensor(bin_points, "bin_points")
@@ -856,14 +929,19 @@ def discrete_variance(bin_points: Union[np.ndarray, torch.Tensor],
         mean = discrete_mean(bins, resources)
         variance = discrete_variance(bins, resources, mean)
 
-    :param bin_points: Bin points.
-    :type bin_points: Union[np.ndarray, torch.Tensor]
-    :param resource_distribution: Resource distribution.
-    :type resource_distribution: Union[np.ndarray, torch.Tensor]
-    :param mean: Mean of the distribution.
-    :type mean: float
-    :return: Variance of the distribution.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    bin_points : Union[np.ndarray, torch.Tensor]
+        Bin points.
+    resource_distribution : Union[np.ndarray, torch.Tensor]
+        Resource distribution.
+    mean : float
+        Mean of the distribution.
+
+    Returns
+    -------
+    torch.Tensor
+        Variance of the distribution.
     """
     variance=torch.dot(bin_points**2,resource_distribution)/torch.sum(resource_distribution)-mean**2
     return variance
@@ -897,18 +975,23 @@ def discrete_covariance(bin_points_1: Union[np.ndarray, torch.Tensor],
         resources = torch.tensor([1.0, 2.0, 3.0, 2.0, 1.0])
         cov = discrete_covariance(bins_x, bins_y, resources, 0.5, 0.5)
 
-    :param bin_points_1: First set of bin points.
-    :type bin_points_1: Union[np.ndarray, torch.Tensor]
-    :param bin_points_2: Second set of bin points.
-    :type bin_points_2: Union[np.ndarray, torch.Tensor]
-    :param resource_distribution: Resource distribution.
-    :type resource_distribution: Union[np.ndarray, torch.Tensor]
-    :param mean_1: Mean of the first distribution.
-    :type mean_1: float
-    :param mean_2: Mean of the second distribution.
-    :type mean_2: float
-    :return: Covariance of the distribution.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    bin_points_1 : Union[np.ndarray, torch.Tensor]
+        First set of bin points.
+    bin_points_2 : Union[np.ndarray, torch.Tensor]
+        Second set of bin points.
+    resource_distribution : Union[np.ndarray, torch.Tensor]
+        Resource distribution.
+    mean_1 : float
+        Mean of the first distribution.
+    mean_2 : float
+        Mean of the second distribution.
+
+    Returns
+    -------
+    torch.Tensor
+        Covariance of the distribution.
     """
     covariance=torch.dot(bin_points_1*bin_points_2,resource_distribution)/torch.sum(resource_distribution)-mean_1*mean_2
     return covariance
@@ -942,12 +1025,17 @@ def split_favor_bottom(num_agents: int,
     - If `num_agents=1`, the function returns `[1]`.
     - If `num_agents=2` and `division=1`, the function returns `[1, 1]`.
 
-    :param num_agents: Total number of agents.
-    :type num_agents: int
-    :param division: Number of divisions.
-    :type division: int
-    :return: List of group sizes.
-    :rtype: list
+    Parameters
+    ----------
+    num_agents : int
+        Total number of agents.
+    division : int
+        Number of divisions.
+
+    Returns
+    -------
+    list
+        List of group sizes.
     """
     if division==0:
         return [num_agents]
@@ -983,21 +1071,28 @@ def _to_tensor(value,
     This internal utility ensures consistent tensor conversion across the module,
     with optional shape validation and device placement.
     
-    :param value: Input value to convert to tensor.
-    :type value: Union[list, np.ndarray, torch.Tensor]
-    :param name: Name of the parameter for error messages.
-    :type name: str
-    :param expected_shape: Expected shape of the tensor. Defaults to None.
-    :type expected_shape: Optional[tuple]
-    :param dtype: Desired data type of the tensor.
-    :type dtype: torch.dtype
-    :param device: Device to place the tensor on ('cpu', 'cuda', 'cuda:0', etc.). 
-        If None, uses the default device. If a tensor is passed and already on a 
-        different device, it will be moved to the specified device.
-    :type device: Optional[Union[str, torch.device]]
-    :return: Converted and validated tensor on the specified device.
-    :rtype: torch.Tensor
-    :raises ValueError: If value is None or shape doesn't match expected_shape.
+    Parameters
+    ----------
+    value : Union[list, np.ndarray, torch.Tensor]
+        Input value to convert to tensor.
+    name : str
+        Name of the parameter for error messages.
+    expected_shape : Optional[tuple]
+        Expected shape of the tensor. Defaults to None.
+    dtype : torch.dtype
+        Desired data type of the tensor.
+    device : Optional[Union[str, torch.device]]
+        Device to place the tensor on ('cpu', 'cuda', 'cuda:0', etc.). If None, uses the default device. If a tensor is passed and already on a different device, it will be moved to the specified device.
+
+    Returns
+    -------
+    torch.Tensor
+        Converted and validated tensor on the specified device.
+
+    Raises
+    ------
+    ValueError
+        If value is None or shape doesn't match expected_shape.
     """
     if value is None:
         raise ValueError(f"{name} cannot be None")
@@ -1055,13 +1150,22 @@ def get_color_by_index(index: int, color_scheme: str = 'default') -> str:
         # Get colors for multiple agents
         colors = [get_color_by_index(i, 'bright') for i in range(3)]
     
-    :param index: Integer index to determine color.
-    :type index: int
-    :param color_scheme: Color scheme to use.
-    :type color_scheme: str
-    :return: Hex color code or matplotlib color name.
-    :rtype: str
-    :raises ValueError: If color_scheme is not supported.
+    Parameters
+    ----------
+    index : int
+        Integer index to determine color.
+    color_scheme : str
+        Color scheme to use.
+
+    Returns
+    -------
+    str
+        Hex color code or matplotlib color name.
+
+    Raises
+    ------
+    ValueError
+        If color_scheme is not supported.
     """
     if not isinstance(index, int):
         raise ValueError(f"Index must be an integer, got {type(index)}")
@@ -1173,13 +1277,22 @@ def generate_color_palette(num_colors: int, color_scheme: str = 'default') -> Li
         for i, color in enumerate(palette):
             plt.plot(data[i], color=color, label=f'Agent {i}')
     
-    :param num_colors: Number of colors to generate.
-    :type num_colors: int
-    :param color_scheme: Color scheme to use.
-    :type color_scheme: str
-    :return: List of color codes.
-    :rtype: List[str]
-    :raises ValueError: If num_colors is not positive.
+    Parameters
+    ----------
+    num_colors : int
+        Number of colors to generate.
+    color_scheme : str
+        Color scheme to use.
+
+    Returns
+    -------
+    List[str]
+        List of color codes.
+
+    Raises
+    ------
+    ValueError
+        If num_colors is not positive.
     """
     if not isinstance(num_colors, int) or num_colors <= 0:
         raise ValueError(f"num_colors must be a positive integer, got {num_colors}")
@@ -1220,16 +1333,26 @@ def smoothing_zeros(tensor: torch.Tensor,
         result = smoothing_zeros(torch.tensor([0, 0, 0, 0]), fill_value=1.0)
         # Returns: tensor([1., 1., 1., 1.])
     
-    :param tensor: Input 1D tensor to smooth.
-    :type tensor: torch.Tensor
-    :param fill_value: Value to use if tensor is all zeros. If None, returns original tensor unchanged.
-    :type fill_value: Optional[float]
-    :param inplace: If True, modifies the tensor in place. Default False.
-    :type inplace: bool
-    :return: Smoothed tensor.
-    :rtype: torch.Tensor
-    :raises TypeError: If tensor is not a torch.Tensor.
-    :raises ValueError: If tensor is not 1D.
+    Parameters
+    ----------
+    tensor : torch.Tensor
+        Input 1D tensor to smooth.
+    fill_value : Optional[float]
+        Value to use if tensor is all zeros. If None, returns original tensor unchanged.
+    inplace : bool
+        If True, modifies the tensor in place. Default False.
+
+    Returns
+    -------
+    torch.Tensor
+        Smoothed tensor.
+
+    Raises
+    ------
+    TypeError
+        If tensor is not a torch.Tensor.
+    ValueError
+        If tensor is not 1D.
     """
     
     # Input validation
@@ -1309,15 +1432,24 @@ def smoothing_zeros_batch(tensor_batch: torch.Tensor,
         
         result = smoothing_zeros_batch(batch)
     
-    :param tensor_batch: 2D tensor where each row is a 1D tensor to smooth.
-    :type tensor_batch: torch.Tensor
-    :param fill_value: Value to use for all-zero tensors.
-    :type fill_value: Optional[float]
-    :param inplace: If True, modifies tensors in place.
-    :type inplace: bool
-    :return: Batch of smoothed tensors.
-    :rtype: torch.Tensor
-    :raises TypeError: If tensor_batch is not a torch.Tensor.
+    Parameters
+    ----------
+    tensor_batch : torch.Tensor
+        2D tensor where each row is a 1D tensor to smooth.
+    fill_value : Optional[float]
+        Value to use for all-zero tensors.
+    inplace : bool
+        If True, modifies tensors in place.
+
+    Returns
+    -------
+    torch.Tensor
+        Batch of smoothed tensors.
+
+    Raises
+    ------
+    TypeError
+        If tensor_batch is not a torch.Tensor.
     """
     
     if not isinstance(tensor_batch, torch.Tensor):

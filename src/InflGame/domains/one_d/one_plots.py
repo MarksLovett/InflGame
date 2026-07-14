@@ -27,7 +27,7 @@ in 1D domains. For example, the :func:`pos_plot_1d` function can be used to plot
 over time, while the :func:`dist_and_pos_plot_1d` function can visualize both agent positions 
 and influence distributions.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -84,21 +84,25 @@ def pos_plot_1d(num_agents: int,
     Creates a line plot showing how agent positions change over gradient ascent iterations.
     Each agent's trajectory is plotted as a separate line with a distinct color.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents]).
-    :type pos_matrix: torch.Tensor
-    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
-    :type domain_bounds: Tuple[float, float]
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: Optional[bool]
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    pos_matrix : torch.Tensor
+        Matrix of agent positions over time (shape: [time_steps, num_agents]).
+    domain_bounds : Tuple[float, float]
+        Minimum and maximum bounds of the 1D domain.
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    axis_return : Optional[bool]
+        If True, return axes object; if False, return figure object.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     cbar_font_size= font.get('cbar_size', 12)
@@ -142,17 +146,21 @@ def gradient_plot_1d(num_agents: int,
     Creates a line plot showing how the gradient values for each agent change over gradient
     ascent iterations. Each agent's gradient trajectory is plotted as a separate line.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param grad_matrix: Matrix of agent gradients over time (shape: [time_steps, num_agents]).
-    :type grad_matrix: torch.Tensor
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    grad_matrix : torch.Tensor
+        Matrix of agent gradients over time (shape: [time_steps, num_agents]).
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -202,38 +210,41 @@ def resource_distribution_plot_1d(bin_points: np.ndarray,
     and labels it with :math:`\alpha`, representing the separation distance between peaks.
     The peak positions are calculated as :math:`0.5 - \alpha/2` and :math:`0.5 + \alpha/2`.
     
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Resource density values at each bin point.
-    :type resource_distribution: np.ndarray
-    :param alpha: The separation parameter for bimodal distributions. If provided, a dashed line 
-                  will be drawn between the peaks at positions (0.5 - alpha/2) and (0.5 + alpha/2).
-    :type alpha: float, optional
-    :param show_alpha_line: Whether to show the alpha annotation line between peaks.
-    :type show_alpha_line: bool
-    :param title: Title for the plot.
-    :type title: str
-    :param fig_size: Figure size as (width, height).
-    :type fig_size: Tuple
-    :param line_width: Width of the distribution line.
-    :type line_width: float
-    :param font: Font configuration dictionary with keys: 'default_size', 'title_size', 'alpha_size', 'font_family'.
-    :type font: dict
-    :param y_padding: Multiplier for y-axis upper limit to add space for labels.
-    :type y_padding: float
-    :param save: Whether to save the plot.
-    :type save: bool
-    :param name_ads: Additional names for saved files.
-    :type name_ads: List[str]
-    :param save_types: File types to save the plot.
-    :type save_types: List[str]
-    :param paper_figure: Configuration for paper figure saving.
-    :type paper_figure: dict
+    Parameters
+    ----------
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    resource_distribution : np.ndarray
+        Resource density values at each bin point.
+    alpha : float, optional
+        The separation parameter for bimodal distributions. If provided, a dashed line will be drawn between the peaks at positions (0.5 - alpha/2) and (0.5 + alpha/2).
+    show_alpha_line : bool
+        Whether to show the alpha annotation line between peaks.
+    title : str
+        Title for the plot.
+    fig_size : Tuple
+        Figure size as (width, height).
+    line_width : float
+        Width of the distribution line.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'title_size', 'alpha_size', 'font_family'.
+    y_padding : float
+        Multiplier for y-axis upper limit to add space for labels.
+    save : bool
+        Whether to save the plot.
+    name_ads : List[str]
+        Additional names for saved files.
+    save_types : List[str]
+        File types to save the plot.
+    paper_figure : dict
+        Configuration for paper figure saving.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     
-    Example:
+    Examples
     --------
     .. code-block:: python
     
@@ -338,25 +349,29 @@ def prob_plot_1d(num_agents: int,
     
     where :math:`f_i(x_i, b_k)` is the influence of agent :math:`i` at bin point :math:`b_k`.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param agents_pos: Current positions of all agents.
-    :type agents_pos: List[float]
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
-    :type domain_bounds: List[float]
-    :param prob: Probability distributions for each agent (one array per agent).
-    :type prob: List[np.ndarray]
-    :param voting_configs: Configuration dictionary with keys 'fixed_party' and 'abstain' for voting behavior.
-    :type voting_configs: Dict[str, bool]
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    agents_pos : List[float]
+        Current positions of all agents.
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    domain_bounds : List[float]
+        Minimum and maximum bounds of the 1D domain.
+    prob : List[np.ndarray]
+        Probability distributions for each agent (one array per agent).
+    voting_configs : Dict[str, bool]
+        Configuration dictionary with keys 'fixed_party' and 'abstain' for voting behavior.
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     cbar_font_size= font.get('cbar_size', 12)
@@ -408,19 +423,23 @@ def three_agent_dynamics(pos_matrix: np.ndarray,
     the instability and complex dynamics of three-player influencer games in 1D domains.
     Only applicable for exactly 3 agents with 1D strategy spaces.
 
-    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, 3]).
-    :type pos_matrix: np.ndarray
-    :param x_star: Equilibrium or reference position (e.g., symmetric Nash equilibrium).
-    :type x_star: float
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: List[str]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: Optional[bool]
+    Parameters
+    ----------
+    pos_matrix : np.ndarray
+        Matrix of agent positions over time (shape: [time_steps, 3]).
+    x_star : float
+        Equilibrium or reference position (e.g., symmetric Nash equilibrium).
+    title_ads : List[str]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    axis_return : Optional[bool]
+        If True, return axes object; if False, return figure object.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -467,18 +486,23 @@ def vector_plot_1d(ids: List[int],
     each axis represents one agent's position. The vectors indicate the direction and
     magnitude of gradient ascent at each point in the position space.
 
-    :param ids: Agent IDs to include in the vector field (must be exactly 2 agents).
-    :type ids: List[int]
-    :param gradient: Gradient matrix for the vector field (shape: [grid_points, 2]).
-    :type gradient: torch.Tensor
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
-    :param **kwargs: Additional keyword arguments passed to matplotlib streamplot function.
+    Parameters
+    ----------
+    ids : List[int]
+        Agent IDs to include in the vector field (must be exactly 2 agents).
+    gradient : torch.Tensor
+        Gradient matrix for the vector field (shape: [grid_points, 2]).
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
+    **kwargs
+        Additional keyword arguments passed to matplotlib streamplot function.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -548,29 +572,33 @@ def dist_and_pos_plot_1d(num_agents: int,
     This provides comprehensive insight into both the spatial influence patterns and
     the temporal evolution of agent positions.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Resource values at each bin point.
-    :type resource_distribution: np.ndarray
-    :param pos_matrix: Matrix of agent positions over time (shape: [time_steps, num_agents]).
-    :type pos_matrix: torch.Tensor
-    :param len_grad_matrix: Number of time steps for x-axis scaling.
-    :type len_grad_matrix: int
-    :param infl_dist: Influence distribution arrays for each agent.
-    :type infl_dist: List[torch.Tensor]
-    :param cm: Matplotlib colormap for agent colors.
-    :type cm: mpl.colors.Colormap
-    :param NUM_COLORS: Total number of colors in the colormap (typically num_agents + 1).
-    :type NUM_COLORS: int
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    resource_distribution : np.ndarray
+        Resource values at each bin point.
+    pos_matrix : torch.Tensor
+        Matrix of agent positions over time (shape: [time_steps, num_agents]).
+    len_grad_matrix : int
+        Number of time steps for x-axis scaling.
+    infl_dist : List[torch.Tensor]
+        Influence distribution arrays for each agent.
+    cm : mpl.colors.Colormap
+        Matplotlib colormap for agent colors.
+    NUM_COLORS : int
+        Total number of colors in the colormap (typically num_agents + 1).
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -646,49 +674,53 @@ def equilibrium_bifurcation_plot_1d(num_agents: int,
     where :math:`A` is the number of test parameters and :math:`x_i` is the equilibrium
     position at parameter value :math:`i`.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Resource values at each bin point.
-    :type resource_distribution: np.ndarray
-    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
-    :type infl_type: str
-    :param reach_parameters: Array of reach parameter values to test.
-    :type reach_parameters: List[float]
-    :param final_pos_matrix: Matrix of final equilibrium positions (shape: [num_params, num_agents]).
-    :type final_pos_matrix: np.ndarray
-    :param reach_start: Starting value of reach parameter range.
-    :type reach_start: float
-    :param reach_end: Ending value of reach parameter range.
-    :type reach_end: float
-    :param refinements: Number of refinements for critical value estimation.
-    :type refinements: int
-    :param plot_type: Type of plot ('line' or 'heat').
-    :type plot_type: str
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param short_title: Use abbreviated title format.
-    :type short_title: bool
-    :param norm: Normalize heatmap values.
-    :type norm: bool
-    :param infl_cshift: Whether influence uses center shift.
-    :type infl_cshift: bool
-    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit'.
-    :type cmaps: dict
-    :param font: Font configuration dictionary.
-    :type font: dict
-    :param cbar_config: Colorbar configuration dictionary.
-    :type cbar_config: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: bool
-    :param show_pred: Show predicted critical values (only for Gaussian kernels).
-    :type show_pred: bool
-    :param optional_vline: Optional vertical lines to add to plot.
-    :type optional_vline: Optional[List[float]]
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    resource_distribution : np.ndarray
+        Resource values at each bin point.
+    infl_type : str
+        Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
+    reach_parameters : List[float]
+        Array of reach parameter values to test.
+    final_pos_matrix : np.ndarray
+        Matrix of final equilibrium positions (shape: [num_params, num_agents]).
+    reach_start : float
+        Starting value of reach parameter range.
+    reach_end : float
+        Ending value of reach parameter range.
+    refinements : int
+        Number of refinements for critical value estimation.
+    plot_type : str
+        Type of plot ('line' or 'heat').
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    short_title : bool
+        Use abbreviated title format.
+    norm : bool
+        Normalize heatmap values.
+    infl_cshift : bool
+        Whether influence uses center shift.
+    cmaps : dict
+        Color map configuration dictionary with keys 'heat', 'trajectory', 'crit'.
+    font : dict
+        Font configuration dictionary.
+    cbar_config : dict
+        Colorbar configuration dictionary.
+    axis_return : bool
+        If True, return axes object; if False, return figure object.
+    show_pred : bool
+        Show predicted critical values (only for Gaussian kernels).
+    optional_vline : Optional[List[float]]
+        Optional vertical lines to add to plot.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     
     crit_cmap = cmaps.get('crit', 'Greys')
@@ -911,55 +943,59 @@ def equilibrium_bifurcation_envelope_plot_1d(num_agents: int,
     equilibria. The envelope reveals the range of positions agents explore as the influence
     parameter varies.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Resource values at each bin point.
-    :type resource_distribution: np.ndarray
-    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
-    :type infl_type: str
-    :param reach_parameters: Array of reach parameter values to test.
-    :type reach_parameters: List[float]
-    :param extreme_positions: Dictionary with 'max' and 'min' keys containing extreme position tensors.
-    :type extreme_positions: Dict[str, torch.Tensor]
-    :param reach_start: Starting value of reach parameter range.
-    :type reach_start: float
-    :param reach_end: Ending value of reach parameter range.
-    :type reach_end: float
-    :param refinements: Number of refinements for critical value estimation.
-    :type refinements: int
-    :param plot_type: Type of plot ('line', 'envelope', or 'heat').
-    :type plot_type: str
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param short_title: Use abbreviated title format.
-    :type short_title: bool
-    :param norm: Normalize heatmap values.
-    :type norm: bool
-    :param infl_cshift: Whether influence uses center shift.
-    :type infl_cshift: bool
-    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
-    :type cmaps: dict
-    :param font: Font configuration dictionary.
-    :type font: dict
-    :param cbar_config: Colorbar configuration dictionary.
-    :type cbar_config: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: bool
-    :param show_pred: Show predicted critical values (only for Gaussian kernels).
-    :type show_pred: bool
-    :param optional_vline: Optional vertical lines to add to plot.
-    :type optional_vline: Optional[List[float]]
-    :param envelope_alpha: Transparency level for envelope fill (0-1).
-    :type envelope_alpha: float
-    :param show_bif_labels: Whether to show bifurcation labels on the plot.
-    :type show_bif_labels: bool
-    :param bifurcation_key_tolerance: Minimum key distance between bifurcations to include both. Bifurcations with keys closer than this tolerance to the previous one will be ignored.
-    :type bifurcation_key_tolerance: int
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    resource_distribution : np.ndarray
+        Resource values at each bin point.
+    infl_type : str
+        Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
+    reach_parameters : List[float]
+        Array of reach parameter values to test.
+    extreme_positions : Dict[str, torch.Tensor]
+        Dictionary with 'max' and 'min' keys containing extreme position tensors.
+    reach_start : float
+        Starting value of reach parameter range.
+    reach_end : float
+        Ending value of reach parameter range.
+    refinements : int
+        Number of refinements for critical value estimation.
+    plot_type : str
+        Type of plot ('line', 'envelope', or 'heat').
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    short_title : bool
+        Use abbreviated title format.
+    norm : bool
+        Normalize heatmap values.
+    infl_cshift : bool
+        Whether influence uses center shift.
+    cmaps : dict
+        Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
+    font : dict
+        Font configuration dictionary.
+    cbar_config : dict
+        Colorbar configuration dictionary.
+    axis_return : bool
+        If True, return axes object; if False, return figure object.
+    show_pred : bool
+        Show predicted critical values (only for Gaussian kernels).
+    optional_vline : Optional[List[float]]
+        Optional vertical lines to add to plot.
+    envelope_alpha : float
+        Transparency level for envelope fill (0-1).
+    show_bif_labels : bool
+        Whether to show bifurcation labels on the plot.
+    bifurcation_key_tolerance : int
+        Minimum key distance between bifurcations to include both. Bifurcations with keys closer than this tolerance to the previous one will be ignored.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     
     crit_cmap = cmaps.get('crit', 'Greys')
@@ -1909,55 +1945,59 @@ def equilibrium_bifurcation_envelope_plot_1d_COMPLETE(num_agents: int,
     a comprehensive visualization showing both the envelope of extreme positions and detailed
     trajectory evolution. Includes density heatmap generation from multiple equilibrium searches.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param bin_points: Discretized points defining resource allocation regions.
-    :type bin_points: np.ndarray
-    :param resource_distribution: Resource values at each bin point.
-    :type resource_distribution: np.ndarray
-    :param infl_type: Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
-    :type infl_type: str
-    :param reach_parameters: Array of reach parameter values to test.
-    :type reach_parameters: List[float]
-    :param matrix_list: Dictionary containing multiple position matrices and envelope data.
-    :type matrix_list: Dict[str, torch.Tensor]
-    :param reach_start: Starting value of reach parameter range.
-    :type reach_start: float
-    :param reach_end: Ending value of reach parameter range.
-    :type reach_end: float
-    :param refinements: Number of refinements for critical value estimation.
-    :type refinements: int
-    :param plot_type: Type of plot ('line', 'envelope', or 'heat').
-    :type plot_type: str
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param short_title: Use abbreviated title format.
-    :type short_title: bool
-    :param norm: Normalize heatmap values.
-    :type norm: bool
-    :param infl_cshift: Whether influence uses center shift.
-    :type infl_cshift: bool
-    :param cmaps: Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
-    :type cmaps: dict
-    :param font: Font configuration dictionary.
-    :type font: dict
-    :param cbar_config: Colorbar configuration dictionary.
-    :type cbar_config: dict
-    :param axis_return: If True, return axes object; if False, return figure object.
-    :type axis_return: bool
-    :param show_pred: Show predicted critical values (only for Gaussian kernels).
-    :type show_pred: bool
-    :param optional_vline: Optional vertical lines to add to plot.
-    :type optional_vline: Optional[List[float]]
-    :param envelope_alpha: Transparency level for envelope fill (0-1).
-    :type envelope_alpha: float
-    :param show_bif_labels: Whether to show bifurcation labels on the plot.
-    :type show_bif_labels: bool
-    :param bifurcation_key_tolerance: Minimum key distance between bifurcations to include both. Bifurcations with keys closer than this tolerance to the previous one will be ignored.
-    :type bifurcation_key_tolerance: int
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    bin_points : np.ndarray
+        Discretized points defining resource allocation regions.
+    resource_distribution : np.ndarray
+        Resource values at each bin point.
+    infl_type : str
+        Type of influence kernel ('gaussian', 'beta', 'multi_gaussian', etc.).
+    reach_parameters : List[float]
+        Array of reach parameter values to test.
+    matrix_list : Dict[str, torch.Tensor]
+        Dictionary containing multiple position matrices and envelope data.
+    reach_start : float
+        Starting value of reach parameter range.
+    reach_end : float
+        Ending value of reach parameter range.
+    refinements : int
+        Number of refinements for critical value estimation.
+    plot_type : str
+        Type of plot ('line', 'envelope', or 'heat').
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    short_title : bool
+        Use abbreviated title format.
+    norm : bool
+        Normalize heatmap values.
+    infl_cshift : bool
+        Whether influence uses center shift.
+    cmaps : dict
+        Color map configuration dictionary with keys 'heat', 'trajectory', 'crit', 'envelope'.
+    font : dict
+        Font configuration dictionary.
+    cbar_config : dict
+        Colorbar configuration dictionary.
+    axis_return : bool
+        If True, return axes object; if False, return figure object.
+    show_pred : bool
+        Show predicted critical values (only for Gaussian kernels).
+    optional_vline : Optional[List[float]]
+        Optional vertical lines to add to plot.
+    envelope_alpha : float
+        Transparency level for envelope fill (0-1).
+    show_bif_labels : bool
+        Whether to show bifurcation labels on the plot.
+    bifurcation_key_tolerance : int
+        Minimum key distance between bifurcations to include both. Bifurcations with keys closer than this tolerance to the previous one will be ignored.
     
-    :return: The generated matplotlib figure or axes object.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure or axes object.
     """
     
     # Extract configuration values following project patterns
@@ -2870,23 +2910,27 @@ def final_position_histogram_1d(num_agents: int,
     a specific reach parameter and resource configuration. Useful for analyzing
     clustering patterns and position distributions at equilibrium.
 
-    :param num_agents: Number of agents in the simulation.
-    :type num_agents: int
-    :param domain_bounds: Minimum and maximum bounds of the 1D domain.
-    :type domain_bounds: Tuple[float, float]
-    :param current_alpha: Current resource parameter value (e.g., mode separation :math:`\\alpha`).
-    :type current_alpha: float
-    :param reach_parameter: Influence reach parameter value (e.g., :math:`\\sigma`).
-    :type reach_parameter: float
-    :param final_pos_vector: Vector of final equilibrium positions for all agents.
-    :type final_pos_vector: np.ndarray
-    :param title_ads: Additional strings to append to the plot title.
-    :type title_ads: Optional[List[str]]
-    :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
-    :type font: dict
+    Parameters
+    ----------
+    num_agents : int
+        Number of agents in the simulation.
+    domain_bounds : Tuple[float, float]
+        Minimum and maximum bounds of the 1D domain.
+    current_alpha : float
+        Current resource parameter value (e.g., mode separation :math:`\\alpha`).
+    reach_parameter : float
+        Influence reach parameter value (e.g., :math:`\\sigma`).
+    final_pos_vector : np.ndarray
+        Vector of final equilibrium positions for all agents.
+    title_ads : Optional[List[str]]
+        Additional strings to append to the plot title.
+    font : dict
+        Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'font_family'.
     
-    :return: The generated matplotlib figure.
-    :rtype: matplotlib.figure.Figure
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The generated matplotlib figure.
     """
     font['font.family'] = font.get('font_family', 'sans-serif')
     default_font_size = font.get('default_size', 12)
@@ -3639,8 +3683,8 @@ def bifurcation_tree_plot_with_images(main_matrix,
     NetworkX-based hierarchical tree visualization for bifurcation structures
     with support for placing custom figures/images on top of nodes.
     
-    Parameters:
-    -----------
+    Parameters
+    ----------
     main_matrix : dict
         Main bifurcation matrix containing 'max', 'min', etc.
     left_matrices : list of dict
@@ -3683,8 +3727,8 @@ def bifurcation_tree_plot_with_images(main_matrix,
     label_offset : float
         Horizontal offset for text labels to the left of nodes (default 0.7)
     
-    Returns:
-    --------
+    Returns
+    -------
     fig, ax : matplotlib figure and axes
     node_positions : dict mapping node names to (x, y) positions for further customization
     """
@@ -4459,19 +4503,23 @@ def create_gradient_vector_field_plot_clipped(vis, grid_resolution=20, figsize=(
     - Handle 1d domain type properly
     - Return matplotlib figure for visualization
 
-    :param vis: Visualization Shell instance containing the field and parameters.
-    :type vis: Shell
-    :param grid_resolution: Number of grid points per dimension (default: 20).
-    :type grid_resolution: int
-    :param figsize: Figure size as (width, height) in inches (default: (24, 12)).
-    :type figsize: tuple
-    :param max_magnitude: Maximum gradient magnitude for clipping; if None, auto-clips at 95th percentile.
-    :type max_magnitude: Optional[float]
-    :param normalize_arrows: If True, normalize all arrows to same length for direction visualization.
-    :type normalize_arrows: bool
+    Parameters
+    ----------
+    vis : Shell
+        Visualization Shell instance containing the field and parameters.
+    grid_resolution : int
+        Number of grid points per dimension (default: 20).
+    figsize : tuple
+        Figure size as (width, height) in inches (default: (24, 12)).
+    max_magnitude : Optional[float]
+        Maximum gradient magnitude for clipping; if None, auto-clips at 95th percentile.
+    normalize_arrows : bool
+        If True, normalize all arrows to same length for direction visualization.
     
-    :return: Tuple of (matplotlib figure, dictionary with computed data including positions, gradients, statistics).
-    :rtype: Tuple[matplotlib.figure.Figure, Dict]
+    Returns
+    -------
+    Tuple[matplotlib.figure.Figure, Dict]
+        Tuple of (matplotlib figure, dictionary with computed data including positions, gradients, statistics).
     """
     # Preserve original state following project patterns
     original_pos = vis.field.agents_pos.clone()

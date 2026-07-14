@@ -56,7 +56,7 @@ while the `influence_vectorized` function computes the influence of agents at sp
 The `d_ln_f_vectorized` function calculates the gradient of the log-density with respect to agent positions.
 The `hessian_vectorized` function calculates the Hessian matrix for stability analysis.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -111,7 +111,8 @@ def _param_vectorized_core(
         agents_pos_tensor: Agent positions (N, L) on the simplex
         sigma: Spread parameter (sigma > 0), higher values = more spread out
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Alpha matrix (N, L)
     """
     # Mode parameterization with inverse concentration: alpha = 1 + x / sigma
@@ -135,7 +136,8 @@ def _influence_log_computation_core(
         bin_points_tensor: Valid bin points (K, L)
         agent_alpha: Alpha parameters for single agent (L,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Log influence values (K,)
     """
     num_dims = agent_alpha.shape[0]
@@ -176,7 +178,8 @@ def _gradient_computation_core(
         sigma: Spread parameter
         psi_alpha: Digamma values for alpha parameters (L,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient matrix (L, K)
     """
     num_dims = agent_alpha.shape[0]
@@ -216,7 +219,8 @@ def _hessian_computation_core(
         sigma: Spread parameter
         psi1_alpha: Trigamma values for alpha parameters (L,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Hessian matrix (L, L) - diagonal
     """
     num_dims = agent_alpha.shape[0]

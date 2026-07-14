@@ -29,7 +29,7 @@ Usage:
 The `add_rl_example_script_args` function adds RLlib-typical example script arguments to a parser, 
 allowing for customization of reinforcement learning experiments in the influencer games framework.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -49,7 +49,6 @@ Example:
     print("Number of agents:", args.num_agents)
     print("Domain type:", args.domain_type)
     print("Initial positions:", args.initial_position)
-
 """
 
 import argparse
@@ -80,17 +79,21 @@ def add_rl_example_script_args(
         This function should be used by most of our example scripts, which
         already mostly have this logic in them (but written out).
 
-    :param parser: The parser to add the arguments to. If None, create a new one.
-    :type parser: Optional[argparse.ArgumentParser]
-    :param default_reward: The default value for the ``--stop-reward`` option.
-    :type default_reward: float
-    :param default_iters: The default value for the ``--stop-iters`` option.
-    :type default_iters: int
-    :param default_timesteps: The default value for the ``--stop-timesteps`` option.
-    :type default_timesteps: int
+    Parameters
+    ----------
+    parser : Optional[argparse.ArgumentParser]
+        The parser to add the arguments to. If None, create a new one.
+    default_reward : float
+        The default value for the ``--stop-reward`` option.
+    default_iters : int
+        The default value for the ``--stop-iters`` option.
+    default_timesteps : int
+        The default value for the ``--stop-timesteps`` option.
 
-    :return: The altered (or newly created) parser object.
-    :rtype: argparse.ArgumentParser
+    Returns
+    -------
+    argparse.ArgumentParser
+        The altered (or newly created) parser object.
     """
     if parser is None:
         parser = argparse.ArgumentParser()

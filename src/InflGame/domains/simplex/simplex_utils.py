@@ -29,7 +29,7 @@ Usage:
 The `simplex_setup` function can be used to create a simplex grid with specified refinement, while the `xy2ba` 
 and `ba2xy` functions allow for conversions between Cartesian and barycentric coordinates.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -568,14 +568,15 @@ def simplex_setup(refinement: int = 4):
     """
     Sets up the simplex by defining its corners and creating a refined triangular grid.
 
-    :param refinement: The level of refinement for the triangular grid. Default is 4.
-    :type refinement: int
-    :return: A tuple containing:
-        - r2 (np.ndarray): The third corner of the simplex.
-        - corners (np.ndarray): The coordinates of the simplex corners.
-        - triangle (matplotlib.tri.Triangulation): The initial triangulation of the simplex.
-        - trimesh (matplotlib.tri.Triangulation): The refined triangular grid.
-    :rtype: tuple
+    Parameters
+    ----------
+    refinement : int
+        The level of refinement for the triangular grid. Default is 4.
+
+    Returns
+    -------
+    tuple
+        A tuple containing: - r2 (np.ndarray): The third corner of the simplex. - corners (np.ndarray): The coordinates of the simplex corners. - triangle (matplotlib.tri.Triangulation): The initial triangulation of the simplex. - trimesh (matplotlib.tri.Triangulation): The refined triangular grid.
     """
     r0 = np.array([0, 0])
     r1 = np.array([1, 0])
@@ -591,12 +592,15 @@ def simplex_bin_setup(domain_bounds:tuple):
     """
     Sets up bins on the simplex by projecting points onto the simplex and adjusting their positions.
 
-    :param domain_bounds: A tuple containing domain information, including corners and triangular mesh.
-    :type domain_bounds: tuple
-    :return: A tuple containing:
-        - bin_points (np.ndarray): Points in barycentric coordinates adjusted to lie on the simplex.
-        - bin_points_xy (np.ndarray): Points in Cartesian coordinates.
-    :rtype: tuple
+    Parameters
+    ----------
+    domain_bounds : tuple
+        A tuple containing domain information, including corners and triangular mesh.
+
+    Returns
+    -------
+    tuple
+        A tuple containing: - bin_points (np.ndarray): Points in barycentric coordinates adjusted to lie on the simplex. - bin_points_xy (np.ndarray): Points in Cartesian coordinates.
     """
     corners = domain_bounds[1]
     trimesh = domain_bounds[3]
@@ -633,14 +637,19 @@ def xy2ba(x: torch.Tensor,
     """
     Converts Cartesian coordinates to barycentric coordinates.
 
-    :param x: x-coordinate in Cartesian space.
-    :type x: torch.Tensor
-    :param y: y-coordinate in Cartesian space.
-    :type y: torch.Tensor
-    :param corners: Coordinates of the simplex corners.
-    :type corners: np.ndarray
-    :return: Barycentric coordinates corresponding to the input Cartesian coordinates.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    x : torch.Tensor
+        x-coordinate in Cartesian space.
+    y : torch.Tensor
+        y-coordinate in Cartesian space.
+    corners : np.ndarray
+        Coordinates of the simplex corners.
+
+    Returns
+    -------
+    torch.Tensor
+        Barycentric coordinates corresponding to the input Cartesian coordinates.
     """
     corner_x = corners.T[0]
     corner_y = corners.T[1]
@@ -660,12 +669,17 @@ def ba2xy(x: torch.Tensor,
     """
     Converts barycentric coordinates to Cartesian coordinates.
 
-    :param x: Array of barycentric coordinates.
-    :type x: torch.Tensor
-    :param corners: Coordinates of the simplex corners.
-    :type corners: np.ndarray
-    :return: Cartesian coordinates corresponding to the input barycentric coordinates.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    x : torch.Tensor
+        Array of barycentric coordinates.
+    corners : np.ndarray
+        Coordinates of the simplex corners.
+
+    Returns
+    -------
+    torch.Tensor
+        Cartesian coordinates corresponding to the input barycentric coordinates.
     """
     return torch.matmul(torch.tensor(corners).T, x.T).T
 
@@ -673,10 +687,15 @@ def projection_onto_simplex(Y: torch.Tensor) -> torch.Tensor:
     """
     Projects a position vector onto the simplex.
 
-    :param Y: Position vector to be projected.
-    :type Y: torch.Tensor
-    :return: Position vector projected onto the simplex.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    Y : torch.Tensor
+        Position vector to be projected.
+
+    Returns
+    -------
+    torch.Tensor
+        Position vector projected onto the simplex.
     """
     D = Y.shape
     Y = Y.reshape(1, list(D)[0])

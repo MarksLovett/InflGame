@@ -63,7 +63,7 @@ Usage:
 Pass ``infl_type='blotto'`` and ``domain_type='simplex'`` to
 ``AdaptiveEnv``.  The ``parameters`` argument is ``[sigma, chi]``.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -109,7 +109,8 @@ def _influence_core(agents_pos_tensor: torch.Tensor, sigma: float) -> torch.Tens
         agents_pos_tensor: Agent positions (N, M) on the budget simplex.
         sigma: Scaling parameter (sigma > 0).
 
-    Returns:
+    Returns
+    -------
         torch.Tensor: Influence matrix (N, M).
     """
     # Clamp to avoid x^sigma = 0 or negative issues
@@ -131,7 +132,8 @@ def _d_ln_f_core(agents_pos_tensor: torch.Tensor, sigma: float) -> torch.Tensor:
         agents_pos_tensor: Agent positions (N, M).
         sigma: Scaling parameter (sigma > 0).
 
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient tensor (N, M, M).
     """
     pos_clamped = torch.clamp(agents_pos_tensor, min=1e-10)
@@ -155,7 +157,8 @@ def _hessian_core(agents_pos_tensor: torch.Tensor, sigma: float) -> torch.Tensor
         agents_pos_tensor: Agent positions (N, M).
         sigma: Scaling parameter (sigma > 0).
 
-    Returns:
+    Returns
+    -------
         torch.Tensor: Hessian tensor (N, M, M) — batch of diagonal matrices.
     """
     pos_clamped = torch.clamp(agents_pos_tensor, min=1e-10)

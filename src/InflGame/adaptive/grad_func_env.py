@@ -30,7 +30,7 @@ Usage:
 ------
 The `AdaptiveEnv` class can be used to simulate and optimize agent interactions in an environment with resource distributions. It supports various influence kernel types and gradient ascent methods for optimization.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -47,9 +47,9 @@ Example:
         resource_distribution=torch.tensor([10.0, 20.0, 30.0]),
         bin_points=np.array([0.1, 0.4, 0.7]),
         infl_configs={'infl_type': 'gaussian'},
-        learning_rate_type='cosine',
+        learning_rate_type='cosine_annealing',
         learning_rate=[0.0001, 0.01, 15],
-        time_steps=100
+        time_steps=100,
         domain_type='1d',
         domain_bounds=[0, 1]
     )
@@ -87,14 +87,19 @@ def _compute_prob_matrix_core(infl_matrix: torch.Tensor,
     This function performs the core mathematical operations of probability matrix
     computation using vectorized tensor operations that can be optimized by JIT.
     
-    :param infl_matrix: Influence matrix of shape (N, K)
-    :type infl_matrix: torch.Tensor
-    :param ignore_zero_infl: Whether to ignore zero influence denominators
-    :type ignore_zero_infl: bool
-    :param small_threshold: Threshold for numerical stability
-    :type small_threshold: float
-    :return: Probability matrix of shape (N, K)
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    infl_matrix : torch.Tensor
+        Influence matrix of shape (N, K)
+    ignore_zero_infl : bool
+        Whether to ignore zero influence denominators
+    small_threshold : float
+        Threshold for numerical stability
+
+    Returns
+    -------
+    torch.Tensor
+        Probability matrix of shape (N, K)
     """
     # Vectorized probability computation with numerical stability
     # Compute column sums (denominator for each bin point)
@@ -120,11 +125,20 @@ def _compute_gradient_1d_core(d_matrix: torch.Tensor,
     """
     JIT-compiled core gradient computation for 1D domains.
     
-    :param d_matrix: Derivative matrix of shape (N, K)
-    :param pr_matrix: Probability matrix of shape (N, K)  
-    :param pr_matrix_c: Complementary probability matrix (1 - pr_matrix)
-    :param resource_tensor: Resource distribution of shape (K,)
-    :return: Gradient vector of shape (N,)
+    Parameters
+    ----------
+    d_matrix
+        Derivative matrix of shape (N, K)
+    pr_matrix
+        Probability matrix of shape (N, K)
+    pr_matrix_c
+        Complementary probability matrix (1 - pr_matrix)
+    resource_tensor
+        Resource distribution of shape (K,)
+
+    Returns
+    -------
+    Gradient vector of shape (N,)
     """
     # Vectorized element-wise multiplication and summation
     gradient_terms = d_matrix * pr_matrix * pr_matrix_c * resource_tensor.unsqueeze(0)
@@ -142,13 +156,24 @@ def _compute_gradient_md_core(d_matrix: torch.Tensor,
     """
     JIT-compiled core gradient computation for multi-dimensional domains.
     
-    :param d_matrix: Derivative matrix of shape (N, dims, K)
-    :param pr_matrix: Probability matrix of shape (N, K)
-    :param pr_matrix_c: Complementary probability matrix (1 - pr_matrix)
-    :param resource_tensor: Resource distribution of shape (K,)
-    :param num_agents: Number of agents
-    :param num_dims: Number of dimensions
-    :return: Gradient matrix of shape (N, dims) or (N,) if num_dims=1
+    Parameters
+    ----------
+    d_matrix
+        Derivative matrix of shape (N, dims, K)
+    pr_matrix
+        Probability matrix of shape (N, K)
+    pr_matrix_c
+        Complementary probability matrix (1 - pr_matrix)
+    resource_tensor
+        Resource distribution of shape (K,)
+    num_agents
+        Number of agents
+    num_dims
+        Number of dimensions
+
+    Returns
+    -------
+    Gradient matrix of shape (N, dims) or (N,) if num_dims=1
     """
     # Compute probability product
     pr_prod = pr_matrix * pr_matrix_c  # Shape: (N, K)
@@ -180,11 +205,20 @@ def _apply_functional_shift_1d(gradient_terms: torch.Tensor,
     """
     JIT-compiled functional shift application for 1D gradients.
     
-    :param gradient_terms: Current gradient terms of shape (N, K)
-    :param shift_matrix: Shift matrix of shape (N, K)
-    :param pr_matrix: Probability matrix of shape (N, K)
-    :param resource_tensor: Resource distribution of shape (K,)
-    :return: Modified gradient terms of shape (N, K)
+    Parameters
+    ----------
+    gradient_terms
+        Current gradient terms of shape (N, K)
+    shift_matrix
+        Shift matrix of shape (N, K)
+    pr_matrix
+        Probability matrix of shape (N, K)
+    resource_tensor
+        Resource distribution of shape (K,)
+
+    Returns
+    -------
+    Modified gradient terms of shape (N, K)
     """
     shift_terms = shift_matrix * pr_matrix * resource_tensor.unsqueeze(0)
     return gradient_terms - shift_terms
@@ -218,7 +252,8 @@ def _compute_gradient_function_1d_core(
         alt_form: Alternative form flag
         shift_matrix: Optional shift matrix for functional shifts (N, K)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Computed gradients
     """
     # Determine which agents to compute gradients for (vectorized)
@@ -275,7 +310,8 @@ def _compute_gradient_function_md_core(
         resource_tensor: Resource distribution (K,)
         num_agents: Number of agents
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Computed gradients
     """
     # Multi-dimensional domain vectorized computation
@@ -342,42 +378,48 @@ class AdaptiveEnv:
         """
         Initialize the AdaptiveEnv class.
 
-        :param num_agents: Number of agents in the environment.
-        :type num_agents: int
-        :param agents_pos: Initial positions of the agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for influence kernels of each agent.
-        :type parameters: torch.Tensor
-        :param resource_distribution: Resource distribution in the environment.
-        :type resource_distribution: torch.Tensor
-        :param bin_points: Points in the domain where resources are distributed.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param infl_configs: Configuration for influence kernel type and custom influence kernels.
-        :type infl_configs: Dict[str, Union[str, callable]]
-        :param learning_rate_type: Type of learning rate schedule.
-        :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters.
-        :type learning_rate: List[float]
-        :param time_steps: Number of time steps for gradient ascent.
-        :type time_steps: int
-        :param fp: Fixed parameter for the Dirichlet kernel type.
-        :type fp: Optional[int]
-        :param infl_cshift: Whether to apply constant shift in influence.
-        :type infl_cshift: bool
-        :param cshift: Value of the constant shift.
-        :type cshift: int
-        :param infl_fshift: Whether to apply functional shift in influence.
-        :type infl_fshift: bool
-        :param Q: Scaling factor for functional shift.
-        :type Q: int
-        :param domain_type: Type of domain ('1d', '2d', or 'simplex').
-        :type domain_type: str
-        :param domain_bounds: Bounds of the domain.
-        :type domain_bounds: Union[List[float], torch.Tensor]
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents that need to meet tolerance before breaking.
-        :type tolerated_agents: Optional[int]
+        Parameters
+        ----------
+        num_agents : int
+            Number of agents in the environment.
+        agents_pos : Union[List[float], np.ndarray]
+            Initial positions of the agents.
+        parameters : torch.Tensor
+            Parameters for influence kernels of each agent.
+        resource_distribution : torch.Tensor
+            Resource distribution in the environment.
+        bin_points : Union[List[float], np.ndarray]
+            Points in the domain where resources are distributed.
+        infl_configs : Dict[str, Union[str, callable]]
+            Configuration for influence kernel type and custom influence kernels.
+        learning_rate_type : str
+            Type of learning rate schedule.
+        learning_rate : List[float]
+            Learning rate parameters.
+        time_steps : int
+            Number of time steps for gradient ascent.
+        fp : Optional[int]
+            Fixed parameter for the Dirichlet kernel type.
+        infl_cshift : bool
+            Whether to apply constant shift in influence.
+        cshift : int
+            Value of the constant shift.
+        infl_fshift : bool
+            Whether to apply functional shift in influence.
+        Q : int
+            Scaling factor for functional shift.
+        domain_type : str
+            Type of domain ('1d', '2d', or 'simplex').
+        domain_bounds : Union[List[float], torch.Tensor]
+            Bounds of the domain.
+        tolerance : float
+            Tolerance for convergence.
+        tolerated_agents : Optional[int]
+            Number of agents that need to meet tolerance before breaking.
+        ignore_zero_infl : bool
+            If True, skip agents/bins with non-positive total influence.
+        device : Optional[Union[str, torch.device]]
+            Torch device for computations (e.g. ``'cpu'``, ``'cuda'``).
         """
         validated = validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -436,15 +478,26 @@ class AdaptiveEnv:
         with optional constant and functional shifts. The function supports multiple
         influence kernel types and provides comprehensive error handling.
         
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Influence matrix of shape (N, K) or (N+shifts, K) where N is number of agents,
-                K is number of bin points, and shifts are additional rows for constant/functional shifts.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
-        :raises NotImplementedError: If functional shift is requested for multi-dimensional agents.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Influence matrix of shape (N, K) or (N+shifts, K) where N is number of agents, K is number of bin points, and shifts are additional rows for constant/functional shifts.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
+        NotImplementedError
+            If functional shift is requested for multi-dimensional agents.
         """
         if parameter_instance is None:
             parameter_instance = self.parameters
@@ -682,13 +735,24 @@ class AdaptiveEnv:
                 G_{N,1} & G_{N,2} & \cdots & G_{N,K}
                 \end{bmatrix}
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Probability matrix.
-        :rtype: torch.Tensor
-        :raises ValueError: If input dimensions are incompatible or contain invalid values.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Probability matrix.
+
+        Raises
+        ------
+        ValueError
+            If input dimensions are incompatible or contain invalid values.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         if parameter_instance is None:
             parameter_instance = self.parameters
@@ -798,13 +862,24 @@ class AdaptiveEnv:
         
         The probability matrix is computed by the function :func:`prob_matrix` . 
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Reward values for agents.
-        :rtype: torch.Tensor
-        :raises ValueError: If input dimensions are incompatible or contain invalid values.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Reward values for agents.
+
+        Raises
+        ------
+        ValueError
+            If input dimensions are incompatible or contain invalid values.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         
         try:
@@ -918,10 +993,15 @@ class AdaptiveEnv:
         
         **For custom influence kernels** use :func:`d_torch`. This is automatically done if infl_type==custom_influence by the adaptive_env class.
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Derivative matrix.
-        :rtype: Union[int, torch.Tensor]
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        Union[int, torch.Tensor]
+            Derivative matrix.
         """
         if parameter_instance is None:
             parameter_instance = self.parameters
@@ -1016,12 +1096,22 @@ class AdaptiveEnv:
             :math:`Q` is a scaling factor for the functional shift.
         
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Shift matrix.
-        :rtype: torch.Tensor
-        :raises ValueError: If input dimensions are incompatible or invalid.
-        :raises RuntimeError: If computation fails due to numerical issues.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Shift matrix.
+
+        Raises
+        ------
+        ValueError
+            If input dimensions are incompatible or invalid.
+        RuntimeError
+            If computation fails due to numerical issues.
         """
         
         try:
@@ -1111,14 +1201,26 @@ class AdaptiveEnv:
                 \end{bmatrix}
         
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: derivative matrix.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
-        :raises NotImplementedError: If custom influence function is not properly configured.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            derivative matrix.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
+        NotImplementedError
+            If custom influence function is not properly configured.
         """
         
         try:
@@ -1295,13 +1397,24 @@ class AdaptiveEnv:
         The output :math:`\nabla\vec{R}` is a :math:`N \times L` matrix where :math:`N` is the number of agents and :math:`L` is the number of dimensions.
         The entry :math:`\nabla\vec{R}_{i,l}` is a the gradient of the reward of the :math:`i` th agent on the :math:`l` th dimension.
 
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :return: Gradient values.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+
+        Returns
+        -------
+        torch.Tensor
+            Gradient values.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         
         # ---- Blotto fast path ------------------------------------------------
@@ -1542,17 +1655,28 @@ class AdaptiveEnv:
             This parameterization ensures positions remain on the simplex without explicit projection.
 
         
-        :param show_out: Whether to return intermediate outputs.
-        :type show_out: bool
-        :param grad_modify: Whether to modify gradients.
-        :type grad_modify: bool
-        :param reward: Whether to compute rewards.
-        :type reward: bool
-        :return: Gradient ascent results.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        show_out : bool
+            Whether to return intermediate outputs.
+        grad_modify : bool
+            Whether to modify gradients.
+        reward : bool
+            Whether to compute rewards.
+
+        Returns
+        -------
+        torch.Tensor
+            Gradient ascent results.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         
         try:
@@ -1799,17 +1923,28 @@ class AdaptiveEnv:
         where :math:`\epsilon` is the tolerance and :math:`E` is the tolerated agents.
         The learning rate :math:`\eta_t` is computed using the function :func:`InflGame.utils.general.learning_rate`.
 
-        :param show_out: Whether to return intermediate outputs.
-        :type show_out: bool
-        :param grad_modify: Whether to modify gradients.
-        :type grad_modify: bool
-        :param reward: Whether to compute rewards.
-        :type reward: bool
-        :return: Gradient ascent results.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        show_out : bool
+            Whether to return intermediate outputs.
+        grad_modify : bool
+            Whether to modify gradients.
+        reward : bool
+            Whether to compute rewards.
+
+        Returns
+        -------
+        torch.Tensor
+            Gradient ascent results.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         
         try:
@@ -1993,18 +2128,32 @@ class AdaptiveEnv:
         This is the helper function for performing gradient ascent for agents in the environment. It calls the appropriate gradient ascent function based on the domain type.
         The gradient ascent is performed using the function :func:`sv_gradient_ascent` or :func:`mv_gradient_ascent` depending on the domain type.
 
-        :param show_out: Whether to return intermediate outputs.
-        :type show_out: bool
-        :param grad_modify: Whether to modify gradients.
-        :type grad_modify: bool
-        :param reward: Whether to compute rewards.
-        :type reward: bool
-        :return: Gradient ascent results.
-        :rtype: Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
-        :raises AttributeError: If required attributes are missing from the environment.
+        Parameters
+        ----------
+        show_out : bool
+            Whether to return intermediate outputs.
+        grad_modify : bool
+            Whether to modify gradients.
+        reward : bool
+            Whether to compute rewards.
+        ignore_tolerance : bool
+            If True, run the full time horizon without early stopping on tolerance.
+
+        Returns
+        -------
+        Optional[Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor, torch.Tensor]]]
+            Gradient ascent results.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
+        AttributeError
+            If required attributes are missing from the environment.
         """
         self.ignore_tolerance = ignore_tolerance
         try:
@@ -2147,19 +2296,30 @@ class AdaptiveEnv:
         The entry :math:`\nabla\vec{R}_{i,l}` is a the gradient of the reward of the :math:`i` th agent on the :math:`l` th dimension.
         
 
-        :param agents_pos: Positions of the agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameter_instance: Parameters for the influence kernels.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param ids: IDs of the agents to compute gradients for.
-        :type ids: List[int]
-        :param two_a: Whether to compute gradients for all agents.
-        :type two_a: bool
-        :return: Gradient values.
-        :rtype: torch.Tensor
-        :raises ValueError: If input parameters are invalid or incompatible.
-        :raises RuntimeError: If computation fails due to numerical issues.
-        :raises TypeError: If input types are not supported.
+        Parameters
+        ----------
+        agents_pos : Union[List[float], np.ndarray]
+            Positions of the agents.
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence kernels.
+        ids : List[int]
+            IDs of the agents to compute gradients for.
+        two_a : bool
+            Whether to compute gradients for all agents.
+
+        Returns
+        -------
+        torch.Tensor
+            Gradient values.
+
+        Raises
+        ------
+        ValueError
+            If input parameters are invalid or incompatible.
+        RuntimeError
+            If computation fails due to numerical issues.
+        TypeError
+            If input types are not supported.
         """
         
         try:

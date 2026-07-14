@@ -34,7 +34,7 @@ The typical workflow involves defining experiment options, loading existing data
 and generating standardized paths for saving new results. The module enforces consistent naming conventions
 across all influencer games experiments.
 
-Example:
+Examples
 --------
 
 .. code-block:: python

@@ -39,7 +39,7 @@ New vectorized functions are available for improved performance:
 - `influence_vectorized` : Compute influence for all agents simultaneously
 - `d_ln_f_vectorized` : Compute gradients for all agents simultaneously
 
-Example:
+Examples
 --------
 
 .. code-block:: python

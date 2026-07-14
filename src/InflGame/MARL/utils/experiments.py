@@ -18,7 +18,7 @@ Usage:
 The `run_experiment` function is the main entry point for running reinforcement learning experiments. It supports both synchronous 
 and asynchronous environments and allows for customization of learning parameters, scheduling configurations, and saving results.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -50,7 +50,6 @@ Example:
     )
 
     print("Experiment completed. Q-tensor and Q-mean saved.")
-
 """
 
 import numpy as np
@@ -93,50 +92,53 @@ def run_experiment(action_type: str = "sync",
     """
     Runs a reinforcement learning experiment using the Influencer Games framework and an independent Q-learning algorithm.
 
-    :param action_type: Type of environment to use ("sync" or "async").
-    :type action_type: str
-    :param env_configs: Configuration dictionary for the environment.
-    :type env_configs: dict
-    :param trials: Number of trials to run.
-    :type trials: int
-    :param gamma: Discount factor for the Q-learning algorithm.
-    :type gamma: float
-    :param alpha: Learning rate for the Q-learning algorithm.
-    :type alpha: float
-    :param epochs: Number of epochs for training.
-    :type epochs: int
-    :param random_seed: Seed for random number generation.
-    :type random_seed: int
-    :param random_initialization: Whether to use random initialization for Q-tables.
-    :type random_initialization: bool
-    :param smoothing: Whether to apply softmax smoothing during training via temperature.
-    :type smoothing: bool
-    :param temperature_configs: Configuration for temperature scheduling.
-        - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'cosine_annealing_distance', 'cosine_annealing_distance_segmented'.
-        - **temperature** (*float*, optional): If TYPE == 'fixed', temperature for smoothing.
-        - **temperature_max** (*float*, optional): If TYPE != 'fixed', maximum global temperature.
-        - **temperature_min** (*float*, optional): If TYPE != 'fixed', minimum global temperature.
-        - **temperature_local_max** (*float*, optional): If TYPE == 'cosine_annealing_distance_segmented', minimum for the first segment of the schedule.
-        - **temperature_local_min** (*float*, optional): If TYPE == 'cosine_annealing_distance_segmented', maximum for the second segment of the schedule.
-    :type temperature_configs: dict, optional
-    :param epsilon_configs: Configuration for epsilon annealing.
-        - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'cosine_annealing'.
-        - **epsilon** (*float*, optional): If TYPE == 'fixed', epsilon value.
-        - **epsilon_max** (*float*, optional): If TYPE != 'fixed', maximum epsilon value.
-        - **epsilon_min** (*float*, optional): If TYPE != 'fixed', minimum epsilon value.
-    :type epsilon_configs: dict, optional
-    :param episode_configs: Configuration for episode scheduling.
-        - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'reverse_cosine_annealing'.
-        - **episode_max** (*float*): If TYPE == 'fixed', max number of episodes in an epoch.
-        - **episode_min** (*float*, optional): If TYPE == 'reverse_cosine_annealing', global minimum number of episodes in an epoch.
-    :type episode_configs: dict, optional
-    :param description: Description of the experiment.
-    :type description: str, optional
-    :param name_ads: Additional identifiers for naming saved files.
-    :type name_ads: list[str], optional
+    Parameters
+    ----------
+    action_type : str
+        Type of environment to use ("sync" or "async").
+    env_configs : dict
+        Configuration dictionary for the environment.
+    trials : int
+        Number of trials to run.
+    gamma : float
+        Discount factor for the Q-learning algorithm.
+    alpha : float
+        Learning rate for the Q-learning algorithm.
+    epochs : int
+        Number of epochs for training.
+    random_seed : int
+        Seed for random number generation.
+    random_initialization : bool
+        Whether to use random initialization for Q-tables.
+    smoothing : bool
+        Whether to apply softmax smoothing during training via temperature.
+    temperature_configs : dict, optional
+        Configuration for temperature scheduling. - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'cosine_annealing_distance', 'cosine_annealing_distance_segmented'. - **temperature** (*float*, optional): If TYPE == 'fixed', temperature for smoothing. - **temperature_max** (*float*, optional): If TYPE != 'fixed', maximum global temperature. - **temperature_min** (*float*, optional): If TYPE != 'fixed', minimum global temperature. - **temperature_local_max** (*float*, optional): If TYPE == 'cosine_annealing_distance_segmented', minimum for the first segment of the schedule. - **temperature_local_min** (*float*, optional): If TYPE == 'cosine_annealing_distance_segmented', maximum for the second segment of the schedule.
+    epsilon_configs : dict, optional
+        Configuration for epsilon annealing. - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'cosine_annealing'. - **epsilon** (*float*, optional): If TYPE == 'fixed', epsilon value. - **epsilon_max** (*float*, optional): If TYPE != 'fixed', maximum epsilon value. - **epsilon_min** (*float*, optional): If TYPE != 'fixed', minimum epsilon value.
+    episode_configs : dict, optional
+        Configuration for episode scheduling. - **TYPE** (*str*): Type of schedule, e.g., 'fixed', 'reverse_cosine_annealing'. - **episode_max** (*float*): If TYPE == 'fixed', max number of episodes in an epoch. - **episode_min** (*float*, optional): If TYPE == 'reverse_cosine_annealing', global minimum number of episodes in an epoch.
+    resource_name : str
+        Name tag used when saving experiment artifacts.
+    description : str, optional
+        Description of the experiment.
+    algo_epoch : bool
+        If True, train with epoch-based scheduling.
+    checkpoints : bool
+        If True, save intermediate training checkpoints.
+    save_positions : bool
+        If True, persist agent position trajectories.
+    return_positions : bool
+        If True, also return final position tensors.
+    name_ads : list[str], optional
+        Additional identifiers for naming saved files.
+    fresh_start : bool
+        If True, start without loading existing Q-tables.
 
-    :return: None. Saves Q-tables and configurations to disk. If trials >= 2, also returns Q-tensor and Q-mean tensor.
-    :rtype: None
+    Returns
+    -------
+    None | tuple
+        ``None`` by default. If ``trials >= 2``, returns stacked Q-tensors (and position tensors when ``return_positions`` is True).
     """
 
     if episode_configs==None:

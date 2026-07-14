@@ -21,7 +21,7 @@ where:
   - :math:`\beta(\alpha)` is the beta function.
 
 Dependencies:
--------------yy
+-------------
 - InflGame.utils
 
 Usage:
@@ -35,7 +35,7 @@ New vectorized functions are available for improved performance:
 - `influence_vectorized` : Compute influence for all agents simultaneously
 - `d_ln_f_vectorized` : Compute gradients for all agents simultaneously
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -98,7 +98,8 @@ def _param_vectorized_core(
         agents_pos_tensor: Agent positions (N, L)
         fixed_pa: Index of fixed coordinate direction
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Alpha matrix (N, L)
     """
     # Extract fixed parameter positions for all agents: shape (num_agents,)
@@ -131,7 +132,8 @@ def _influence_log_computation_core(
         bin_points_tensor: Valid bin points (K, L)
         agent_alpha: Alpha parameters for single agent (L,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Log influence values (K,)
     """
     num_dims = agent_alpha.shape[0]
@@ -170,7 +172,8 @@ def _gradient_computation_core(
         psi_alpha: Digamma values for alpha parameters (L,)
         psi_sum: Digamma of sum of alpha parameters
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient matrix (L, K)
     """
     num_dims = agent_pos.shape[0]
@@ -241,7 +244,7 @@ def param_vectorized(num_agents: int,
         corresponds to the alpha parameters of an agent.
         
     Raises
-    -----
+    ------
     RuntimeError
         If computation fails due to numerical issues.
     TypeError
@@ -704,7 +707,7 @@ def d_ln_f(agent_id: int,
     - For :math:`l \neq \varphi`:
 
       .. math::
-        d_{(i,l)} = \frac{\alpha_{i,\varphi}}{x_{i,\varphi}} \left(\ln(b_{l}) - \psi(\alpha_{i,l}) + \psi\left(\sum_{l=1}^{L} \alpha_{i,l}\right)\right)
+        d_{(i,l)} = \frac{\alpha_{i,\varphi}}{x_{i,\varphi}} \left(\ln(b_{l}) - \psi(\alpha_{i,l})\right)
 
     - For :math:`l = \varphi`:
 

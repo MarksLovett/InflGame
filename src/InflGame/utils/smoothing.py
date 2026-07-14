@@ -23,7 +23,7 @@ The smoothing functions accept and return NumPy arrays of shape :math:`(H, W)` w
 and :math:`W` is width. When SciPy is available, optimized filters are used; otherwise, NumPy-based
 fallback implementations are employed.
 
-Example:
+Examples
 --------
 
 .. code-block:: python

@@ -35,7 +35,7 @@ Usage:
 The `resource_distribution_choice` function serves as the main entry point for selecting and computing 
 a resource distribution based on the specified type and parameters.
 
-Example:
+Examples
 --------
 
 .. code-block:: python

@@ -25,7 +25,7 @@ Usage:
 ------
 The `Shell` class can be used to visualize the results of simulations performed using the `AdaptiveEnv` class. It supports various visualization types, including position plots, gradient plots, probability plots, and bifurcation plots.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -167,58 +167,60 @@ class Shell:
         """
         Initialize the Shell class with simulation parameters.
 
-        :param num_agents: Number of agents in the simulation.
-        :type num_agents: int
-        :param agents_pos: Initial positions of agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for the influence function.
-        :type parameters: torch.Tensor
-        :param resource_distribution: Resource distribution over the domain.
-        :type resource_distribution: torch.Tensor
-        :param bin_points: Discretized points in the domain.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param infl_configs: Configuration for influence kernels.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "beta", "custom").
-            - ``custom_influence`` (callable): Function for a custom influence (see guides).
-        :type infl_configs: Dict[str, str]
-        :param learning_rate_type: Learning rate type (e.g., 'cosine_annealing').
-        :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters.
-        :type learning_rate: List[float]
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param fp: Fixed parameter for influence function.
-        :type fp: int
-        :param infl_cshift: Whether to apply a center shift to influence.
-        :type infl_cshift: bool
-        :param cshift: Center shift tensor.
-        :type cshift: Optional[torch.Tensor]
-        :param infl_fshift: Whether to apply a fixed shift to influence.
-        :type infl_fshift: bool
-        :param Q: Additional parameter for influence function.
-        :type Q: Optional[int]
-        :param domain_type: Type of domain ('1d', '2d', or 'simplex').
-        :type domain_type: str
-        :param rect_X: X-coordinates for 2D rectangular domain mesh.
-        :type rect_X: Optional[List[float]]
-        :param rect_Y: Y-coordinates for 2D rectangular domain mesh.
-        :type rect_Y: Optional[List[float]]
-        :param rect_positions: Position grid for 2D rectangular domain.
-        :type rect_positions: Optional[torch.Tensor]
-        :param resource_grid: Resource values on 2D grid.
-        :type resource_grid: Optional[torch.Tensor]
-        :param domain_bounds: Bounds of the domain.
-        :type domain_bounds: Union[List[float], torch.Tensor]
-        :param resource_type: Type of resource distribution.
-        :type resource_type: float
-        :param domain_refinement: Refinement level for 2D domains.
-        :type domain_refinement: int
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
-        :param ignore_zero_infl: Whether to ignore agents with zero influence.
-        :type ignore_zero_infl: bool
+        Parameters
+        ----------
+        num_agents : int
+            Number of agents in the simulation.
+        agents_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        parameters : torch.Tensor
+            Parameters for the influence function.
+        resource_distribution : torch.Tensor
+            Resource distribution over the domain.
+        bin_points : Union[List[float], np.ndarray]
+            Discretized points in the domain.
+        infl_configs : Dict[str, str]
+            Configuration for influence kernels. - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "Jones_M", "dirichlet", "beta", "custom"). - ``custom_influence`` (callable): Function for a custom influence (see guides).
+        learning_rate_type : str
+            Learning rate type (e.g., 'cosine_annealing').
+        learning_rate : List[float]
+            Learning rate parameters.
+        time_steps : int
+            Number of gradient ascent steps.
+        fp : int
+            Fixed parameter for influence function.
+        infl_cshift : bool
+            Whether to apply a center shift to influence.
+        cshift : Optional[torch.Tensor]
+            Center shift tensor.
+        infl_fshift : bool
+            Whether to apply a fixed shift to influence.
+        Q : Optional[int]
+            Additional parameter for influence function.
+        domain_type : str
+            Type of domain ('1d', '2d', or 'simplex').
+        rect_X : Optional[List[float]]
+            X-coordinates for 2D rectangular domain mesh.
+        rect_Y : Optional[List[float]]
+            Y-coordinates for 2D rectangular domain mesh.
+        rect_positions : Optional[torch.Tensor]
+            Position grid for 2D rectangular domain.
+        resource_grid : Optional[torch.Tensor]
+            Resource values on 2D grid.
+        domain_bounds : Union[List[float], torch.Tensor]
+            Bounds of the domain.
+        resource_type : str
+            Type of resource distribution.
+        domain_refinement : int
+            Refinement level for 2D domains.
+        tolerance : float
+            Tolerance for convergence.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to tolerate deviations.
+        ignore_zero_infl : bool
+            Whether to ignore agents with zero influence.
+        device : Optional[Union[str, torch.device]]
+            Torch device for computations (e.g. ``'cpu'``, ``'cuda'``).
         """
         validated=validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -307,6 +309,7 @@ class Shell:
                                              resource_distribution=self.resource_distribution,bin_points=self.bin_points,
                                              infl_configs=self.infl_configs,learning_rate_type=self.learning_rate_type,learning_rate=self.learning_rate,time_steps=self.time_steps,fp=self.fp,infl_cshift=self.infl_cshift,cshift=self.cshift,
                                              infl_fshift=self.infl_fshift,Q=self.Q,domain_type=self.domain_type,domain_bounds=self.domain_bounds,tolerance=self.tolerance,tolerated_agents=self.tolerated_agents,ignore_zero_infl=self.ignore_zero_infl)
+        self.bif_field.setup_adaptive_env()
     
     # Plots
     def pos_plot(self,
@@ -323,18 +326,27 @@ class Shell:
         Plots the positions of agents over gradient ascent steps. The positions of players are calculated via the 
         results of :func:`InflGame.adaptive.grad_func_env.gradient_ascent`  
 
+        .. figure:: examples/pos_plot.png
+            :width: 100%
 
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+            Example trajectory of agent positions over gradient-ascent steps in a 1D domain.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+
+        Parameters
+        ----------
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         
         if self.domain_type=='1d':
@@ -388,18 +400,27 @@ class Shell:
         Where :math:`x_i` is the :math:`i` th players position, :math:`b_k\in \mathbb{B}` are the bin/resource points, :math:`B(b_k)` is the resource value at :math:`b_k`, and :math:`G_i(x_i,b_k)` 
         probability of player :math:`i` influencing the bin point :math:`b`. The gradients are calculated via :func:`InflGame.adaptive.grad_func_env.gradient`.
         
+        .. figure:: examples/gradient.png
+            :width: 100%
 
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+            Example gradient trajectories for a three-player game in a 1D domain.
+        
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Parameters
+        ----------
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         
 
@@ -439,21 +460,25 @@ class Shell:
             
         There can is also the option to have a fixed third party (infl_csift==True) and/or abstaining voters if (infl_fshift==True). 
         
-        :param position: Positions of agents.
-        :type position: np.ndarray
-        :param parameters: Parameters for the influence function.
-        :type parameters: np.ndarray
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+        Parameters
+        ----------
+        position : np.ndarray
+            Positions of agents.
+        parameters : np.ndarray
+            Parameters for the influence function.
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         og_position=self.field.agents_pos.clone()
         og_parameters=self.field.parameters.clone()
@@ -500,19 +525,23 @@ class Shell:
 
             This is an example of the three player dynamics via their positions in time`.
 
-        :param x_star: Equilibrium position.
-        :type x_star: Optional[float]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+        Parameters
+        ----------
+        x_star : Optional[float]
+            Equilibrium position.
+        title_ads : List[str]
+            Additional titles for the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save : bool
+            Whether to save the plot.
+        save_types : List[str]
+            File types to save the plot.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         if self.domain_type=='1d' or self.num_agents!=3:
             if self.infl_type=="gaussian":
@@ -555,30 +584,35 @@ class Shell:
 
             This is an example of the vector field for a three player game with only players 1 and 2 dynamics shown (player 3 is fixed)`.
 
-        :param agent_id: ID of the agent.
-        :type agent_id: int
-        :param parameter_instance: Parameters for the influence function.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param cmap: Colormap for the plot.
-        :type cmap: str
-        :param typelabels: Labels for agent types.
-        :type typelabels: List[str]
-        :param ids: IDs of agents of interest.
-        :type ids: List[int]
-        :param pos: Positions of agents.
-        :type pos: Optional[torch.Tensor]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param kwargs: Additional arguments for plotting.
+        Parameters
+        ----------
+        agent_id : int
+            ID of the agent.
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence function.
+        cmap : str
+            Colormap for the plot.
+        typelabels : List[str]
+            Labels for agent types.
+        ids : List[int]
+            IDs of agents of interest.
+        pos : Optional[torch.Tensor]
+            Positions of agents.
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
+        kwargs
+            Additional arguments for plotting.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         
         
@@ -626,19 +660,34 @@ class Shell:
         r"""
         Plot the agents' influence distributions distributions via the function :func:`calc_infl_dist` .
         
+        .. figure:: examples/dist_plot.png
+            :width: 100%
 
-        :param agent_id: ID of the agent.
-        :type agent_id: int
-        :param parameter_instance: Parameters for the influence function.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param cmap: Colormap for the plot.
-        :type cmap: str
-        :param typelabels: Labels for agent types.
-        :type typelabels: List[str]
-        :param kwargs: Additional arguments for plotting.
+            Example 1D influence kernels for each agent.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        .. figure:: examples/dist_plot_2d.png
+            :width: 100%
+
+            Example 2D influence distribution for a single agent.
+        
+
+        Parameters
+        ----------
+        agent_id : int
+            ID of the agent.
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence function.
+        cmap : str
+            Colormap for the plot.
+        typelabels : List[str]
+            Labels for agent types.
+        kwargs
+            Additional arguments for plotting.
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         self.calc_infl_dist(parameter_instance=parameter_instance,pos=self.agents_pos)
 
@@ -685,34 +734,42 @@ class Shell:
         and labels it with :math:`\alpha`, representing the separation distance between peaks.
         The peak positions are calculated as :math:`0.5 - \alpha/2` and :math:`0.5 + \alpha/2`.
         
-        :param alpha: The separation parameter for bimodal distributions. If provided, a dashed line 
-                      will be drawn between the peaks at positions (0.5 - alpha/2) and (0.5 + alpha/2).
-        :type alpha: float, optional
-        :param show_alpha_line: Whether to show the alpha annotation line between peaks.
-        :type show_alpha_line: bool
-        :param title: Title for the plot.
-        :type title: str
-        :param fig_size: Figure size as (width, height).
-        :type fig_size: Tuple
-        :param line_width: Width of the distribution line.
-        :type line_width: float
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param paper_figure: Configuration for paper figure saving.
-        :type paper_figure: dict
-        :param font: Font configuration dictionary.
-        :type font: dict
-        :param y_padding: Multiplier for y-axis upper limit to add space for labels.
-        :type y_padding: float
+        .. figure:: examples/resource_distribution.png
+            :width: 100%
+
+            Example bimodal resource distribution with an :math:`\alpha` annotation.
         
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Parameters
+        ----------
+        alpha : float, optional
+            The separation parameter for bimodal distributions. If provided, a dashed line will be drawn between the peaks at positions (0.5 - alpha/2) and (0.5 + alpha/2).
+        show_alpha_line : bool
+            Whether to show the alpha annotation line between peaks.
+        title : str
+            Title for the plot.
+        fig_size : Tuple
+            Figure size as (width, height).
+        line_width : float
+            Width of the distribution line.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
+        paper_figure : dict
+            Configuration for paper figure saving.
+        font : dict
+            Font configuration dictionary.
+        y_padding : float
+            Multiplier for y-axis upper limit to add space for labels.
         
-        Example:
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
+        
+        Examples
         --------
         .. code-block:: python
         
@@ -767,38 +824,44 @@ class Shell:
         ** In one dimension**
 
         .. figure:: examples/dist_pos_1d.png
-            :scale: 75 %
+            :width: 100%
+            :alt: 1D influence distribution and agent positions
 
-            This is a 3 player influence distribution and position plot for a 1d domain`.
+            This is a 3 player influence distribution and position plot for a 1d domain.
 
         **For a simplex**
 
         
         .. figure:: examples/dist_pos.png
-            :scale: 75 %
+            :width: 100%
+            :alt: Simplex influence distribution and agent positions
 
-            This is a 2 player influence distribution and position plot for a simplex domain`.
+            This is a 2 player influence distribution and position plot for a simplex domain.
 
 
-        :param parameter_instance: Parameters for the influence function.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param typelabels: Labels for agent types.
-        :type typelabels: List[str]
-        :param cmap1: Colormap for the plot.
-        :type cmap1: str
-        :param cmap2: Colormap for the plot.
-        :type cmap2: str
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence function.
+        typelabels : List[str]
+            Labels for agent types.
+        cmap1 : str
+            Colormap for the plot.
+        cmap2 : str
+            Colormap for the plot.
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
 
         NUM_COLORS = self.num_agents+1
@@ -844,28 +907,33 @@ class Shell:
         **Simplex example** 
 
         .. figure:: examples/timelapse.gif
-            :scale: 75 %
+            :width: 100%
+            :alt: Simplex influence distribution and positions timelapse
 
-            This is a 3 player influence distribution and position plot gif for a simplex domain`.
+            This is a 3 player influence distribution and position plot gif for a simplex domain.
 
 
-        :param max_frames: Maximum number of frames for the gif.
-        :type max_frames: int
-        :param output_filename: Name of the output GIF file.
-        :type output_filename: str
-        :param optimize_memory: Whether to use memory optimization techniques.
-        :type optimize_memory: bool
-        :param dpi: DPI for the frames (lower = faster, higher = better quality).
-        :type dpi: int
-        :param fps: Frames per second for the GIF.
-        :type fps: int
-        :param quality: GIF compression quality (1-10, lower = smaller file).
-        :type quality: int
-        :param verbose: Whether to print progress information.
-        :type verbose: bool
+        Parameters
+        ----------
+        max_frames : int
+            Maximum number of frames for the gif.
+        output_filename : str
+            Name of the output GIF file.
+        optimize_memory : bool
+            Whether to use memory optimization techniques.
+        dpi : int
+            DPI for the frames (lower = faster, higher = better quality).
+        fps : int
+            Frames per second for the GIF.
+        quality : int
+            GIF compression quality (1-10, lower = smaller file).
+        verbose : bool
+            Whether to print progress information.
 
-        :return: The generated gif figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated gif figure.
         """
         import io
         from PIL import Image
@@ -914,7 +982,7 @@ class Shell:
             
             try:
                 with imageio.get_writer(output_filename, mode='I', fps=fps, 
-                                      quantizer='nq', palettesize=256) as writer:
+                                      quantizer='nq', palettesize=256, loop=0) as writer:
                     
                     for i, time_step in enumerate(times):
                         # Update positions
@@ -995,7 +1063,7 @@ class Shell:
                 if verbose:
                     print("Writing GIF...")
                 with imageio.get_writer(output_filename, mode='I', fps=fps,
-                                      quantizer='nq', palettesize=256) as writer:
+                                      quantizer='nq', palettesize=256, loop=0) as writer:
                     for filename in filenames:
                         image = imageio.imread(filename)
                         writer.append_data(image)
@@ -1039,29 +1107,41 @@ class Shell:
         Only available for 1D domains with exactly 3 agents, as it visualizes the 3-dimensional
         trajectory space where each axis represents one agent's position.
         
-        :param x_star: Equilibrium position (computed from resource distribution if not provided).
-        :type x_star: Optional[float]
-        :param title_ads: Additional title text components.
-        :type title_ads: List[str]
-        :param save: Whether to save the figure to file.
-        :type save: bool
-        :param name_ads: Additional filename components for saving.
-        :type name_ads: List[str]
-        :param fontL: Font configuration dictionary for left (3D) panel.
-        :type fontL: dict
-        :param fontR: Font configuration dictionary for right (position) panel.
-        :type fontR: dict
-        :param fontmain: Font configuration dictionary for main title.
-        :type fontmain: dict
-        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
-        :type paper_figure: dict
+        .. figure:: examples/three_agent_pos_3A1d.png
+            :width: 100%
+
+            Side-by-side 3D position path and time-series trajectories for three agents.
         
-        :return: Combined matplotlib figure with both visualizations.
-        :rtype: matplotlib.figure.Figure
+        Parameters
+        ----------
+        x_star : Optional[float]
+            Equilibrium position (computed from resource distribution if not provided).
+        title_ads : List[str]
+            Additional title text components.
+        save : bool
+            Whether to save the figure to file.
+        name_ads : List[str]
+            Additional filename components for saving.
+        fontL : dict
+            Font configuration dictionary for left (3D) panel.
+        fontR : dict
+            Font configuration dictionary for right (position) panel.
+        fontmain : dict
+            Font configuration dictionary for main title.
+        save_types : List[str]
+            File formats for saving (e.g., ['.png', '.svg']).
+        paper_figure : dict
+            Paper figure configuration with 'paper', 'section', 'figure_id' keys.
         
-        :raises ValueError: If domain_type is not '1d' or num_agents is not 3.
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Combined matplotlib figure with both visualizations.
+        
+        Raises
+        ------
+        ValueError
+            If domain_type is not '1d' or num_agents is not 3.
         """
         
         if self.domain_type=='1d':
@@ -1086,21 +1166,15 @@ class Shell:
         trajectories from different initial positions. It handles state setup, execution, and
         result packaging for multiprocessing.
         
-        :param args: Tuple containing (point, color, shell_obj, time_steps) where:
-            - point: Starting position tensor for agents
-            - color: Color code for visualization
-            - shell_obj: Shell instance for gradient ascent computation
-            - time_steps: Maximum iterations for gradient ascent
-        :type args: Tuple[torch.Tensor, str, Shell, int]
+        Parameters
+        ----------
+        args : Tuple[torch.Tensor, str, Shell, int]
+            Tuple containing (point, color, shell_obj, time_steps) where: - point: Starting position tensor for agents - color: Color code for visualization - shell_obj: Shell instance for gradient ascent computation - time_steps: Maximum iterations for gradient ascent
         
-        :return: Dictionary with trajectory information containing:
-            - 'path': Numpy array of position history
-            - 'color': Color code for this path
-            - 'converged': Boolean indicating convergence
-            - 'start': Starting position
-            - 'end': Final position
-            Returns None if processing fails.
-        :rtype: Optional[dict]
+        Returns
+        -------
+        Optional[dict]
+            Dictionary with trajectory information containing: - 'path': Numpy array of position history - 'color': Color code for this path - 'converged': Boolean indicating convergence - 'start': Starting position - 'end': Final position Returns None if processing fails.
         """
         point, color, shell_obj, time_steps = args
         try:
@@ -1158,11 +1232,15 @@ class Shell:
         starting point to verify that the core optimization loop is working correctly.
         Useful for debugging and validation.
         
-        :param point: Starting position for agents (defaults to [0.3, 0.5, 0.7] if None).
-        :type point: Optional[torch.Tensor]
+        Parameters
+        ----------
+        point : Optional[torch.Tensor]
+            Starting position for agents (defaults to [0.3, 0.5, 0.7] if None).
         
-        :return: True if gradient ascent successfully generated a path, False otherwise.
-        :rtype: bool
+        Returns
+        -------
+        bool
+            True if gradient ascent successfully generated a path, False otherwise.
         """
         if point is None:
             point = torch.tensor([0.3, 0.5, 0.7])
@@ -1214,33 +1292,42 @@ class Shell:
         main diagonal (x=y=z line) to better visualize symmetric and asymmetric equilibria.
         Paths are color-coded by the ordering of initial agent positions.
         
-        :param resolution: Number of test points per dimension (total points = resolution^3).
-        :type resolution: int
-        :param time_steps: Maximum gradient ascent iterations per trajectory.
-        :type time_steps: int
-        :param show_planes: Whether to display equality planes (x=y, y=z, x=z) for reference.
-        :type show_planes: bool
-        :param figsize: Figure dimensions in inches (width, height).
-        :type figsize: Tuple[int, int]
-        :param seed: Random seed for reproducibility of starting points.
-        :type seed: int
-        :param include_boundaries: Whether to include boundary points in the analysis.
-        :type include_boundaries: bool
-        :param elev: Elevation viewing angle in degrees (lower values look more downward).
-        :type elev: int
-        :param azim: Azimuth viewing angle in degrees (rotation around vertical axis).
-        :type azim: int
-        :param num_workers: Number of parallel worker processes.
-        :type num_workers: int
-        :param use_parallel: Whether to use parallel processing for trajectory computation.
-        :type use_parallel: bool
-        :param only_results: If True, return only the results dictionary without creating plot.
-        :type only_results: bool
-        :param verbose: Whether to print detailed progress information.
-        :type verbose: bool
+        .. figure:: examples/threed_fixed_diagonal_view.png
+            :width: 100%
+
+            Diagonal-view 3D trajectories from multiple initial conditions.
         
-        :return: Tuple of (matplotlib figure, list of trajectory result dictionaries).
-        :rtype: Tuple[matplotlib.figure.Figure, List[dict]]
+        Parameters
+        ----------
+        resolution : int
+            Number of test points per dimension (total points = resolution^3).
+        time_steps : int
+            Maximum gradient ascent iterations per trajectory.
+        show_planes : bool
+            Whether to display equality planes (x=y, y=z, x=z) for reference.
+        figsize : Tuple[int, int]
+            Figure dimensions in inches (width, height).
+        seed : int
+            Random seed for reproducibility of starting points.
+        include_boundaries : bool
+            Whether to include boundary points in the analysis.
+        elev : int
+            Elevation viewing angle in degrees (lower values look more downward).
+        azim : int
+            Azimuth viewing angle in degrees (rotation around vertical axis).
+        num_workers : int
+            Number of parallel worker processes.
+        use_parallel : bool
+            Whether to use parallel processing for trajectory computation.
+        only_results : bool
+            If True, return only the results dictionary without creating plot.
+        verbose : bool
+            Whether to print detailed progress information.
+        
+        Returns
+        -------
+        Tuple[matplotlib.figure.Figure, List[dict]]
+            Tuple of (matplotlib figure, list of trajectory result dictionaries).
         """
         # Set random seed for reproducibility
         torch.manual_seed(seed)
@@ -1616,7 +1703,12 @@ class Shell:
         r"""
         Create a 3D diagonal view GIF showing gradient ascent traces over varying reach parameters.
         Similar to dist_pos_gif but for 3D visualization. Works by varying the reach parameters
-        and creating frames of :func:`plot_3d_fixed_diagonal_view` .
+        and creating frames of :func:`threed_fixed_diagonal_view` .
+        
+        .. figure:: examples/threed_fixed_diagonal_view.gif
+            :width: 100%
+
+            Animated diagonal-view trajectories as the reach parameter varies.
         
         **Optimized Performance Features:**
         - Direct memory writing without intermediate files
@@ -1624,47 +1716,51 @@ class Shell:
         - Optimized frame sampling
         - Configurable quality vs speed trade-offs
         
-        :param max_frames: Maximum number of frames for the gif.
-        :type max_frames: int
-        :param output_filename: Name of the output GIF file.
-        :type output_filename: str
-        :param resolution: Resolution for point sampling in 3D plot.
-        :type resolution: int
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param show_planes: Whether to show equality planes in 3D plot.
-        :type show_planes: bool
-        :param figsize: Figure size for each frame.
-        :type figsize: tuple
-        :param seed: Random seed for reproducibility.
-        :type seed: int
-        :param include_boundaries: Whether to include boundary points in 3D plot.
-        :type include_boundaries: bool
-        :param elev: Elevation angle for 3D view.
-        :type elev: int
-        :param azim: Azimuth angle for 3D view.
-        :type azim: int
-        :param num_workers: Number of parallel workers for 3D processing.
-        :type num_workers: int
-        :param use_parallel: Whether to use parallel processing for 3D plots.
-        :type use_parallel: bool
-        :param reach_start: Starting reach parameter value.
-        :type reach_start: float
-        :param reach_end: Ending reach parameter value.
-        :type reach_end: float
-        :param optimize_memory: Whether to use memory optimization techniques.
-        :type optimize_memory: bool
-        :param dpi: DPI for the frames (lower = faster, higher = better quality).
-        :type dpi: int
-        :param fps: Frames per second for the GIF.
-        :type fps: int
-        :param quality: GIF compression quality (1-10, lower = smaller file).
-        :type quality: int
-        :param verbose: Whether to print progress information.
-        :type verbose: bool
+        Parameters
+        ----------
+        max_frames : int
+            Maximum number of frames for the gif.
+        output_filename : str
+            Name of the output GIF file.
+        resolution : int
+            Resolution for point sampling in 3D plot.
+        time_steps : int
+            Number of gradient ascent steps.
+        show_planes : bool
+            Whether to show equality planes in 3D plot.
+        figsize : tuple
+            Figure size for each frame.
+        seed : int
+            Random seed for reproducibility.
+        include_boundaries : bool
+            Whether to include boundary points in 3D plot.
+        elev : int
+            Elevation angle for 3D view.
+        azim : int
+            Azimuth angle for 3D view.
+        num_workers : int
+            Number of parallel workers for 3D processing.
+        use_parallel : bool
+            Whether to use parallel processing for 3D plots.
+        reach_start : float
+            Starting reach parameter value.
+        reach_end : float
+            Ending reach parameter value.
+        optimize_memory : bool
+            Whether to use memory optimization techniques.
+        dpi : int
+            DPI for the frames (lower = faster, higher = better quality).
+        fps : int
+            Frames per second for the GIF.
+        quality : int
+            GIF compression quality (1-10, lower = smaller file).
+        verbose : bool
+            Whether to print progress information.
 
-        :return: The final frame figure for display.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The final frame figure for display.
         """
         import io
         from PIL import Image
@@ -1686,11 +1782,12 @@ class Shell:
         if max_frames == 1:
             og_parameters = self.field.parameters.clone()
             self.field.parameters = reach_parameters[0]
-            final_fig = self.plot_3d_fixed_diagonal_view(
+            _tmp = self.threed_fixed_diagonal_view(
                 resolution=resolution, time_steps=time_steps, show_planes=show_planes,
                 figsize=figsize, seed=seed, include_boundaries=include_boundaries,
                 elev=elev, azim=azim, num_workers=num_workers, use_parallel=use_parallel
             )
+            final_fig = _tmp[0] if isinstance(_tmp, tuple) else _tmp
             self.field.parameters = og_parameters
             return final_fig
         
@@ -1733,21 +1830,23 @@ class Shell:
                         
                         # Suppress matplotlib output when not in verbose mode
                         if verbose:
-                            fig = self.plot_3d_fixed_diagonal_view(
+                            _tmp = self.threed_fixed_diagonal_view(
                                 resolution=resolution, time_steps=time_steps, 
                                 show_planes=show_planes, figsize=figsize, seed=seed,
                                 include_boundaries=include_boundaries, elev=elev, azim=azim,
                                 num_workers=num_workers, use_parallel=use_parallel
                             )
+                            fig = _tmp[0] if isinstance(_tmp, tuple) else _tmp
                         else:
                             # Redirect stdout/stderr to suppress matplotlib figure output
                             with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                                fig = self.plot_3d_fixed_diagonal_view(
+                                _tmp = self.threed_fixed_diagonal_view(
                                     resolution=resolution, time_steps=time_steps,
                                     show_planes=show_planes, figsize=figsize, seed=seed,
                                     include_boundaries=include_boundaries, elev=elev, azim=azim,
                                     num_workers=num_workers, use_parallel=use_parallel
                                 )
+                                fig = _tmp[0] if isinstance(_tmp, tuple) else _tmp
                         
                         fig.set_dpi(dpi)
                         
@@ -1792,12 +1891,13 @@ class Shell:
                     self.field.parameters = reach_parameters[param_idx]
                     
                     # Create plot
-                    fig = self.plot_3d_fixed_diagonal_view(
+                    _tmp = self.threed_fixed_diagonal_view(
                         resolution=resolution, time_steps=time_steps,
                         show_planes=show_planes, figsize=figsize, seed=seed,
                         include_boundaries=include_boundaries, elev=elev, azim=azim,
                         num_workers=num_workers, use_parallel=use_parallel
                     )
+                    fig = _tmp[0] if isinstance(_tmp, tuple) else _tmp
                     
                     # Save to temporary file
                     filename = os.path.join(temp_dir, f'frame_{i:04d}.png')
@@ -1828,11 +1928,12 @@ class Shell:
         
         # Return the final frame for display
         self.field.parameters = reach_parameters[-1]
-        final_fig = self.plot_3d_fixed_diagonal_view(
+        _tmp = self.threed_fixed_diagonal_view(
             resolution=resolution, time_steps=time_steps, show_planes=show_planes,
             figsize=figsize, seed=seed, include_boundaries=include_boundaries,
             elev=elev, azim=azim, num_workers=num_workers, use_parallel=use_parallel
         )
+        final_fig = _tmp[0] if isinstance(_tmp, tuple) else _tmp
         self.field.parameters = og_parameters
         
         return final_fig
@@ -1847,22 +1948,34 @@ class Shell:
         """
         Creates an interactive 3D plot of gradient ascent paths from multiple starting points,
         with paths color-coded based on the initial position's quadrant.
+
+        The docs embed is a live Plotly figure (zoom / pan / hover). It is generated into
+        ``docs/_static/plotly/`` and isolated from the Sphinx theme via an iframe.
+
+        .. plotly-iframe:: plotly/threed_gradient_ascent_paths_interactive.html
+           :width: 100%
+           :height: 560px
+           :title: Interactive 3D gradient ascent paths
         
-        :param resolution: Resolution of the cube grid (points per dimension).
-        :type resolution: int
-        :param time_steps: Maximum number of steps for gradient ascent.
-        :type time_steps: int
-        :param start_color: Color of the starting points.
-        :type start_color: str
-        :param end_color: Color of the ending points (for converged paths).
-        :type end_color: str
-        :param title: Plot title.
-        :type title: str
-        :param show_planes: Whether to show the equality planes (x=y, y=z, z=x).
-        :type show_planes: bool
+        Parameters
+        ----------
+        resolution : int
+            Resolution of the cube grid (points per dimension).
+        time_steps : int
+            Maximum number of steps for gradient ascent.
+        start_color : str
+            Color of the starting points.
+        end_color : str
+            Color of the ending points (for converged paths).
+        title : str
+            Plot title.
+        show_planes : bool
+            Whether to show the equality planes (x=y, y=z, z=x).
             
-        :return: Interactive 3D plot.
-        :rtype: plotly.graph_objects.Figure
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            Interactive 3D plot.
         """
         # Function to generate a 3D unit cube grid
         def unit_cube_3d(resolution=10):
@@ -2131,43 +2244,43 @@ class Shell:
             First-order bifurcation plot for 5 players using symmetric Gaussian influence kernels.
                 
 
-        :param infl_type: Type of influence kernel ('gaussian', 'beta', etc.).
-        :type infl_type: str
-        :param alpha_st: Starting value of the resource parameter range.
-        :type alpha_st: float
-        :param alpha_end: Ending value of the resource parameter range.
-        :type alpha_end: float
-        :param processed_data: Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
-        :type processed_data: Optional[dict]
-        :param alpha_values: Array of alpha (parameter) values corresponding to equilibria.
-        :type alpha_values: Optional[np.ndarray]
-        :param cutoff_index: Index to truncate the data (useful for focusing on specific parameter ranges).
-        :type cutoff_index: Optional[int]
-        :param title_ads: Additional text to append to plot title.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot to file.
-        :type save: bool
-        :param name_ads: Additional text for saved filename.
-        :type name_ads: List[str]
-        :param font: Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 
-                     'legend_size', 'table_size', 'label_size', 'font_family'.
-        :type font: Dict
-        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
-                            'section' (str), 'figure_id' (str).
-        :type paper_figure: dict
+        Parameters
+        ----------
+        processed_data : dict
+            Pre-processed bifurcation data with 'unstable_flip', 'stable_flip', and optionally 'cycles_end'.
+        alpha_st : float
+            Starting value of the resource parameter range.
+        alpha_end : float
+            Ending value of the resource parameter range.
+        alpha_values : Optional[np.ndarray]
+            Array of alpha (parameter) values corresponding to equilibria.
+        cutoff_index : Optional[int]
+            Index to truncate the data (useful for focusing on specific parameter ranges).
+        title_ads : List[str]
+            Additional text to append to plot title.
+        save : bool
+            Whether to save the plot to file.
+        name_ads : List[str]
+            Additional text for saved filename.
+        font : Dict
+            Font configuration dictionary with keys: 'default_size', 'cbar_size', 'title_size', 'legend_size', 'table_size', 'label_size', 'font_family'.
+        save_types : List[str]
+            List of file formats for saving (e.g., ['.png', '.svg']).
+        paper_figure : dict
+            Configuration for paper figure saving with keys: 'paper' (bool), 'section' (str), 'figure_id' (str).
 
-        :return: The generated matplotlib figure object.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated matplotlib figure object.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
         
             fig = vis.first_order_bifurcation_plot(
-                infl_type='gaussian',
+                processed_data=processed,
                 alpha_st=0.0,
                 alpha_end=1.0,
                 save=True,
@@ -2402,65 +2515,69 @@ class Shell:
 
             This is a 3 player positions bifurcation plot for a simplex.
 
-        :param matrix: Pre-computed matrix of final positions (optional, will compute if None).
-        :type matrix: Optional[Dict]
-        :param reach_start: Starting value of reach parameter.
-        :type reach_start: float
-        :param reach_end: Ending value of reach parameter.
-        :type reach_end: float
-        :param reach_num_points: Number of points in the reach parameter range.
-        :type reach_num_points: int
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param initial_pos: Initial positions of agents.
-        :type initial_pos: Union[List[float], np.ndarray]
-        :param current_alpha: Current alpha value.
-        :type current_alpha: float
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: Optional[float]
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
-        :param refinements: Refinement level for plotting.
-        :type refinements: int
-        :param plot_type: Type of plot ('heat', 'trajectory', etc.).
-        :type plot_type: str
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param return_matrix: Whether to return the final position matrix.
-        :type return_matrix: bool
-        :param parallel_configs: Configuration dictionary for parallel processing with keys 'parallel', 'max_workers', 'batch_size'.
-        :type parallel_configs: Optional[Dict[str, Union[bool, int]]]
-        :param cmaps: Color map configuration dictionary.
-        :type cmaps: dict
-        :param font: Font configuration dictionary.
-        :type font: dict
-        :param cbar_config: Colorbar configuration dictionary.
-        :type cbar_config: dict
-        :param paper_figure: Paper figure configuration dictionary.
-        :type paper_figure: dict
-        :param show_pred: Whether to show predictions.
-        :type show_pred: bool
-        :param envelope: Whether to use envelope method.
-        :type envelope: bool
-        :param optional_vline: Optional vertical lines to add to plot.
-        :type optional_vline: Optional[List[float]]
-        :param verbose: Whether to print verbose output.
-        :type verbose: bool
-        :param complete: Whether to compute complete bifurcation envelope.
-        :type complete: bool
-        :param learning_rate: Learning rate schedule.
-        :type learning_rate: Optional[List]
-        :param percentage: Percentage threshold for envelope method.
-        :type percentage: Optional[float]
+        Parameters
+        ----------
+        matrix : Optional[Dict]
+            Pre-computed matrix of final positions (optional, will compute if None).
+        reach_start : float
+            Starting value of reach parameter.
+        reach_end : float
+            Ending value of reach parameter.
+        reach_num_points : int
+            Number of points in the reach parameter range.
+        time_steps : int
+            Number of gradient ascent steps.
+        initial_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        current_alpha : float
+            Current alpha value.
+        tolerance : Optional[float]
+            Tolerance for convergence.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to tolerate deviations.
+        refinements : int
+            Refinement level for plotting.
+        plot_type : str
+            Type of plot ('heat', 'trajectory', etc.).
+        title_ads : List[str]
+            Additional titles for the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save : bool
+            Whether to save the plot.
+        save_types : List[str]
+            File types to save the plot.
+        return_matrix : bool
+            Whether to return the final position matrix.
+        parallel_configs : Optional[Dict[str, Union[bool, int]]]
+            Configuration dictionary for parallel processing with keys 'parallel', 'max_workers', 'batch_size'.
+        cmaps : dict
+            Color map configuration dictionary.
+        font : dict
+            Font configuration dictionary.
+        cbar_config : dict
+            Colorbar configuration dictionary.
+        paper_figure : dict
+            Paper figure configuration dictionary.
+        show_pred : bool
+            Whether to show predictions.
+        envelope : bool
+            Whether to use envelope method.
+        optional_vline : Optional[List[float]]
+            Optional vertical lines to add to plot.
+        verbose : bool
+            Whether to print verbose output.
+        complete : bool
+            Whether to compute complete bifurcation envelope.
+        learning_rate : Optional[List]
+            Learning rate schedule.
+        percentage : Optional[float]
+            Percentage threshold for envelope method.
 
-        :return: The generated plot figure or final position matrix.
-        :rtype: Union[torch.Tensor, matplotlib.figure.Figure]
+        Returns
+        -------
+        Union[torch.Tensor, matplotlib.figure.Figure]
+            The generated plot figure or final position matrix.
         """
         og_iterations=self.time_steps
         og_pos=self.agents_pos.clone()
@@ -2656,41 +2773,45 @@ class Shell:
            
         
 
-        :param reach_parameter: Reach parameter value.
-        :type reach_parameter: float
-        :param time_steps: Number of gradient ascent steps.
-        :type time_steps: int
-        :param initial_pos: Initial positions of agents.
-        :type initial_pos: Union[List[float], np.ndarray]
-        :param current_alpha: Current alpha value.
-        :type current_alpha: float
-        :param tolerance: Tolerance for convergence.
-        :type tolerance: Optional[float]
-        :param tolerated_agents: Number of agents allowed to tolerate deviations.
-        :type tolerated_agents: Optional[int]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param return_pos: Whether to return the final positions.
-        :type return_pos: bool
-        :param parallel: Whether to use parallel processing.
-        :type parallel: bool
-        :param max_workers: Maximum number of parallel workers (defaults to CPU count).
-        :type max_workers: Optional[int]
-        :param batch_size: Batch size for processing (auto-calculated if None).
-        :type batch_size: Optional[int]
-        :param paper_figure: Paper figure configuration dictionary.
-        :type paper_figure: dict
-        :param font: Font configuration dictionary.
-        :type font: dict
+        Parameters
+        ----------
+        reach_parameter : float
+            Reach parameter value.
+        time_steps : int
+            Number of gradient ascent steps.
+        initial_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        current_alpha : float
+            Current alpha value.
+        tolerance : Optional[float]
+            Tolerance for convergence.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to tolerate deviations.
+        title_ads : List[str]
+            Additional titles for the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save : bool
+            Whether to save the plot.
+        save_types : List[str]
+            File types to save the plot.
+        return_pos : bool
+            Whether to return the final positions.
+        parallel : bool
+            Whether to use parallel processing.
+        max_workers : Optional[int]
+            Maximum number of parallel workers (defaults to CPU count).
+        batch_size : Optional[int]
+            Batch size for processing (auto-calculated if None).
+        paper_figure : dict
+            Paper figure configuration dictionary.
+        font : dict
+            Font configuration dictionary.
 
-        :return: The generated plot figure or final positions.
-        :rtype: Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]
+        Returns
+        -------
+        Union[matplotlib.figure.Figure, Tuple[matplotlib.figure.Figure, np.ndarray]]
+            The generated plot figure or final positions.
         """
         og_iterations=self.time_steps
         og_pos=self.agents_pos.clone()
@@ -2758,51 +2879,60 @@ class Shell:
         - For '2d' domains: Uses rectangular histogram binning
         - For 'simplex' domains: Converts barycentric to Cartesian and uses triangular binning with clustering
         
-        :param pos_matrix: Position matrix. If None, uses self.field.pos_matrix.
-        :type pos_matrix: Union[torch.Tensor, np.ndarray, None]
-        :param bins: Number of bins in each dimension.
-        :type bins: int
-        :param distance_threshold: Distance threshold for clustering nearby agents (simplex only).
-        :type distance_threshold: float
-        :param cmap: Colormap name.
-        :type cmap: str
-        :param font: Font configuration dictionary.
-        :type font: dict
-        :param figsize: Figure size as (width, height).
-        :type figsize: tuple
-        :param xlabel: Label for x-axis.
-        :type xlabel: str
-        :param ylabel: Label for y-axis.
-        :type ylabel: str
-        :param zlabel: Label for z-axis.
-        :type zlabel: str
-        :param axis_return: If True, return axes object; if False, return figure object.
-        :type axis_return: bool
-        :param edgecolor: Color of outlines around bars.
-        :type edgecolor: Optional[str]
-        :param linewidth: Width of bar edge lines.
-        :type linewidth: float
-        :param alpha: Bar transparency.
-        :type alpha: float
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
-        :param paper_figure: Dictionary for paper figure naming.
-        :type paper_figure: dict
-        :param id: Identifier for file naming.
-        :type id: int
-        :param cap_z_axis: If True, cap the z-axis maximum at num_agents.
-        :type cap_z_axis: bool
-        :param integer_ticks: If True, only show integer ticks on the z-axis.
-        :type integer_ticks: bool
+        .. figure:: examples/agent_density_3d.png
+            :width: 100%
+
+            Example agent-density histogram on the simplex.
         
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Parameters
+        ----------
+        pos_matrix : Union[torch.Tensor, np.ndarray, None]
+            Position matrix. If None, uses self.field.pos_matrix.
+        bins : int
+            Number of bins in each dimension.
+        distance_threshold : float
+            Distance threshold for clustering nearby agents (simplex only).
+        cmap : str
+            Colormap name.
+        font : dict
+            Font configuration dictionary.
+        figsize : tuple
+            Figure size as (width, height).
+        xlabel : str
+            Label for x-axis.
+        ylabel : str
+            Label for y-axis.
+        zlabel : str
+            Label for z-axis.
+        axis_return : bool
+            If True, return axes object; if False, return figure object.
+        edgecolor : Optional[str]
+            Color of outlines around bars.
+        linewidth : float
+            Width of bar edge lines.
+        alpha : float
+            Bar transparency.
+        title_ads : List[str]
+            Additional titles for the plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional names for saved files.
+        save_types : List[str]
+            File types to save the plot.
+        paper_figure : dict
+            Dictionary for paper figure naming.
+        id : int
+            Identifier for file naming.
+        cap_z_axis : bool
+            If True, cap the z-axis maximum at num_agents.
+        integer_ticks : bool
+            If True, only show integer ticks on the z-axis.
+        
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         if pos_matrix is None:
             pos_matrix = self.field.pos_matrix
@@ -2868,9 +2998,16 @@ class Shell:
         """
         Convert barycentric coordinates to 2D Cartesian coordinates.
         
-        :param bary_coords: Barycentric coordinates of shape (N, 3)
-        :param corners: Triangle vertices of shape (3, 2). Default is standard simplex.
-        :return: Cartesian coordinates of shape (N, 2)
+        Parameters
+        ----------
+        bary_coords
+            Barycentric coordinates of shape (N, 3)
+        corners
+            Triangle vertices of shape (3, 2). Default is standard simplex.
+
+        Returns
+        -------
+        Cartesian coordinates of shape (N, 2)
         """
         if corners is None:
             corners = np.array([[0.0, 0.0], [1.0, 0.0], [0.5, np.sqrt(3)/2]])
@@ -2886,9 +3023,16 @@ class Shell:
         """
         Cluster nearby agents and return cluster centers with counts.
         
-        :param positions: Agent positions of shape (N, 2)
-        :param distance_threshold: Maximum distance for agents to be in same cluster
-        :return: (cluster_centers, cluster_counts)
+        Parameters
+        ----------
+        positions
+            Agent positions of shape (N, 2)
+        distance_threshold
+            Maximum distance for agents to be in same cluster
+
+        Returns
+        -------
+        (cluster_centers, cluster_counts)
         """
         if len(positions) <= 1:
             return positions, np.array([len(positions)])
@@ -2934,47 +3078,32 @@ class Shell:
         This method generates comparative visualization showing how equilibrium positions change with parameter variation
         for both gradient-based adaptive dynamics and reinforcement learning methods.
         
-        :param parameters_AD: Configuration dictionary for adaptive dynamics bifurcation with keys:
-            - 'reach_start': Starting reach parameter value
-            - 'reach_end': Ending reach parameter value
-            - 'reach_num_points': Number of parameter points
-            - 'time_steps': Gradient ascent iterations
-            - 'tolerance': Convergence tolerance
-            - 'tolerated_agents': Number of agents for convergence check
-            - 'plot_type': Type of bifurcation plot
-            - 'refinements': Plot refinement level
-            - 'title_ads': Additional title strings
-            - 'cmaps': Color map configuration
-            - 'cbar_config': Colorbar configuration
-            - 'parallel_configs': Parallel processing settings
-            - 'font': Font configuration
-        :type parameters_AD: dict
-        :param parameters_MARL: Configuration dictionary for MARL bifurcation with keys:
-            - 'step_size': Step size for RL environment
-            - 'resource': Resource distribution type
-            - 'reach_start': Starting reach parameter
-            - 'reach_end': Ending reach parameter
-            - 'reach_parameters': Array of reach parameter values
-            - 'refinements': Plot refinement level
-            - 'plot_type': Type of bifurcation plot
-            - 'infl_type': Influence kernel type
-            - 'title_ads': Additional title strings
-            - 'font': Font configuration
-            - 'cbar_config': Colorbar configuration
-        :type parameters_MARL: dict
-        :param fontmain: Main font configuration for combined plot.
-        :type fontmain: dict
-        :param save: Whether to save the plot.
-        :type save: bool
-        :param name_ads: Additional filename components for saving.
-        :type name_ads: List[str]
-        :param save_types: File formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Paper figure configuration with 'paper', 'section', 'figure_id' keys.
-        :type paper_figure: dict
+        .. figure:: examples/bifurcation_ad_marl.png
+            :width: 100%
+
+            Side-by-side AD vs MARL bifurcation comparison for five agents.
         
-        :return: Combined matplotlib figure with AD and MARL bifurcation plots.
-        :rtype: matplotlib.figure.Figure
+        Parameters
+        ----------
+        parameters_AD : dict
+            Configuration dictionary for adaptive dynamics bifurcation with keys: - 'reach_start': Starting reach parameter value - 'reach_end': Ending reach parameter value - 'reach_num_points': Number of parameter points - 'time_steps': Gradient ascent iterations - 'tolerance': Convergence tolerance - 'tolerated_agents': Number of agents for convergence check - 'plot_type': Type of bifurcation plot - 'refinements': Plot refinement level - 'title_ads': Additional title strings - 'cmaps': Color map configuration - 'cbar_config': Colorbar configuration - 'parallel_configs': Parallel processing settings - 'font': Font configuration
+        parameters_MARL : dict
+            Configuration dictionary for MARL bifurcation with keys: - 'step_size': Step size for RL environment - 'resource': Resource distribution type - 'reach_start': Starting reach parameter - 'reach_end': Ending reach parameter - 'reach_parameters': Array of reach parameter values - 'refinements': Plot refinement level - 'plot_type': Type of bifurcation plot - 'infl_type': Influence kernel type - 'title_ads': Additional title strings - 'font': Font configuration - 'cbar_config': Colorbar configuration
+        fontmain : dict
+            Main font configuration for combined plot.
+        save : bool
+            Whether to save the plot.
+        name_ads : List[str]
+            Additional filename components for saving.
+        save_types : List[str]
+            File formats for saving (e.g., ['.png', '.svg']).
+        paper_figure : dict
+            Paper figure configuration with 'paper', 'section', 'figure_id' keys.
+        
+        Returns
+        -------
+        matplotlib.figure.Figure
+            Combined matplotlib figure with AD and MARL bifurcation plots.
         """
 
 
@@ -3129,29 +3258,33 @@ class Shell:
         Generate and plot a heatmap of equilibrium positions in a 1D influence game.
         This method visualizes the equilibrium positions of agents in a 1D influence game
         as a heatmap, with optional stability analysis overlay.
-        :param unique_results: Unique equilibrium results to plot.
-        :type unique_results: np.ndarray
-        :param num_agents: Number of agents in the game.
-        :type num_agents: int
-        :param stability_analysis: Optional stability analysis data.
-        :type stability_analysis: Optional[dict]
-        :param title_ads: Additional text to append to plot title.
-        :type title_ads: List[str]
-        :param save: Whether to save the plot to file.
-        :type save: bool
-        :param name_ads: Additional text for saved filename.
-        :type name_ads: List[str]
-        :param font: Font configuration dictionary with keys
-                        'default_size', 'cbar_size', 'title_size', 
-                        'legend_size', 'table_size', 'label_size', 'font_family'.
-        :type font: Dict
-        :param save_types: List of file formats for saving (e.g., ['.png', '.svg']).
-        :type save_types: List[str]
-        :param paper_figure: Configuration for paper figure saving with keys: 'paper' (bool), 
-                            'section' (str), 'figure_id' (str).
-        :type paper_figure: dict
-        :return: The generated matplotlib figure object.
-        :rtype: matplotlib.figure.Figure
+
+        .. figure:: examples/equilibrium_heatmap.png
+            :width: 100%
+
+            Example equilibrium heatmap from a Newton grid search.
+
+        Parameters
+        ----------
+        newton_search_data : dict | list | np.ndarray
+            Equilibrium search results used to build the heatmap.
+        title_ads : List[str]
+            Additional text to append to plot title.
+        save : bool
+            Whether to save the plot to file.
+        name_ads : List[str]
+            Additional text for saved filename.
+        font : Dict
+            Font configuration dictionary with keys 'default_size', 'cbar_size', 'title_size', 'legend_size', 'table_size', 'label_size', 'font_family'.
+        save_types : List[str]
+            List of file formats for saving (e.g., ['.png', '.svg']).
+        paper_figure : dict
+            Configuration for paper figure saving with keys: 'paper' (bool), 'section' (str), 'figure_id' (str).
+
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated matplotlib figure object.
         """
         if self.domain_type!='1d':
             raise ValueError("This function is only implemented for 1D influence games.")
@@ -3204,8 +3337,13 @@ class Shell:
         """
         Create a vertical tree plot with a main rectangle and left/right branches based on bifurcation changes.
         
-        Parameters:
-        -----------
+        .. figure:: examples/bifurcation_tree.png
+            :width: 100%
+
+            Example reward-annotated bifurcation tree for a six-player game.
+        
+        Parameters
+        ----------
         main_matrix : dict
             Main bifurcation matrix containing 'max', 'min', etc.
         left_matrices : list of dict
@@ -3238,8 +3376,8 @@ class Shell:
             'rect' for rectangle display (colored rectangles with legends)
             'tree' for tree display (text labels at branch points)
         
-        Returns:
-        --------
+        Returns
+        -------
         fig, ax : matplotlib figure and axes
         """
         if self.domain_type!='1d':
@@ -3347,6 +3485,14 @@ class Shell:
                               aspect: float = 1,
                               save_types: List[str] = ['.png', '.svg'],
                               paper_figure: dict= {'paper':False,'section':'3_2_6','figure_id':'reward_groups_stacked'}):
+        """
+        Plot stacked reward groups across agents for a selected bifurcation slice.
+
+        .. figure:: examples/reward_groups_stacked.png
+            :width: 100%
+
+            Stacked reward groups at a fixed reach for a five-player bifurcation.
+        """
        
         if self.domain_type!='1d':
             raise ValueError("This function is only implemented for 1D influence games.")
@@ -3402,8 +3548,8 @@ class Shell:
     def node_to_images(self,main,left_matrices, right_matrices,reach_parameters,reach_start,reach_end,key_tolerance=2,box_width=0.05,space=None,title_ads: List[str] = [],font = {'default_size': 24, 'cbar_size': 12, 'title_size': 64, 'legend_size': 12,'font_family': 'sans-serif','label_size':24},hide_text: bool = False,max_reward: Optional[float] = None,show_column_labels: bool = True):
         """process all matrices and create images for each node
         
-        Parameters:
-        -----------
+        Parameters
+        ----------
         main : dict
             Main bifurcation matrix
         left_matrices : list
@@ -3528,7 +3674,7 @@ class Shell:
                         og_learning_rate=self.learning_rate
                         self.learning_rate=[1/100000,1/10000,500]
                         self.time_steps=1000
-                        agents_pos=exp_params['agent_pos'].clone()
+                        agents_pos=torch.as_tensor(exp_params['agent_pos'], dtype=torch.float32).clone()
                         self.agents_pos=agents_pos.clone()
                         self.parameters=params.clone()
                         self.setup_adaptive_env()
@@ -3634,7 +3780,7 @@ class Shell:
                         #speicific params
                         self.learning_rate=[1/100000,1/10000,500]
                         self.time_steps=1000
-                        agents_pos=exp_params['agent_pos'].clone()
+                        agents_pos=torch.as_tensor(exp_params['agent_pos'], dtype=torch.float32).clone()
                         self.agents_pos=agents_pos.clone()
                         self.parameters=params
                         #plot generation
@@ -3725,13 +3871,17 @@ class Shell:
         """
         Calculate the influence distribution for agents via thier influence kernels by interacting with the class :func:`InflGame.adaptive.grad_func_env` .
 
-        :param pos: Positions of agents.
-        :type pos: torch.Tensor
-        :param parameter_instance: Parameters for the influence function.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
+        Parameters
+        ----------
+        pos : torch.Tensor
+            Positions of agents.
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence function.
 
-        :return: The influence distribution.
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            The influence distribution.
         """
         infl_dist=0
         if self.domain_type=='simplex':
@@ -3768,17 +3918,21 @@ class Shell:
         """
         Calculate the direction and strength of gradients for agents via interacting with :func:`InflGame.adaptive.grad_func_env` .
 
-        :param parameter_instance: Parameters for the influence function.
-        :type parameter_instance: Union[List[float], np.ndarray, torch.Tensor]
-        :param agent_id: ID of the agent.
-        :type agent_id: int
-        :param ids: IDs of agents of interest.
-        :type ids: List[int]
-        :param pos: Positions of agents.
-        :type pos: Optional[torch.Tensor]
+        Parameters
+        ----------
+        parameter_instance : Union[List[float], np.ndarray, torch.Tensor]
+            Parameters for the influence function.
+        agent_id : int
+            ID of the agent.
+        ids : List[int]
+            IDs of agents of interest.
+        pos : Optional[torch.Tensor]
+            Positions of agents.
 
-        :return: The calculated gradients.
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            The calculated gradients.
         """
         
         if self.domain_type=='simplex':
@@ -3824,24 +3978,28 @@ class Shell:
         The symmetric Nash equilibrium position is computed based on the resource distribution,
         and stability is assessed by examining the sign of the maximum real eigenvalue of the Jacobian.
         
-        :param agent_parameter_instance: Parameters for the influence function (e.g., sigma for Gaussian).
-        :type agent_parameter_instance: Union[List[float], np.ndarray]
-        :param resource_distribution_type: Type of resource distribution ('gauss_mix_2m', 'uniform', etc.).
-        :type resource_distribution_type: str
-        :param resource_parameters: Parameters defining the resource distribution for each test point.
-        :type resource_parameters: Union[List[float], np.ndarray]
-        :param resource_entropy: Whether to calculate and return entropy of resource distributions.
-        :type resource_entropy: bool
-        :param infl_entropy: Whether to calculate and return entropy of influence distributions.
-        :type infl_entropy: bool
+        Parameters
+        ----------
+        agent_parameter_instance : Union[List[float], np.ndarray]
+            Parameters for the influence function (e.g., sigma for Gaussian).
+        resource_distribution_type : str
+            Type of resource distribution ('gauss_mix_2m', 'uniform', etc.).
+        resource_parameters : Union[List[float], np.ndarray]
+            Parameters defining the resource distribution for each test point.
+        resource_entropy : bool
+            Whether to calculate and return entropy of resource distributions.
+        infl_entropy : bool
+            Whether to calculate and return entropy of influence distributions.
 
-        :return: Tuple containing:
-            - List of critical parameter values (one per resource configuration)
-            - List of resource entropies (empty if resource_entropy=False)
-            - List of influence entropies (empty if infl_entropy=False)
-        :rtype: Tuple[List[torch.Tensor], List[float], List[float]]
+        Returns
+        -------
+        Tuple[List[torch.Tensor], List[float], List[float]]
+            Tuple containing: - List of critical parameter values (one per resource configuration) - List of resource entropies (empty if resource_entropy=False) - List of influence entropies (empty if infl_entropy=False)
         
-        :raises ValueError: If influence type is not 'gaussian' or 'multi_gaussian'.
+        Raises
+        ------
+        ValueError
+            If influence type is not 'gaussian' or 'multi_gaussian'.
         """
         og_pos=self.agents_pos.clone()
         parameter_star_list=[]
@@ -3877,15 +4035,19 @@ class Shell:
         """
         Identify parameter values where eigenvalue real parts are close to zero.
         
-        :param test_eval: Tensor of eigenvalues [n_params, n_agents].
-        :type test_eval: torch.Tensor
-        :param parameters_list: Tensor of parameter values [n_params, n_agents].
-        :type parameters_list: torch.Tensor
-        :param threshold: Maximum absolute value to consider "close to zero".
-        :type threshold: float
+        Parameters
+        ----------
+        test_eval : torch.Tensor
+            Tensor of eigenvalues [n_params, n_agents].
+        parameters_list : torch.Tensor
+            Tensor of parameter values [n_params, n_agents].
+        threshold : float
+            Maximum absolute value to consider "close to zero".
             
-        :return: Tuple of (parameter indices, parameter values, real parts) near zero crossings.
-        :rtype: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        Returns
+        -------
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+            Tuple of (parameter indices, parameter values, real parts) near zero crossings.
         """
         # Extract real parts from eigenvalues
         real_parts = test_eval.real
@@ -3903,15 +4065,19 @@ class Shell:
         """
         Perform detailed analysis of zero crossings in the refined parameter space.
         
-        :param refined_parameters: Tensor of refined parameter values.
-        :type refined_parameters: torch.Tensor
-        :param refined_eval: Tensor of eigenvalues at refined parameters.
-        :type refined_eval: torch.Tensor
-        :param x_star: Theoretical critical point (if available).
-        :type x_star: Optional[torch.Tensor]
+        Parameters
+        ----------
+        refined_parameters : torch.Tensor
+            Tensor of refined parameter values.
+        refined_eval : torch.Tensor
+            Tensor of eigenvalues at refined parameters.
+        x_star : Optional[torch.Tensor]
+            Theoretical critical point (if available).
         
-        :return: Dictionary of analysis results and figure handles.
-        :rtype: dict
+        Returns
+        -------
+        dict
+            Dictionary of analysis results and figure handles.
         """
         # Extract parameter values and real/imaginary parts
         param_indices = refined_parameters[:, 0]
@@ -4028,15 +4194,19 @@ class Shell:
         """
         Perform high-resolution analysis near the theoretical critical point x*.
         
-        :param x_star: Theoretical critical point.
-        :type x_star: torch.Tensor
-        :param padding: Range to examine on either side of x*.
-        :type padding: float
-        :param num_points: Number of parameter points to examine.
-        :type num_points: int
+        Parameters
+        ----------
+        x_star : torch.Tensor
+            Theoretical critical point.
+        padding : float
+            Range to examine on either side of x*.
+        num_points : int
+            Number of parameter points to examine.
             
-        :return: Analysis results focused on the critical point.
-        :rtype: dict
+        Returns
+        -------
+        dict
+            Analysis results focused on the critical point.
         """
         # Create parameter range centered on x*
         x_star_val = x_star.item()
@@ -4201,17 +4371,21 @@ class Shell:
         """
         Complete workflow to find, refine, and analyze eigenvalue zero crossings.
         
-        :param test_eval: Tensor of eigenvalues.
-        :type test_eval: torch.Tensor
-        :param parameters_list: Tensor of parameter values.
-        :type parameters_list: torch.Tensor
-        :param x_star: Theoretical critical point (if available).
-        :type x_star: Optional[torch.Tensor]
-        :param threshold: Maximum absolute value to consider "close to zero".
-        :type threshold: float
+        Parameters
+        ----------
+        test_eval : torch.Tensor
+            Tensor of eigenvalues.
+        parameters_list : torch.Tensor
+            Tensor of parameter values.
+        x_star : Optional[torch.Tensor]
+            Theoretical critical point (if available).
+        threshold : float
+            Maximum absolute value to consider "close to zero".
             
-        :return: Analysis results dictionary.
-        :rtype: Optional[dict]
+        Returns
+        -------
+        Optional[dict]
+            Analysis results dictionary.
         """
         # Use the imported function from stability_analysis
         zero_indices, zero_params, real_parts = self.find_zero_crossings(test_eval, parameters_list, threshold)
@@ -4343,33 +4517,37 @@ class Shell:
             This is a first order bifurcations plot for 5 players using symmetric Gaussian influence kernels.
              
 
-        :param agent_parameter_instance: Parameters for the influence function.
-        :type agent_parameter_instance: Union[List[float], np.ndarray]
-        :param resource_distribution_type: Type of resource distribution.
-        :type resource_distribution_type: str
-        :param resource_entropy: Whether to calculate resource entropy.
-        :type resource_entropy: bool
-        :param infl_entropy: Whether to calculate influence entropy.
-        :type infl_entropy: bool
-        :param alpha_current: Current alpha value.
-        :type alpha_current: float
-        :param alpha_st: Starting value of alpha.
-        :type alpha_st: float
-        :param alpha_end: Ending value of alpha.
-        :type alpha_end: float
-        :param varying_parameter_type: Type of varying parameter (e.g., 'mean').
-        :type varying_parameter_type: str
-        :param fixed_parameters_lst: List of fixed parameters.
-        :type fixed_parameters_lst: Optional[List[float]]
-        :param name_ads: Additional names for saved files.
-        :type name_ads: List[str]
-        :param title_ads: Additional titles for the plot.
-        :type title_ads: List[str]
-        :param save_types: File types to save the plot.
-        :type save_types: List[str]
+        Parameters
+        ----------
+        agent_parameter_instance : Union[List[float], np.ndarray]
+            Parameters for the influence function.
+        resource_distribution_type : str
+            Type of resource distribution.
+        resource_entropy : bool
+            Whether to calculate resource entropy.
+        infl_entropy : bool
+            Whether to calculate influence entropy.
+        alpha_current : float
+            Current alpha value.
+        alpha_st : float
+            Starting value of alpha.
+        alpha_end : float
+            Ending value of alpha.
+        varying_parameter_type : str
+            Type of varying parameter (e.g., 'mean').
+        fixed_parameters_lst : Optional[List[float]]
+            List of fixed parameters.
+        name_ads : List[str]
+            Additional names for saved files.
+        title_ads : List[str]
+            Additional titles for the plot.
+        save_types : List[str]
+            File types to save the plot.
 
-        :return: The generated plot figure.
-        :rtype: matplotlib.figure.Figure
+        Returns
+        -------
+        matplotlib.figure.Figure
+            The generated plot figure.
         """
         resource_parameters,alpha=general.resource_parameter_setup(resource_distribution_type=resource_distribution_type,varying_parameter_type=varying_parameter_type,alpha_st=alpha_st, alpha_end=alpha_end, fixed_parameters_lst=fixed_parameters_lst)
         y=self.jacobian_stability_fast(agent_parameter_instance=agent_parameter_instance,resource_distribution_type=resource_distribution_type,resource_parameters=resource_parameters,resource_entropy=resource_entropy,infl_entropy=infl_entropy)[0]
@@ -4429,6 +4607,11 @@ class Shell:
         Generate the standardized combined bifurcation and equilibrium analysis figure.
 
         Delegates to :func:`InflGame.domains.one_d.one_plots.generate_combined_bifurcation_figure`.
+
+        .. figure:: examples/combined_figure.png
+            :width: 100%
+
+            Combined first-order bifurcation diagram with regional equilibrium panels.
 
         Parameters
         ----------

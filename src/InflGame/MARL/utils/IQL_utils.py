@@ -17,14 +17,14 @@ The module supports:
 
 Dependencies:
 -------------
-- `InflGame.utils
+- InflGame.utils
 
 Usage:
 ------
 The functions in this module can be used to preprocess Q-tables, generate policies, and dynamically adjust parameters 
 for MARL algorithms.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -49,7 +49,6 @@ Example:
     }
     epsilon = adjusted_epsilon(configs, num_agents=2, episode=10, episodes=100)
     print(f"Adjusted epsilon: {epsilon}")
-
 """
 import InflGame.utils.general as general
 import torch 
@@ -72,16 +71,20 @@ def Q_table_to_tensor(Q_table):
     Converts a Q-table (nested dictionary) into a tensor representation.
 
     .. math::
-    Q_{torch}[i,j,k] = Q_{dict}[p_i,s_i, a_j]
+        Q_{torch}[i,j,k] = Q_{dict}[p_i,s_i, a_j]
 
     where:
-        -:math:`Q(s_i, a_j, a_k)` is the Q-value for state :math:`s_i`, actions :math:`a_j` , and :math:`p_i` the :math:`i`-th player.
+        - :math:`Q(s_i, a_j, a_k)` is the Q-value for state :math:`s_i`, actions :math:`a_j` , and :math:`p_i` the :math:`i`-th player.
 
-    :param dict Q_table: Nested dictionary representing the Q-table.
-        Expected structure: Q_table[agent][state][action] = value.
-        Agents may be strings (e.g. 'player0') or integers.
-    :return: Tensor representation of the Q-table.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    Q_table : dict
+        Nested dictionary representing the Q-table. Expected structure: Q_table[agent][state][action] = value. Agents may be strings (e.g. 'player0') or integers.
+
+    Returns
+    -------
+    torch.Tensor
+        Tensor representation of the Q-table.
     """
     agent_keys = sorted(Q_table.keys(), key=_agent_sort_key)
     Q_matrix = []
@@ -128,11 +131,19 @@ def Q_tensor_to_policy(q_tensor: torch.Tensor,
         
 
 
-    :param torch.Tensor q_tensor: Q-tensor for all players.
-    :param float temperature: Temperature parameter for softmax.
-    :param int agent_id: ID of the player for which to compute the policy.
-    :return: Policy tensor for the specified player.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    q_tensor : torch.Tensor
+        Q-tensor for all players.
+    temperature : float
+        Temperature parameter for softmax.
+    agent_id : int
+        ID of the player for which to compute the policy.
+
+    Returns
+    -------
+    torch.Tensor
+        Policy tensor for the specified player.
     """
     q_tensor_exp=torch.exp(q_tensor[agent_id]/temperature)
     policy=torch.div(q_tensor_exp.T,torch.sum(q_tensor_exp,1)).T
@@ -153,12 +164,21 @@ def adjusted_epsilon(configs, num_agents, episode, episodes):
             - :math:`\epsilon = \epsilon_{\text{min}} + \frac{1}{2} (\epsilon_{\text{max}} - \epsilon_{\text{min}}) (1 + \cos(\frac{\pi \cdot \text{episode}}{\text{episodes}}))`
         
 
-    :param dict configs: Configuration dictionary containing epsilon adjustment parameters.
-    :param int num_agents: Number of players in the game.
-    :param int episode: Current episode number.
-    :param int episodes: Total number of episodes.
-    :return: Adjusted epsilon value.
-    :rtype: float
+    Parameters
+    ----------
+    configs : dict
+        Configuration dictionary containing epsilon adjustment parameters.
+    num_agents : int
+        Number of players in the game.
+    episode : int
+        Current episode number.
+    episodes : int
+        Total number of episodes.
+
+    Returns
+    -------
+    float
+        Adjusted epsilon value.
     """
     type=configs['TYPE']
     if type=='fixed':
@@ -187,11 +207,19 @@ def adjusted_temperature(configs, observation, observation_space_size):
     Adjusts the temperature value based on the specified configuration and observation.
 
     
-    :param dict configs: Configuration dictionary containing temperature adjustment parameters.
-    :param int observation: Current observation value.
-    :param int observation_space_size: Size of the observation space.
-    :return: Adjusted temperature value.
-    :rtype: float
+    Parameters
+    ----------
+    configs : dict
+        Configuration dictionary containing temperature adjustment parameters.
+    observation : int
+        Current observation value.
+    observation_space_size : int
+        Size of the observation space.
+
+    Returns
+    -------
+    float
+        Adjusted temperature value.
     """
     TYPE=configs['TYPE']
     if TYPE=="fixed":
@@ -221,14 +249,19 @@ def adjusted_episodes(configs: dict,
     """
     Adjusts the number of episodes based on the specified configuration and epoch progress.
 
-    :param dict configs: Configuration dictionary containing episode adjustment parameters TYPE, episode_max, episode_min.
-        TYPE (str): schedule type
-        episodes_min (int): minimum number of episodes
-        episodes_max (optional,int):maximum number of episodes
-    :param int epoch: Current epoch number.
-    :param int epochs: Total number of epochs.
-    :return: Adjusted number of episodes.
-    :rtype: int
+    Parameters
+    ----------
+    configs : dict
+        Configuration dictionary containing episode adjustment parameters TYPE, episode_max, episode_min. TYPE (str): schedule type episodes_min (int): minimum number of episodes episodes_max (optional,int):maximum number of episodes
+    epoch : int
+        Current epoch number.
+    epochs : int
+        Total number of epochs.
+
+    Returns
+    -------
+    int
+        Adjusted number of episodes.
     """
     TYPE=configs['TYPE']
     episode_max=configs['episode_max']
@@ -245,10 +278,17 @@ def q_tables_to_q_tensors(num_runs: int,
     """
     Converts multiple Q-tables into a stacked tensor representation.
 
-    :param int num_runs: Number of runs (Q-tables).
-    :param dict q_tables: Dictionary containing Q-tables for each run.
-    :return: Stacked tensor representation of all Q-tables.
-    :rtype: torch.Tensor
+    Parameters
+    ----------
+    num_runs : int
+        Number of runs (Q-tables).
+    q_tables : dict
+        Dictionary containing Q-tables for each run.
+
+    Returns
+    -------
+    torch.Tensor
+        Stacked tensor representation of all Q-tables.
     """
     Q_tensors=[]
     for run in range(num_runs):
@@ -273,21 +313,32 @@ def cosine_annealing_distance_dependent(value_max: float,
     where:
         - :math:`v(t)` is the computed value at time :math:`t`.
         - :math:`v_{\text{max}}` is the maximum value.
-        - :math:`v_{\text{min}` is the minimum value.
+        - :math:`v_{\text{min}}` is the minimum value.
         - :math:`t_{\text{crit}}` is the critical time step.
         - :math:`d_{\text{max}}` is the maximum distance from the critical time, defaulting to half of :math:`t_{\text{max}}`.
 
     This function adjusts the value smoothly using a cosine function, depending on the distance from a critical time step.
 
 
-    :param float value_max: Maximum value.
-    :param float value_min: Minimum value.
-    :param int time: Current time step.
-    :param int time_crit: Critical time step.
-    :param int time_max: Maximum time step.
-    :param int max_distance: Maximum distance from the critical time. Defaults to half of time_max.
-    :return: Computed value based on cosine annealing.
-    :rtype: float
+    Parameters
+    ----------
+    value_max : float
+        Maximum value.
+    value_min : float
+        Minimum value.
+    time : int
+        Current time step.
+    time_crit : int
+        Critical time step.
+    time_max : int
+        Maximum time step.
+    max_distance : int
+        Maximum distance from the critical time. Defaults to half of time_max.
+
+    Returns
+    -------
+    float
+        Computed value based on cosine annealing.
     """
     time_from_crit=np.abs(time-time_crit) #distance in time from a critical time
     if max_distance==None:
@@ -309,18 +360,27 @@ def reverse_cosine_annealing(value_max: float,
     where:
         - :math:`v(t)` is the computed value at time :math:`t`.
         - :math:`v_{\text{max}}` is the maximum value.
-        - :math:`v_{\text{min}` is the minimum value.
-        - :math:`t_{\text{max}` is the maximum time step.
+        - :math:`v_{\text{min}}` is the minimum value.
+        - :math:`t_{\text{max}}` is the maximum time step.
 
 
 
 
-    :param float value_max: Maximum value.
-    :param float value_min: Minimum value.
-    :param int time: Current time step.
-    :param int time_max: Maximum time step.
-    :return: Computed value based on reverse cosine annealing.
-    :rtype: float
+    Parameters
+    ----------
+    value_max : float
+        Maximum value.
+    value_min : float
+        Minimum value.
+    time : int
+        Current time step.
+    time_max : int
+        Maximum time step.
+
+    Returns
+    -------
+    float
+        Computed value based on reverse cosine annealing.
     """
     value_between=int(value_min+value_max-int(np.around(value_min+1/2*(value_max-value_min)*(1+np.cos(time/time_max*np.pi)),decimals=0)))
     return value_between

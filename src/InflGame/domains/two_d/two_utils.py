@@ -15,7 +15,6 @@ for simulations involving agent dynamics and resource distributions.
 Usage:
 ------
 The `two_dimensional_rectangle_setup` function can be used to create a 2D rectangular grid within specified domain bounds.
-
 """
 
 
@@ -31,16 +30,17 @@ def two_dimensional_rectangle_setup(domain_bounds: np.ndarray,
     """
     Sets up a 2D rectangular grid within the specified domain bounds.
 
-    :param domain_bounds: A 2x2 array specifying the bounds of the domain. The first row corresponds to the Y-axis bounds, and the second row corresponds to the X-axis bounds.
-    :type domain_bounds: np.ndarray
-    :param domain_refinement: The number of points along each axis for the grid. Higher values result in finer grids. Default is 10.
-    :type domain_refinement: int
+    Parameters
+    ----------
+    domain_bounds : np.ndarray
+        A 2x2 array specifying the bounds of the domain. The first row corresponds to the Y-axis bounds, and the second row corresponds to the X-axis bounds.
+    domain_refinement : int
+        The number of points along each axis for the grid. Higher values result in finer grids. Default is 10.
 
-    :returns: A tuple containing:
-              - rect_X (np.ndarray): The X-coordinates of the grid points.
-              - rect_Y (np.ndarray): The Y-coordinates of the grid points.
-              - rect_positions (np.ndarray): A 2D array of shape (N, 2), where N is the total number of grid points. Each row represents the (X, Y) coordinates of a grid point.
-    :rtype: tuple
+    Returns
+    -------
+    tuple
+        A tuple containing: - rect_X (np.ndarray): The X-coordinates of the grid points. - rect_Y (np.ndarray): The Y-coordinates of the grid points. - rect_positions (np.ndarray): A 2D array of shape (N, 2), where N is the total number of grid points. Each row represents the (X, Y) coordinates of a grid point.
     """
     # Convert torch tensors to numpy if needed
     if hasattr(domain_bounds, 'numpy'):

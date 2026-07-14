@@ -33,7 +33,7 @@ Usage:
 The `influencer_env_sync` class provides a synchronized multi-agent environment for influencer games. It supports 
 custom configurations for agents, resource distributions, and influence kernels.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -69,7 +69,6 @@ Example:
     print("Observations:", observations)
     print("Rewards:", rewards)
     print("Terminated:", terminated)
-
 """
 import gymnasium as gym
 import torch
@@ -86,8 +85,8 @@ class influencer_env_sync(MultiAgentEnv):
     This environment simulates a 1D domain where agents can move left, stay, or move right synchronously.
     Rewards are calculated based on a probability matrix and resource distribution.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     - `num_agent` (int): Number of agents in the environment.
     - `initial_position` (list[float]): Initial positions of the agents.
     - `bin_points` (list[float]): Points defining bins for resource distribution.
@@ -120,21 +119,10 @@ class influencer_env_sync(MultiAgentEnv):
         r"""
         Initialize the influencer environment.
 
-        :param config: Configuration dictionary containing:
-            - **num_agents** (*int*): Number of agents in the environment.
-            - **initial_position** (*list[float]*): Initial positions of the agents in the domain.
-            - **bin_points** (*list[float]*): Points defining bins for resource distribution.
-            - **resource_distribution** (*list[float]*): Distribution of resources across bins.
-            - **step_size** (*float*): Step size for discretizing the domain.
-            - **domain_type** (*str*): Type of domain (e.g., '1d', '2d', 'simplex').
-            - **domain_bounds** (*list[float]*): Bounds of the domain (e.g., for 1D [min, max]).
-            - **infl_configs** (*dict*): Configuration for the influence kernel.
-                - **infl_type** (*str*): Type of influence kernel (e.g., 'gaussian', 'diri', 'jones', 'multi_gaussian', 'custom').
-                - **custom_infl** (*function*, optional): Custom influence kernel function (if `infl_type` is 'custom').
-            - **parameters** (*list | dict*): Additional parameters for the influence kernels.
-            - **fixed_pa** (*int*, optional): Fixed parameter required for Dirichlet influence kernels.
-            - **NUM_ITERS** (*int*): Maximum number of iterations per episode.
-            - **normalize_reward** (*bool*): Whether to normalize rewards (default: True).
+        Parameters
+        ----------
+        config
+            Configuration dictionary containing: - **num_agents** (*int*): Number of agents in the environment. - **initial_position** (*list[float]*): Initial positions of the agents in the domain. - **bin_points** (*list[float]*): Points defining bins for resource distribution. - **resource_distribution** (*list[float]*): Distribution of resources across bins. - **step_size** (*float*): Step size for discretizing the domain. - **domain_type** (*str*): Type of domain (e.g., '1d', '2d', 'simplex'). - **domain_bounds** (*list[float]*): Bounds of the domain (e.g., for 1D [min, max]). - **infl_configs** (*dict*): Configuration for the influence kernel. - **infl_type** (*str*): Type of influence kernel (e.g., 'gaussian', 'diri', 'jones', 'multi_gaussian', 'custom'). - **custom_infl** (*function*, optional): Custom influence kernel function (if `infl_type` is 'custom'). - **parameters** (*list | dict*): Additional parameters for the influence kernels. - **fixed_pa** (*int*, optional): Fixed parameter required for Dirichlet influence kernels. - **NUM_ITERS** (*int*): Maximum number of iterations per episode. - **normalize_reward** (*bool*): Whether to normalize rewards (default: True).
         """
         self.num_agent = config.get('num_agents')
         # Set agents/possible_agents BEFORE super() so MultiAgentEnv.__init__ doesn't overwrite with []
@@ -205,10 +193,15 @@ class influencer_env_sync(MultiAgentEnv):
         The probability is calculated by the function :func:`InflGame.MARL.utils.MARL_utils.prob_matrix`:
 
 
-        :param observations: Current observations of all agents.
-        :type observations: dict
-        :return: Rewards for each agent.
-        :rtype: dict
+        Parameters
+        ----------
+        observations : dict
+            Current observations of all agents.
+
+        Returns
+        -------
+        dict
+            Rewards for each agent.
         """
         for key in observations.keys():
             observations[key] = int(np.array(observations[key]).item())
@@ -235,12 +228,17 @@ class influencer_env_sync(MultiAgentEnv):
         r"""
         Reset the environment to its initial state.
 
-        :param seed: Random seed for reproducibility (optional).
-        :type seed: int, optional
-        :param options: Additional options for reset (optional).
-        :type options: dict, optional
-        :return: Initial observations and an empty info dictionary.
-        :rtype: tuple
+        Parameters
+        ----------
+        seed : int, optional
+            Random seed for reproducibility (optional).
+        options : dict, optional
+            Additional options for reset (optional).
+
+        Returns
+        -------
+        tuple
+            Initial observations and an empty info dictionary.
         """
         self.num_moves = 0
         observations_list = self.initial_position_to_observation()
@@ -252,8 +250,10 @@ class influencer_env_sync(MultiAgentEnv):
         r"""
         Convert initial positions to observations. 
 
-        :return: List of initial observations for all agents.
-        :rtype: list
+        Returns
+        -------
+        list
+            List of initial observations for all agents.
         """
         observations_list = []
         for pos in self.initial_position:
@@ -267,10 +267,15 @@ class influencer_env_sync(MultiAgentEnv):
         r"""
         Convert observations to positions in the domain.
 
-        :param observations: Current observations of all agents.
-        :type observations: dict
-        :return: List of positions corresponding to the observations.
-        :rtype: list
+        Parameters
+        ----------
+        observations : dict
+            Current observations of all agents.
+
+        Returns
+        -------
+        list
+            List of positions corresponding to the observations.
         """
         pos_list = []
         for key in observations:
@@ -289,12 +294,17 @@ class influencer_env_sync(MultiAgentEnv):
         - If the new observation is out of bounds, keep the observation unchanged.
 
 
-        :param actions: Actions taken by each agent.
-        :type actions: dict
-        :param observations: Current observations of all agents.
-        :type observations: dict
-        :return: Updated observations for all agents.
-        :rtype: dict
+        Parameters
+        ----------
+        actions : dict
+            Actions taken by each agent.
+        observations : dict
+            Current observations of all agents.
+
+        Returns
+        -------
+        dict
+            Updated observations for all agents.
         """
         if self.domain_type == '1d':
             for key in observations:
@@ -316,10 +326,15 @@ class influencer_env_sync(MultiAgentEnv):
         This method updates the environment based on the actions taken by all agents via the :func:`observation_update` method.
         It computes the rewards for each agent using the :func:`REWARD_MAP` method and checks for termination conditions.
 
-        :param action_dict: Actions taken by each agent.
-        :type action_dict: dict
-        :return: Updated observations, rewards, termination status, truncation status, and info dictionary.
-        :rtype: tuple
+        Parameters
+        ----------
+        action_dict : dict
+            Actions taken by each agent.
+
+        Returns
+        -------
+        tuple
+            Updated observations, rewards, termination status, truncation status, and info dictionary.
         """
         self.num_moves += 1
         observations = self.observation_update(actions=action_dict, observations=self.observations)

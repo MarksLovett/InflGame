@@ -31,7 +31,7 @@ New vectorized functions are available for improved performance:
 - `d_ln_f_vectorized` : Compute gradients for all agents simultaneously
 - `symmetric_nash_stability_vectorized` : Vectorized stability computation
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -90,7 +90,8 @@ def _influence_vectorized_core(
         bin_points: Bin points (K,)
         parameter_instance: Gaussian parameters (N,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Influence matrix (N, K)
     """
     # Reshape for broadcasting:
@@ -121,7 +122,8 @@ def _d_ln_f_vectorized_core(
         bin_points: Bin points (K,)
         parameter_instance: Gaussian parameters (N,)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Gradient matrix (N, K)
     """
     # Reshape for broadcasting
@@ -148,7 +150,8 @@ def _symmetric_nash_stability_core(
         resource_distribution: Resource distribution (K,)
         factor: Pre-computed factor (N-2)/(N-1)
     
-    Returns:
+    Returns
+    -------
         torch.Tensor: Stability parameter (scalar)
     """
     # Vectorized computation
@@ -228,7 +231,7 @@ def d_ln_f_vectorized(parameter_instance: Union[list, np.ndarray, torch.Tensor],
     The gradient is calculated as:
 
     .. math::
-        d_{i}(x_i,b) = -\frac{(b - x_i)}{\sigma_i^2}
+        d_{i}(x_i,b) = \frac{(b - x_i)}{\sigma_i^2}
 
     Parameters
     ----------
@@ -281,7 +284,7 @@ def symmetric_nash_stability_vectorized(num_agents: int,
     The symmetric stability parameter is given by:
 
     .. math::
-        \sigma^* = \sqrt{\frac{(N-2)}{(N-1)} \cdot \frac{\sum_{b\in \mathbb{B}} (b-x)^2 \cdot B(b)}{\sum_{b\in \mathbb{B}} B(b)}}
+        \sigma^* = \sqrt{\frac{(N-2)}{(N-1)} \cdot \frac{\sum_{k} d_{k}^{2} B_{k}}{\sum_{k} B_{k}}}
 
     Parameters
     ----------
@@ -387,7 +390,7 @@ def d_ln_f(agent_id: int,
     The gradient is calculated as:
 
     .. math::
-        d_{i}(x_i,b) = -\frac{(b - x_i)}{\sigma_i^2}
+        d_{i}(x_i,b) = \frac{(b - x_i)}{\sigma_i^2}
 
     where:
       - :math:`x_i` is the position of agent :math:`i`
@@ -431,7 +434,7 @@ def symmetric_nash_stability(num_agents: int,
     The symmetric stability parameter is given by:
 
     .. math::
-        \sigma^* = \sqrt{\frac{(N-2)}{(N-1)} \cdot \frac{\sum_{b\in \mathbb{B}} (b-x)^2 \cdot B(b)}{\sum_{b\in \mathbb{B}} B(b)}}
+        \sigma^* = \sqrt{\frac{(N-2)}{(N-1)} \cdot \frac{\sum_{k} d_{k}^{2} B_{k}}{\sum_{k} B_{k}}}
 
     where:
       - :math:`N` is the number of agents

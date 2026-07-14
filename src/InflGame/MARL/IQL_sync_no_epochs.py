@@ -39,7 +39,7 @@ Usage:
 The `IQL_sync` class provides an implementation of the IQL algorithm with synchronized updates. It supports 
 custom configurations for learning rate, discount factor, epsilon decay, and more.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -84,7 +84,6 @@ Example:
     final_q_table = iql_agent.train()
 
     print("Training completed. Final Q-table:", final_q_table)
-
 """
 import numpy as np
 import torch
@@ -100,15 +99,15 @@ class IQL_sync_no_epochs():
     r"""
     Implements Independent Q-Learning (IQL) with synchronized updates for multi-agent reinforcement learning.
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     - `configs`: Configuration dictionary containing parameters such as random seed, environment, epsilon configurations, 
       gamma, alpha, epochs, and others.
     - `Q_table`: The Q-value table for all agents.
     - `observations`: Current observations for all agents.
 
-    Methods:
-    --------
+    Notes
+    -----
     - `Q_table_initiation`: Initializes the Q-table for all agents.
     - `observation_initialized`: Resets the environment and initializes observations.
     - `action_choice`: Chooses actions for all agents using epsilon-greedy or softmax policies.
@@ -122,9 +121,10 @@ class IQL_sync_no_epochs():
         r"""
         Initializes the IQL_sync class with the given configuration.
 
-        :param config: Configuration dictionary containing parameters such as random seed, environment,
-                       epsilon configurations, gamma, alpha, epochs, and others.
-        :type config: dict
+        Parameters
+        ----------
+        config : dict
+            Configuration dictionary containing parameters such as random seed, environment, epsilon configurations, gamma, alpha, epochs, and others.
         """
         super().__init__()
         self.configs = config
@@ -177,10 +177,15 @@ class IQL_sync_no_epochs():
         If a random value is less than :math:`\epsilon`, a random action is chosen. Otherwise, the action is selected 
         based on the Q-values using either a softmax or max policy.
 
-        :param episode: The current episode number.
-        :type episode: int
-        :return: A dictionary mapping each agent to its chosen action.
-        :rtype: dict
+        Parameters
+        ----------
+        episode : int
+            The current episode number.
+
+        Returns
+        -------
+        dict
+            A dictionary mapping each agent to its chosen action.
         """
         action_dict = {}
         epsilon_f = IQL_utils.adjusted_epsilon(configs=self.epsilon_configs, num_agents=self.env.num_agents, episode=episode, episodes=self.episodes)
@@ -213,10 +218,15 @@ class IQL_sync_no_epochs():
           - :math:`P(a|s)` is the probability of taking action :math:`a` in state :math:`s`
           - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`
 
-        :param agent_id: The ID of the agent.
-        :type agent_id: int
-        :return: The chosen action.
-        :rtype: int
+        Parameters
+        ----------
+        agent_id : int
+            The ID of the agent.
+
+        Returns
+        -------
+        int
+            The chosen action.
         """
         observation = self.observations[agent_id]
         self.temperature = IQL_utils.adjusted_temperature(configs=self.configs["temperature_configs"], observation=observation, observation_space_size=self.env.observation_spaces[agent_id].n)
@@ -237,10 +247,15 @@ class IQL_sync_no_epochs():
           - :math:`a^*` is the action with the highest Q-value
           - :math:`Q(s,a)` is the Q-value for action :math:`a` in state :math:`s`
 
-        :param agent: The ID of the player.
-        :type agent: int
-        :return: The action with the highest Q-value.
-        :rtype: int
+        Parameters
+        ----------
+        agent : int
+            The ID of the player.
+
+        Returns
+        -------
+        int
+            The action with the highest Q-value.
         """
         observation = self.observations[agent]
         LEFT = 0
@@ -265,10 +280,15 @@ class IQL_sync_no_epochs():
         .. math::
             Q(s, a) \leftarrow (1 - \alpha) Q(s, a) + \alpha \left( r + \gamma \max_{a'} Q(s', a') \right)
 
-        :param episode: The current episode number.
-        :type episode: int
-        :return: The updated Q-table.
-        :rtype: dict
+        Parameters
+        ----------
+        episode : int
+            The current episode number.
+
+        Returns
+        -------
+        dict
+            The updated Q-table.
         """
         action_dict = self.action_choice(episode)
         previous_observations = self.observations.copy()
@@ -286,8 +306,10 @@ class IQL_sync_no_epochs():
 
         At the end of an all episodes the environment is reset and the observations are reinitialized randomly.
 
-        :return: The final Q-table after training.
-        :rtype: dict
+        Returns
+        -------
+        dict
+            The final Q-table after training.
         """
         if save_positions == True:
                 position_array = [MARL_utils.observation_to_position(observations=self.observations.copy(), possible_positions=self.env.possible_positions)]

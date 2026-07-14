@@ -26,7 +26,7 @@ The `newton_method` class can be used to find equilibrium positions by solving f
 using Newton's method with various step control strategies. It supports parallel grid searches for
 systematic exploration of the equilibrium landscape.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
@@ -131,48 +131,48 @@ class newton_method:
         """
         Initialize the newton_method class with configuration parameters.
 
-        :param field: Reference to an AdaptiveEnv instance containing the gradient function.
-        :type field: object
-        :param num_agents: Number of agents in the environment.
-        :type num_agents: int
-        :param agents_pos: Initial positions of agents.
-        :type agents_pos: Union[List[float], np.ndarray]
-        :param parameters: Parameters for the influence kernel (e.g., reach, variance).
-        :type parameters: torch.Tensor
-        :param resource_distribution: Distribution of resources across the domain.
-        :type resource_distribution: torch.Tensor
-        :param bin_points: Bin points defining resource allocation regions.
-        :type bin_points: Union[List[float], np.ndarray]
-        :param infl_configs: Configuration dictionary for influence kernel type and parameters.
-            - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "dirichlet", "beta", "custom").
-            - ``custom_influence`` (callable): Function for a custom influence kernel (optional).
-        :type infl_configs: Dict[str, Union[str, callable]]
-        :param learning_rate_type: Type of learning rate schedule (e.g., 'cosine').
-        :type learning_rate_type: str
-        :param learning_rate: Learning rate parameters [min_lr, max_lr, annealing_period].
-        :type learning_rate: List[float]
-        :param time_steps: Maximum number of gradient ascent iterations.
-        :type time_steps: int
-        :param fp: Whether to use fixed point analysis.
-        :type fp: Optional[int]
-        :param infl_cshift: Whether to apply constant shift to influence.
-        :type infl_cshift: bool
-        :param cshift: Constant shift value.
-        :type cshift: int
-        :param infl_fshift: Whether to apply frequency shift to influence.
-        :type infl_fshift: bool
-        :param Q: Covariance matrix parameter for multivariate Gaussian kernels.
-        :type Q: int
-        :param domain_type: Type of domain ('1d', '2d', or 'simplex').
-        :type domain_type: str
-        :param domain_bounds: Bounds of the domain.
-        :type domain_bounds: Union[List[float], torch.Tensor]
-        :param tolerance: Convergence tolerance for root finding.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents allowed to violate tolerance before convergence.
-        :type tolerated_agents: Optional[int]
-        :param ignore_zero_infl: Whether to ignore agents with zero influence.
-        :type ignore_zero_infl: bool
+        Parameters
+        ----------
+        field : object
+            Reference to an AdaptiveEnv instance containing the gradient function.
+        num_agents : int
+            Number of agents in the environment.
+        agents_pos : Union[List[float], np.ndarray]
+            Initial positions of agents.
+        parameters : torch.Tensor
+            Parameters for the influence kernel (e.g., reach, variance).
+        resource_distribution : torch.Tensor
+            Distribution of resources across the domain.
+        bin_points : Union[List[float], np.ndarray]
+            Bin points defining resource allocation regions.
+        infl_configs : Dict[str, Union[str, callable]]
+            Configuration dictionary for influence kernel type and parameters. - ``infl_type`` (str): The type of influence kernel (e.g., "gaussian", "multi_gaussian", "dirichlet", "beta", "custom"). - ``custom_influence`` (callable): Function for a custom influence kernel (optional).
+        learning_rate_type : str
+            Type of learning rate schedule (e.g., 'cosine').
+        learning_rate : List[float]
+            Learning rate parameters [min_lr, max_lr, annealing_period].
+        time_steps : int
+            Maximum number of gradient ascent iterations.
+        fp : Optional[int]
+            Whether to use fixed point analysis.
+        infl_cshift : bool
+            Whether to apply constant shift to influence.
+        cshift : int
+            Constant shift value.
+        infl_fshift : bool
+            Whether to apply frequency shift to influence.
+        Q : int
+            Covariance matrix parameter for multivariate Gaussian kernels.
+        domain_type : str
+            Type of domain ('1d', '2d', or 'simplex').
+        domain_bounds : Union[List[float], torch.Tensor]
+            Bounds of the domain.
+        tolerance : float
+            Convergence tolerance for root finding.
+        tolerated_agents : Optional[int]
+            Number of agents allowed to violate tolerance before convergence.
+        ignore_zero_infl : bool
+            Whether to ignore agents with zero influence.
         """
         validated = validation.validate_adaptive_config(
             num_agents=num_agents,
@@ -253,42 +253,42 @@ class newton_method:
         - **trust_region**: Limits step size to maximum radius, prevents overshooting
         - **adaptive**: Tries multiple step sizes, accepts one that reduces gradient norm
         
-        :param initial_guess: Initial agent positions from which to start Newton iteration.
-        :type initial_guess: torch.Tensor
-        :param tolerance: Convergence tolerance for position changes (default: instance tolerance).
-        :type tolerance: Optional[float]
-        :param max_iter: Maximum number of Newton iterations.
-        :type max_iter: int
-        :param verbose: Whether to print progress information during iteration.
-        :type verbose: bool
-        :param enforce_bounds: Whether to clamp positions to domain bounds.
-        :type enforce_bounds: bool
-        :param method: Step control method ('trust_region' or 'adaptive').
-        :type method: str
-        :param tolerated_agents: Number of agents that must satisfy convergence criteria.
-        :type tolerated_agents: Optional[int]
-        :param stagnation_window: Number of iterations to check for lack of improvement.
-        :type stagnation_window: int
-        :param stagnation_tolerance: Minimum improvement required to avoid stagnation detection.
-        :type stagnation_tolerance: float
-        :param return_detailed_history: If True, return full position/gradient history; if False, save memory.
-        :type return_detailed_history: bool
-        :param tolerance_grad: Convergence tolerance for gradient magnitude.
-        :type tolerance_grad: float
+        Parameters
+        ----------
+        initial_guess : torch.Tensor
+            Initial agent positions from which to start Newton iteration.
+        tolerance : Optional[float]
+            Convergence tolerance for position changes (default: instance tolerance).
+        max_iter : int
+            Maximum number of Newton iterations.
+        verbose : bool
+            Whether to print progress information during iteration.
+        enforce_bounds : bool
+            Whether to clamp positions to domain bounds.
+        method : str
+            Step control method ('trust_region' or 'adaptive').
+        tolerated_agents : Optional[int]
+            Number of agents that must satisfy convergence criteria.
+        stagnation_window : int
+            Number of iterations to check for lack of improvement.
+        stagnation_tolerance : float
+            Minimum improvement required to avoid stagnation detection.
+        return_detailed_history : bool
+            If True, return full position/gradient history; if False, save memory.
+        tolerance_grad : float
+            Convergence tolerance for gradient magnitude.
         
-        :return: Dictionary containing:
-                 - 'final_position': Converged position
-                 - 'converged': Whether convergence criteria were met
-                 - 'final_gradient_norm': Gradient norm at final position
-                 - 'iterations': Number of iterations performed
-                 - 'termination_reason': Why iteration stopped ('converged', 'stagnation', 'max_iterations')
-                 - 'position_matrix': (if return_detailed_history=True) Full position history
-                 - 'gradient_history': (if return_detailed_history=True) Full gradient history
-        :rtype: Dict[str, Union[torch.Tensor, bool, List]]
+        Returns
+        -------
+        Dict[str, Union[torch.Tensor, bool, List]]
+            Dictionary containing: - 'final_position': Converged position - 'converged': Whether convergence criteria were met - 'final_gradient_norm': Gradient norm at final position - 'iterations': Number of iterations performed - 'termination_reason': Why iteration stopped ('converged', 'stagnation', 'max_iterations') - 'position_matrix': (if return_detailed_history=True) Full position history - 'gradient_history': (if return_detailed_history=True) Full gradient history
         
-        :raises RuntimeError: If linear solve fails during Newton step computation.
+        Raises
+        ------
+        RuntimeError
+            If linear solve fails during Newton step computation.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -497,17 +497,21 @@ class newton_method:
         Limits the Newton step to a maximum radius to prevent overshooting and ensure
         stability, particularly when far from the solution or in poorly conditioned regions.
         
-        :param current_pos: Current agent positions.
-        :type current_pos: torch.Tensor
-        :param newton_direction: Computed Newton direction from Jacobian solve.
-        :type newton_direction: torch.Tensor
-        :param current_grad: Current gradient vector.
-        :type current_grad: torch.Tensor
-        :param max_radius: Maximum allowed step size.
-        :type max_radius: float
+        Parameters
+        ----------
+        current_pos : torch.Tensor
+            Current agent positions.
+        newton_direction : torch.Tensor
+            Computed Newton direction from Jacobian solve.
+        current_grad : torch.Tensor
+            Current gradient vector.
+        max_radius : float
+            Maximum allowed step size.
         
-        :return: New position after trust region step.
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            New position after trust region step.
         """
         step_norm = torch.norm(newton_direction).item()
         if step_norm > max_radius:
@@ -521,17 +525,21 @@ class newton_method:
         Tries multiple step sizes and selects the one that achieves gradient norm reduction.
         This ensures progress toward the solution at each iteration.
         
-        :param current_pos: Current agent positions.
-        :type current_pos: torch.Tensor
-        :param newton_direction: Computed Newton direction from Jacobian solve.
-        :type newton_direction: torch.Tensor
-        :param current_grad: Current gradient vector.
-        :type current_grad: torch.Tensor
-        :param max_step: Maximum initial step size to try.
-        :type max_step: float
+        Parameters
+        ----------
+        current_pos : torch.Tensor
+            Current agent positions.
+        newton_direction : torch.Tensor
+            Computed Newton direction from Jacobian solve.
+        current_grad : torch.Tensor
+            Current gradient vector.
+        max_step : float
+            Maximum initial step size to try.
         
-        :return: New position after adaptive step.
-        :rtype: torch.Tensor
+        Returns
+        -------
+        torch.Tensor
+            New position after adaptive step.
         """
         original_pos = self.field.agents_pos.clone()
         current_grad_norm = torch.norm(current_grad).item()
@@ -585,30 +593,32 @@ class newton_method:
         4. Collect and deduplicate converged equilibria
         5. Compute statistics on convergence behavior
         
-        :param grid_points_per_dim: Number of grid points per dimension (x, y, z).
-        :type grid_points_per_dim: int
-        :param bounds: Tuple of (min, max) bounds for grid coordinates.
-        :type bounds: Tuple[float, float]
-        :param max_workers: Number of parallel workers (defaults to CPU count).
-        :type max_workers: Optional[int]
-        :param verbose: Whether to print progress information.
-        :type verbose: bool
-        :param position_tolerance: Tolerance for considering two positions as unique.
-        :type position_tolerance: float
-        :param **newton_kwargs: Additional arguments passed to :meth:`newton_root_finder`.
+        Parameters
+        ----------
+        grid_points_per_dim : int
+            Number of grid points per dimension (x, y, z).
+        bounds : Tuple[float, float]
+            Tuple of (min, max) bounds for grid coordinates.
+        max_workers : Optional[int]
+            Number of parallel workers (defaults to CPU count).
+        verbose : bool
+            Whether to print progress information.
+        position_tolerance : float
+            Tolerance for considering two positions as unique.
+        **newton_kwargs
+            Additional arguments passed to :meth:`newton_root_finder`.
         
-        :return: Dictionary containing:
-                 - 'all_results': All Newton trial results
-                 - 'unique_final_positions': List of unique equilibria found
-                 - 'successful_results': All converged positions (including duplicates)
-                 - 'statistics': Convergence statistics (mean/std gradient norms, iterations)
-                 - 'convergence_rate': Fraction of grid points that converged
-                 - 'grid_info': Grid configuration details
-        :rtype: Dict
+        Returns
+        -------
+        Dict
+            Dictionary containing: - 'all_results': All Newton trial results - 'unique_final_positions': List of unique equilibria found - 'successful_results': All converged positions (including duplicates) - 'statistics': Convergence statistics (mean/std gradient norms, iterations) - 'convergence_rate': Fraction of grid points that converged - 'grid_info': Grid configuration details
         
-        :raises ValueError: If num_agents < 3.
+        Raises
+        ------
+        ValueError
+            If num_agents < 3.
         
-        Example:
+        Examples
         --------
         
         .. code-block:: python
@@ -829,17 +839,21 @@ class newton_method:
         This is a helper function designed for parallel execution. It wraps :meth:`newton_root_finder`
         with error handling and result formatting suitable for grid search applications.
         
-        :param trial_id: Unique identifier for this trial.
-        :type trial_id: int
-        :param initial_pos: Initial agent positions for this trial.
-        :type initial_pos: torch.Tensor
-        :param newton_kwargs: Keyword arguments to pass to newton_root_finder.
-        :type newton_kwargs: Dict
-        :param verbose_trial: Whether to print verbose output for this trial.
-        :type verbose_trial: bool
+        Parameters
+        ----------
+        trial_id : int
+            Unique identifier for this trial.
+        initial_pos : torch.Tensor
+            Initial agent positions for this trial.
+        newton_kwargs : Dict
+            Keyword arguments to pass to newton_root_finder.
+        verbose_trial : bool
+            Whether to print verbose output for this trial.
         
-        :return: Dictionary with trial results including trial_id, initial_position, and convergence info.
-        :rtype: Dict
+        Returns
+        -------
+        Dict
+            Dictionary with trial results including trial_id, initial_position, and convergence info.
         """
         try:
             # Make a copy of newton_kwargs to avoid modifying the original
@@ -885,12 +899,17 @@ class newton_method:
         
         Calls :meth:`newton_root_finder` with method='trust_region'.
         
-        :param initial_guess: Initial agent positions.
-        :type initial_guess: torch.Tensor
-        :param **kwargs: Additional arguments passed to newton_root_finder.
+        Parameters
+        ----------
+        initial_guess : torch.Tensor
+            Initial agent positions.
+        **kwargs
+            Additional arguments passed to newton_root_finder.
         
-        :return: Newton method results dictionary.
-        :rtype: Dict
+        Returns
+        -------
+        Dict
+            Newton method results dictionary.
         """
         return self.newton_root_finder(initial_guess, method='trust_region', **kwargs)
 
@@ -900,12 +919,17 @@ class newton_method:
         
         Calls :meth:`newton_root_finder` with method='adaptive'.
         
-        :param initial_guess: Initial agent positions.
-        :type initial_guess: torch.Tensor
-        :param **kwargs: Additional arguments passed to newton_root_finder.
+        Parameters
+        ----------
+        initial_guess : torch.Tensor
+            Initial agent positions.
+        **kwargs
+            Additional arguments passed to newton_root_finder.
         
-        :return: Newton method results dictionary.
-        :rtype: Dict
+        Returns
+        -------
+        Dict
+            Newton method results dictionary.
         """
         return self.newton_root_finder(initial_guess, method='adaptive', **kwargs)
 
@@ -921,19 +945,26 @@ class newton_method:
         .. warning::
            This method is a placeholder and is not yet implemented.
         
-        :param reach_parameters: Array of reach/influence parameter values to iterate over.
-        :type reach_parameters: Union[List[float], np.ndarray]
-        :param tolerance: Convergence tolerance for Newton method.
-        :type tolerance: float
-        :param tolerated_agents: Number of agents that must converge.
-        :type tolerated_agents: int
-        :param percentage: Percentage parameter (usage to be determined).
-        :type percentage: float
+        Parameters
+        ----------
+        reach_parameters : Union[List[float], np.ndarray]
+            Array of reach/influence parameter values to iterate over.
+        tolerance : float
+            Convergence tolerance for Newton method.
+        tolerated_agents : int
+            Number of agents that must converge.
+        percentage : float
+            Percentage parameter (usage to be determined).
         
-        :return: None (placeholder)
-        :rtype: None
+        Returns
+        -------
+        None
+            None (placeholder)
         
-        :raises NotImplementedError: This method is not yet implemented.
+        Raises
+        ------
+        NotImplementedError
+            This method is not yet implemented.
         """
         # Input validation
         if tolerance == None:

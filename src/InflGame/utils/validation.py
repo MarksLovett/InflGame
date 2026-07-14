@@ -25,7 +25,7 @@ The `validate_adaptive_config` function is the main entry point for validating a
 parameters before creating an `AdaptiveEnv` instance. It performs type checking, range validation,
 and compatibility checks between related parameters.
 
-Example:
+Examples
 --------
 
 .. code-block:: python
