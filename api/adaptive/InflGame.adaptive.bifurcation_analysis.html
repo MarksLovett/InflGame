@@ -1,0 +1,1168 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Bifurcation Analysis &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/math_fix.css?v=0386c563" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/adaptive/InflGame.adaptive.bifurcation_analysis';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Multi-Agent Learning (InflGame.MARL)" href="../MARL/InflGame.MARL.html" />
+    <link rel="prev" title="Monte Carlo Search" href="InflGame.adaptive.monte_search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.visualization.html">Plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.jacobian.html">Jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.newton_search.html">Newton Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.monte_search.html">Monte Carlo Search</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Bifurcation Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../kernels/InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.plot_utils.html">Plot Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.validation.html">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.smoothing.html">Smoothing</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.adaptive.html" class="nav-link">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Bifurcation Analysis</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.adaptive.bifurcation_analysis">
+<span id="bifurcation-analysis"></span><h1>Bifurcation Analysis<a class="headerlink" href="#module-InflGame.adaptive.bifurcation_analysis" title="Link to this heading">#</a></h1>
+<section id="bifurcation-analysis-module">
+<span id="module-bifurcation_analysis"></span><h2>Bifurcation Analysis Module<a class="headerlink" href="#bifurcation-analysis-module" title="Link to this heading">#</a></h2>
+<p>This module provides comprehensive bifurcation analysis tools for studying equilibrium dynamics, stability transitions,
+and parameter-dependent behaviors in adaptive environments for influencer games. It includes methods for computing
+equilibrium positions across parameter ranges, detecting bifurcation points, and analyzing stability properties.</p>
+<p>The module is designed to work with the <em class="xref py py-obj">AdaptiveEnv</em> class and provides a framework for understanding how agent
+behaviors and equilibrium configurations change as system parameters vary.</p>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.adaptive.grad_func_env</p></li>
+<li><p>InflGame.adaptive.jacobian</p></li>
+<li><p>InflGame.utils</p></li>
+<li><p>InflGame.kernels</p></li>
+<li><p>InflGame.domains</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">BifurcationEnv</em> class can be used to analyze bifurcations and equilibrium dynamics in simulations performed 
+using the <em class="xref py py-obj">AdaptiveEnv</em> class. It supports various analysis types, including equilibrium bifurcation diagrams,
+stability analysis, and multi-order bifurcation detection.</p>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">InflGame.adaptive.bifurcation_analysis</span> <span class="kn">import</span> <span class="n">BifurcationEnv</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Initialize the BifurcationEnv</span>
+<span class="n">bif_env</span> <span class="o">=</span> <span class="n">BifurcationEnv</span><span class="p">(</span>
+    <span class="n">num_agents</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">agents_pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]),</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span>
+    <span class="n">resource_distribution</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]),</span>
+    <span class="n">bin_points</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">]),</span>
+    <span class="n">infl_configs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;infl_type&#39;</span><span class="p">:</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">},</span>
+    <span class="n">learning_rate_type</span><span class="o">=</span><span class="s1">&#39;cosine_annealing&#39;</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">domain_type</span><span class="o">=</span><span class="s1">&#39;1d&#39;</span><span class="p">,</span>
+    <span class="n">domain_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Set up the adaptive environment</span>
+<span class="n">bif_env</span><span class="o">.</span><span class="n">setup_adaptive_env</span><span class="p">()</span>
+
+<span class="c1"># Compute equilibrium bifurcation diagram</span>
+<span class="n">equilibria</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">equilibrium_bifurcation_complete</span><span class="p">(</span>
+    <span class="n">reach_start</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">reach_end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">reach_num_points</span><span class="o">=</span><span class="mi">50</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.bifurcation_analysis.</span></span><span class="sig-name descname"><span class="pre">BifurcationEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'infl_type':</span> <span class="pre">'gaussian'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_annealing'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0001,</span> <span class="pre">0.01,</span> <span class="pre">15]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_fshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1d'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'na'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_refinement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_zero_infl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv" title="Link to this definition">#</a></dt>
+<dd><p>Bifurcation analysis environment for studying equilibrium dynamics and stability transitions.</p>
+<p>The BifurcationEnv class provides a comprehensive framework for analyzing bifurcation phenomena
+in adaptive dynamics across various domains (1D, 2D, and simplex). It supports computing equilibrium
+positions over parameter ranges, detecting bifurcation points of multiple orders, and analyzing
+stability properties through Jacobian analysis.</p>
+<p>This class is designed to work in conjunction with the AdaptiveEnv class and provides specialized
+methods for understanding how system behavior changes as parameters vary, including identifying
+critical parameter values where qualitative changes in dynamics occur.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.equilibrium_bifurcation_complete" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.equilibrium_bifurcation_complete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">equilibrium_bifurcation_complete</span></code></a>([...])</p></td>
+<td><p>Compute complete equilibrium bifurcation diagram over a parameter range.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach"><code class="xref py py-obj docutils literal notranslate"><span class="pre">final_pos_over_reach</span></code></a>(reach_parameters, ...)</p></td>
+<td><p>Calculate final equilibrium positions of agents over a range of reach parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach_envelope" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach_envelope"><code class="xref py py-obj docutils literal notranslate"><span class="pre">final_pos_over_reach_envelope</span></code></a>(...[, ...])</p></td>
+<td><p>Calculate the envelope of equilibrium positions over a parameter range.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_convergence_intersections" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_convergence_intersections"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_convergence_intersections</span></code></a>(reach_parameters)</p></td>
+<td><p>Find parameter values where agent positions converge across different position variants.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_second_order_bifs" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_second_order_bifs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_second_order_bifs</span></code></a>(bin_points, ...[, ...])</p></td>
+<td><p>Detect second-order (pitchfork or transcritical) bifurcation points.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_third_order_bifurcations_refined" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_third_order_bifurcations_refined"><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_third_order_bifurcations_refined</span></code></a>(...[, ...])</p></td>
+<td><p>Detect third-order (subcritical or supercritical) bifurcation points with iterative refinement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.first_order_bifurcation_plot" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.first_order_bifurcation_plot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">first_order_bifurcation_plot</span></code></a>(processed_data)</p></td>
+<td><p>Generate and plot first-order bifurcation diagram with stability analysis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.learning_rate_large_end" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.learning_rate_large_end"><code class="xref py py-obj docutils literal notranslate"><span class="pre">learning_rate_large_end</span></code></a>(resource_parameter)</p></td>
+<td><p>Determine appropriate learning rate upper bound for bifurcation analysis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.setup_adaptive_env" title="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.setup_adaptive_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_adaptive_env</span></code></a>()</p></td>
+<td><p>Set up the adaptive environment for bifurcation analysis.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.equilibrium_bifurcation_complete">
+<span class="sig-name descname"><span class="pre">equilibrium_bifurcation_complete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reach_num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">envelope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.equilibrium_bifurcation_complete" title="Link to this definition">#</a></dt>
+<dd><p>Compute complete equilibrium bifurcation diagram over a parameter range.</p>
+<p>This method generates a comprehensive bifurcation diagram by computing equilibrium positions
+across a range of reach parameter values, testing multiple initial position configurations
+to capture all stable equilibria. This is the primary method for creating bifurcation diagrams
+that visualize how equilibrium configurations change as parameters vary.</p>
+<p><strong>Key Features:</strong></p>
+<ul class="simple">
+<li><p>Proper state management with restoration after computation</p></li>
+<li><p>Memory efficient matrix clearing between computations</p></li>
+<li><p>Parameter validation and sensible defaults</p></li>
+<li><p>Support for both single and envelope (max/min) equilibria</p></li>
+<li><p>Optimized position generation for exploring initial condition space</p></li>
+<li><p>Parallel processing support for large parameter sweeps</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>reach_start</strong><span class="classifier">float</span></dt><dd><p>Starting value of reach parameter range.</p>
+</dd>
+<dt><strong>reach_end</strong><span class="classifier">float</span></dt><dd><p>Ending value of reach parameter range.</p>
+</dd>
+<dt><strong>reach_num_points</strong><span class="classifier">int</span></dt><dd><p>Number of parameter values to sample in the range.</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">int</span></dt><dd><p>Maximum iterations for gradient ascent at each parameter value.</p>
+</dd>
+<dt><strong>initial_pos</strong><span class="classifier">Union[List[float], torch.Tensor]</span></dt><dd><p>Initial agent positions (defaults to current instance positions if None).</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">Optional[float]</span></dt><dd><p>Convergence tolerance (defaults to instance tolerance if None).</p>
+</dd>
+<dt><strong>tolerated_agents</strong><span class="classifier">Optional[int]</span></dt><dd><p>Convergence agent tolerance (defaults to instance value if None).</p>
+</dd>
+<dt><strong>parallel_configs</strong><span class="classifier">Dict[str, Union[bool, int]]</span></dt><dd><p>Dictionary with parallel processing configuration: {‘parallel’: bool, ‘max_workers’: int, ‘batch_size’: int}. Defaults to {‘parallel’: True, ‘max_workers’: 4, ‘batch_size’: 2}.</p>
+</dd>
+<dt><strong>envelope</strong><span class="classifier">bool</span></dt><dd><p>Whether to compute envelope (max/min) of equilibria across initial conditions.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>Whether to print progress information during computation.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Union[torch.Tensor, List[torch.Tensor]]</dt><dd><p>For envelope=False: torch.Tensor of shape (num_variants, num_params, num_agents). For envelope=True: List of [max_matrix, min_matrix] each of shape (num_params, num_agents).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Compute standard bifurcation diagram</span>
+<span class="n">equilibria</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">equilibrium_bifurcation_complete</span><span class="p">(</span>
+    <span class="n">reach_start</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">reach_end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">reach_num_points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+    <span class="n">parallel_configs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;parallel&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;max_workers&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Compute envelope diagram</span>
+<span class="n">max_eq</span><span class="p">,</span> <span class="n">min_eq</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">equilibrium_bifurcation_complete</span><span class="p">(</span>
+    <span class="n">reach_start</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">reach_end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">reach_num_points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">envelope</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach">
+<span class="sig-name descname"><span class="pre">final_pos_over_reach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach" title="Link to this definition">#</a></dt>
+<dd><p>Calculate final equilibrium positions of agents over a range of reach parameters.</p>
+<p>This method computes the final positions of agents by running gradient ascent via
+<a class="reference internal" href="InflGame.adaptive.grad_func_env.html#InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent" title="InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent</span></code></a> for each parameter
+value in the provided range. The results form the basis for bifurcation diagrams.</p>
+<p>The method has been optimized with:</p>
+<ul class="simple">
+<li><p>Vectorized operations where possible</p></li>
+<li><p>Parallel processing support via multiprocessing</p></li>
+<li><p>Comprehensive error handling and input validation</p></li>
+<li><p>Progress logging for long-running computations</p></li>
+<li><p>Proper state preservation and restoration</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>reach_parameters</strong><span class="classifier">Union[List[float], np.ndarray]</span></dt><dd><p>Array of reach/influence parameter values to iterate over.</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Convergence tolerance for gradient ascent at each parameter value.</p>
+</dd>
+<dt><strong>tolerated_agents</strong><span class="classifier">int</span></dt><dd><p>Number of agents allowed to violate tolerance before declaring convergence.</p>
+</dd>
+<dt><strong>parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing for parameter sweep.</p>
+</dd>
+<dt><strong>max_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum number of parallel workers (defaults to CPU count if None).</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">Optional[int]</span></dt><dd><p>Batch size for parallel processing (auto-calculated if None).</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum iterations for gradient ascent (uses instance default if None).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>torch.Tensor</dt><dd><p>Matrix of final agent positions for each parameter value (shape: len(reach_parameters) x num_agents).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If input parameters are invalid (empty arrays, negative values, etc.).</p>
+</dd>
+<dt>RuntimeError</dt><dd><p>If computation fails during gradient ascent.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reach_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">equilibria</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">final_pos_over_reach</span><span class="p">(</span>
+    <span class="n">reach_parameters</span><span class="o">=</span><span class="n">reach_params</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">tolerated_agents</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach_envelope">
+<span class="sig-name descname"><span class="pre">final_pos_over_reach_envelope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach_envelope" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the envelope of equilibrium positions over a parameter range.</p>
+<p>This method explores the envelope of possible equilibria by computing both maximum and minimum
+final agent positions across multiple initial conditions for each reach parameter value. This is
+useful for identifying regions of multistability and bifurcations where multiple equilibria coexist.</p>
+<p>The method runs gradient ascent via <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent" title="InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent"><code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.AdaptiveEnv.gradient_ascent</span></code></a>
+from multiple initial positions (generated by perturbing the central position) and tracks the
+extreme positions reached. If convergence is not achieved, the method tracks extreme positions
+during the specified percentage of iterations.</p>
+<p><strong>Optimizations:</strong></p>
+<ul class="simple">
+<li><p>Parallel processing via multiprocessing</p></li>
+<li><p>Vectorized operations where possible</p></li>
+<li><p>Memory efficient computation and state management</p></li>
+<li><p>Progress tracking for long-running computations</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>reach_parameters</strong><span class="classifier">Union[List[float], np.ndarray]</span></dt><dd><p>Array of reach/influence parameter values to iterate over.</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Convergence tolerance for gradient ascent at each parameter value.</p>
+</dd>
+<dt><strong>tolerated_agents</strong><span class="classifier">int</span></dt><dd><p>Number of agents allowed to violate tolerance before declaring convergence.</p>
+</dd>
+<dt><strong>percentage</strong><span class="classifier">float</span></dt><dd><p>Percentage of trajectory to analyze (0.0-1.0, e.g., 0.5 for last 50%, 1.0 for entire trajectory). Controls which portion of gradient ascent history is examined for extreme values.</p>
+</dd>
+<dt><strong>parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing for parameter sweep.</p>
+</dd>
+<dt><strong>max_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum number of parallel workers (defaults to CPU count if None).</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">Optional[int]</span></dt><dd><p>Batch size for parallel processing (auto-calculated if None).</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum iterations for gradient ascent (uses instance default if None).</p>
+</dd>
+<dt><strong>learning_rate</strong><span class="classifier">Optional[List]</span></dt><dd><p>Custom learning rate schedule (uses instance default if None).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict[str, torch.Tensor]</dt><dd><p>Dictionary containing ‘max’ and ‘min’ matrices of extreme positions for each parameter. Each matrix has shape (len(reach_parameters) x num_agents).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If input parameters are invalid (empty arrays, invalid percentage range, etc.).</p>
+</dd>
+<dt>RuntimeError</dt><dd><p>If computation fails during gradient ascent.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">reach_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">final_pos_over_reach_envelope</span><span class="p">(</span>
+    <span class="n">reach_parameters</span><span class="o">=</span><span class="n">reach_params</span><span class="p">,</span>
+    <span class="n">tolerance</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+    <span class="n">tolerated_agents</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">percentage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">parallel</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">max_positions</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;max&#39;</span><span class="p">]</span>
+<span class="n">min_positions</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_convergence_intersections">
+<span class="sig-name descname"><span class="pre">find_convergence_intersections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reach_parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_convergence_intersections" title="Link to this definition">#</a></dt>
+<dd><p>Find parameter values where agent positions converge across different position variants.</p>
+<p>This static method analyzes a list of equilibrium position matrices (each from different
+initial conditions) to identify parameter values where the equilibria from different
+trajectories converge to the same position within a specified tolerance. These convergence
+points often indicate bifurcation boundaries or transitions between different equilibrium basins.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>matrix_list</strong><span class="classifier">List[torch.Tensor]</span></dt><dd><p>List of position matrices, each of shape (num_params, num_agents).</p>
+</dd>
+<dt><strong>reach_parameters</strong><span class="classifier">torch.Tensor</span></dt><dd><p>Array of parameter values corresponding to matrix rows.</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Distance threshold for considering positions as converged.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict[str, torch.Tensor]</dt><dd><p>Dictionary containing ‘convergence_points’ (parameter values where convergence occurs) and ‘parameter_indices’ (indices in reach_parameters array).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_second_order_bifs">
+<span class="sig-name descname"><span class="pre">find_second_order_bifs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_parameters_lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multi_modal_gaussian_distribution_1D'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_st</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varying_parameter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0001,</span> <span class="pre">0.01,</span> <span class="pre">100]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_second_order_bifs" title="Link to this definition">#</a></dt>
+<dd><p>Detect second-order (pitchfork or transcritical) bifurcation points.</p>
+<p>This method identifies parameter values where second-order bifurcations occur by analyzing
+equilibrium behavior as a resource distribution parameter varies. The method is specifically
+designed for three-player systems exhibiting 1-1-1 equilibrium patterns (each player at a
+distinct resource peak).</p>
+<p>The algorithm systematically varies a parameter (such as mean or standard deviation of resource
+distribution) and identifies critical values where equilibrium structure changes qualitatively,
+using either direct numerical methods or root-finding approaches.</p>
+<p><strong>Note:</strong> This function is currently applicable only to 1-1-1 equilibria for 3 players.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>bin_points</strong><span class="classifier">Union[List[float], np.ndarray]</span></dt><dd><p>Discretization points defining the domain grid.</p>
+</dd>
+<dt><strong>fixed_parameters_lst</strong><span class="classifier">List[List[float]]</span></dt><dd><p>Fixed parameters for resource distribution (e.g., means, standard deviations).</p>
+</dd>
+<dt><strong>agents_pos</strong><span class="classifier">Optional[Union[List[float], np.ndarray, torch.Tensor]]</span></dt><dd><p>Initial agent positions (defaults to instance positions if None).</p>
+</dd>
+<dt><strong>resource_distribution_type</strong><span class="classifier">str</span></dt><dd><p>Type of resource distribution function.</p>
+</dd>
+<dt><strong>alpha_st</strong><span class="classifier">float</span></dt><dd><p>Starting value of the varying parameter.</p>
+</dd>
+<dt><strong>alpha_end</strong><span class="classifier">float</span></dt><dd><p>Ending value of the varying parameter.</p>
+</dd>
+<dt><strong>varying_parameter_type</strong><span class="classifier">str</span></dt><dd><p>Which parameter to vary (‘mean’, ‘std’, etc.).</p>
+</dd>
+<dt><strong>learning_rate_p</strong><span class="classifier">List[float]</span></dt><dd><p>Learning rate parameters [min_lr, max_lr, annealing_period].</p>
+</dd>
+<dt><strong>parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing.</p>
+</dd>
+<dt><strong>max_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum number of parallel workers (defaults to CPU count if None).</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">Optional[int]</span></dt><dd><p>Batch size for parallel processing (auto-calculated if None).</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">int</span></dt><dd><p>Maximum iterations for gradient ascent.</p>
+</dd>
+<dt><strong>second_run</strong><span class="classifier">bool</span></dt><dd><p>Whether this is a refinement run with adjusted learning rates.</p>
+</dd>
+<dt><strong>data</strong><span class="classifier">Optional[Union[List[float], np.ndarray, torch.Tensor]]</span></dt><dd><p>Pre-computed equilibrium data to refine (used in refinement runs).</p>
+</dd>
+<dt><strong>num_points</strong><span class="classifier">int</span></dt><dd><p>Number of parameter values to sample in the search range.</p>
+</dd>
+<dt><strong>direct_method</strong><span class="classifier">bool</span></dt><dd><p>If True, uses direct gradient=0 solving with symmetric split at 0.5. If False, uses gradient ascent method to find equilibria.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict[str, List]</dt><dd><p>Dictionary containing ‘sigma_star’ (bifurcation parameter values) and ‘final_parameters’ (corresponding equilibrium parameters) lists.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">find_second_order_bifs</span><span class="p">(</span>
+    <span class="n">bin_points</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="n">fixed_parameters_lst</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]],</span>
+    <span class="n">alpha_st</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">alpha_end</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">varying_parameter_type</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+    <span class="n">num_points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">direct_method</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">bifurcation_points</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;sigma_star&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_third_order_bifurcations_refined">
+<span class="sig-name descname"><span class="pre">find_third_order_bifurcations_refined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">int_position</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_order_bif</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">guess_distance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig_edge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_refinements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varying_parameter_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_num_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fixed_parameters_lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bottom_up'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_third_order_bifurcations_refined" title="Link to this definition">#</a></dt>
+<dd><p>Detect third-order (subcritical or supercritical) bifurcation points with iterative refinement.</p>
+<p>This method identifies parameter values where higher-order bifurcations occur by analyzing
+the appearance and disappearance of equilibria as a resource distribution parameter varies.
+It uses an iterative refinement approach to precisely locate bifurcation points, building
+upon second-order bifurcation data.</p>
+<p>The refined algorithm processes multiple resource parameters in parallel and iteratively
+refines bifurcation point estimates through:</p>
+<ol class="arabic simple">
+<li><p>Starting from second-order bifurcation estimates</p></li>
+<li><p>Using gradient ascent from strategic initial positions</p></li>
+<li><p>Tracking stability changes via Jacobian analysis</p></li>
+<li><p>Iteratively refining estimates to desired precision</p></li>
+</ol>
+<p><strong>Optimizations:</strong></p>
+<ul class="simple">
+<li><p>Parallel processing using ProcessPoolExecutor</p></li>
+<li><p>Proper state management and error handling</p></li>
+<li><p>Memory efficient batch processing</p></li>
+<li><p>Comprehensive logging and progress tracking</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>int_position</strong><span class="classifier">torch.Tensor</span></dt><dd><p>Initial position for agents.</p>
+</dd>
+<dt><strong>second_order_bif</strong><span class="classifier">List[torch.Tensor]</span></dt><dd><p>Second-order bifurcation parameters for each resource parameter.</p>
+</dd>
+<dt><strong>guess_distance</strong><span class="classifier">torch.Tensor</span></dt><dd><p>Distance parameter for initial guess estimation.</p>
+</dd>
+<dt><strong>sig_edge</strong><span class="classifier">float</span></dt><dd><p>Minimum sigma value constraint (lower bound on parameter search).</p>
+</dd>
+<dt><strong>num_refinements</strong><span class="classifier">int</span></dt><dd><p>Number of iterative refinement steps to perform.</p>
+</dd>
+<dt><strong>learning_rate_p</strong><span class="classifier">List[float]</span></dt><dd><p>Learning rate parameters [min_lr, max_lr, annealing_period].</p>
+</dd>
+<dt><strong>resource_distribution_type</strong><span class="classifier">str</span></dt><dd><p>Type of resource distribution function.</p>
+</dd>
+<dt><strong>varying_parameter_type</strong><span class="classifier">str</span></dt><dd><p>Which parameter to vary (‘mean’, ‘std’, etc.).</p>
+</dd>
+<dt><strong>alpha_st</strong><span class="classifier">float</span></dt><dd><p>Starting value of the varying parameter.</p>
+</dd>
+<dt><strong>alpha_end</strong><span class="classifier">float</span></dt><dd><p>Ending value of the varying parameter.</p>
+</dd>
+<dt><strong>alpha_num_points</strong><span class="classifier">int</span></dt><dd><p>Number of points to sample in the varying parameter range.</p>
+</dd>
+<dt><strong>fixed_parameters_lst</strong><span class="classifier">List[List[float]]</span></dt><dd><p>Fixed parameters for resource distribution.</p>
+</dd>
+<dt><strong>learning_rate_type</strong><span class="classifier">str</span></dt><dd><p>Type of learning rate schedule (uses instance default if None).</p>
+</dd>
+<dt><strong>method_type</strong><span class="classifier">str</span></dt><dd><p>Search strategy (‘bottom_up’, ‘top_down’, ‘top_down_n1’, ‘bottom_up_n1’).</p>
+</dd>
+<dt><strong>parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing.</p>
+</dd>
+<dt><strong>max_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum number of parallel workers (defaults to CPU count if None).</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">Optional[int]</span></dt><dd><p>Batch size for parallel processing (auto-calculated if None).</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">int</span></dt><dd><p>Maximum iterations for gradient ascent.</p>
+</dd>
+<dt><strong>verbose</strong><span class="classifier">bool</span></dt><dd><p>Whether to print progress and diagnostic information.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>List[torch.Tensor]</dt><dd><p>List of cycle end parameters (bifurcation points) for each resource parameter.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If input parameters are invalid (negative refinements, invalid method_type, etc.).</p>
+</dd>
+<dt>RuntimeError</dt><dd><p>If computation fails during bifurcation detection.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># First find second-order bifurcations</span>
+<span class="n">second_order_data</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">find_second_order_bifs</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Then refine to find third-order bifurcations</span>
+<span class="n">third_order_bifs</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">find_third_order_bifurcations_refined</span><span class="p">(</span>
+    <span class="n">int_position</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]),</span>
+    <span class="n">second_order_bif</span><span class="o">=</span><span class="n">second_order_data</span><span class="p">[</span><span class="s1">&#39;sigma_star&#39;</span><span class="p">],</span>
+    <span class="n">guess_distance</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span>
+    <span class="n">sig_edge</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+    <span class="n">num_refinements</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+    <span class="n">learning_rate_p</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span>
+    <span class="n">resource_distribution_type</span><span class="o">=</span><span class="s2">&quot;multi_modal_gaussian_distribution_1D&quot;</span><span class="p">,</span>
+    <span class="n">varying_parameter_type</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+    <span class="n">alpha_st</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">alpha_end</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+    <span class="n">alpha_num_points</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">fixed_parameters_lst</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]],</span>
+    <span class="n">method_type</span><span class="o">=</span><span class="s1">&#39;bottom_up&#39;</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.first_order_bifurcation_plot">
+<span class="sig-name descname"><span class="pre">first_order_bifurcation_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">processed_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gaussian'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_st</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'cbar_size':</span> <span class="pre">16,</span> <span class="pre">'default_size':</span> <span class="pre">24,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'label_size':</span> <span class="pre">10,</span> <span class="pre">'legend_size':</span> <span class="pre">12,</span> <span class="pre">'table_size':</span> <span class="pre">15,</span> <span class="pre">'title_size':</span> <span class="pre">34}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'bif_diag',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'3_2_6'}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.first_order_bifurcation_plot" title="Link to this definition">#</a></dt>
+<dd><p>Generate and plot first-order bifurcation diagram with stability analysis.</p>
+<p>This method creates a visualization of first-order (saddle-node) bifurcations by computing
+equilibrium positions and their stability across a parameter range. The plot shows how
+equilibrium agent positions change as a resource parameter (alpha) varies, with stability
+indicated through <code class="xref py py-func docutils literal notranslate"><span class="pre">InflGame.adaptive.jacobian.jacobian_stability_fast</span></code>.</p>
+<p>The method supports both original format (e.g., Gaussian kernels) and processed data format
+with pre-computed stability flips, making it flexible for different analysis workflows.</p>
+<p>First-order bifurcations are characterized by the creation or annihilation of equilibrium pairs,
+typically visualized as branches that meet and disappear at critical parameter values.</p>
+<p><strong>Example Gaussian Bifurcation Diagram</strong></p>
+<figure class="align-default" id="id1">
+<a class="reference internal image-reference" href="../../_images/first_order.png"><img alt="../../_images/first_order.png" height="1560" src="../../_images/first_order.png" width="1574" />
+</a>
+<figcaption>
+<p><span class="caption-text">First-order bifurcation plot for 5 players using symmetric Gaussian influence kernels.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
+</figcaption>
+</figure>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>infl_type</strong><span class="classifier">str</span></dt><dd><p>Type of influence kernel (‘gaussian’, ‘beta’, etc.).</p>
+</dd>
+<dt><strong>alpha_st</strong><span class="classifier">float</span></dt><dd><p>Starting value of the resource parameter range.</p>
+</dd>
+<dt><strong>alpha_end</strong><span class="classifier">float</span></dt><dd><p>Ending value of the resource parameter range.</p>
+</dd>
+<dt><strong>processed_data</strong><span class="classifier">Optional[dict]</span></dt><dd><p>Pre-processed bifurcation data with ‘unstable_flip’, ‘stable_flip’, and optionally ‘cycles_end’.</p>
+</dd>
+<dt><strong>alpha_values</strong><span class="classifier">Optional[np.ndarray]</span></dt><dd><p>Array of alpha (parameter) values corresponding to equilibria.</p>
+</dd>
+<dt><strong>cutoff_index</strong><span class="classifier">Optional[int]</span></dt><dd><p>Index to truncate the data (useful for focusing on specific parameter ranges).</p>
+</dd>
+<dt><strong>title_ads</strong><span class="classifier">List[str]</span></dt><dd><p>Additional text to append to plot title.</p>
+</dd>
+<dt><strong>save</strong><span class="classifier">bool</span></dt><dd><p>Whether to save the plot to file.</p>
+</dd>
+<dt><strong>name_ads</strong><span class="classifier">List[str]</span></dt><dd><p>Additional text for saved filename.</p>
+</dd>
+<dt><strong>font</strong><span class="classifier">Dict</span></dt><dd><p>Font configuration dictionary with keys: ‘default_size’, ‘cbar_size’, ‘title_size’, ‘legend_size’, ‘table_size’, ‘label_size’, ‘font_family’.</p>
+</dd>
+<dt><strong>save_types</strong><span class="classifier">List[str]</span></dt><dd><p>List of file formats for saving (e.g., [‘.png’, ‘.svg’]).</p>
+</dd>
+<dt><strong>paper_figure</strong><span class="classifier">dict</span></dt><dd><p>Configuration for paper figure saving with keys: ‘paper’ (bool), ‘section’ (str), ‘figure_id’ (str).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated matplotlib figure object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span> <span class="o">=</span> <span class="n">bif_env</span><span class="o">.</span><span class="n">first_order_bifurcation_plot</span><span class="p">(</span>
+    <span class="n">infl_type</span><span class="o">=</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span>
+    <span class="n">alpha_st</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">alpha_end</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">name_ads</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;my_bifurcation&#39;</span><span class="p">],</span>
+    <span class="n">title_ads</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;3-Player System&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.learning_rate_large_end">
+<span class="sig-name descname"><span class="pre">learning_rate_large_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.learning_rate_large_end" title="Link to this definition">#</a></dt>
+<dd><p>Determine appropriate learning rate upper bound for bifurcation analysis.</p>
+<p>This method computes an appropriate maximum learning rate for gradient ascent based on
+the resource parameter value, with adjustments for refinement runs. The learning rate
+is scaled to ensure convergence while maintaining computational efficiency across
+different parameter regimes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>resource_parameter</strong><span class="classifier">float</span></dt><dd><p>Current value of the resource/reach parameter.</p>
+</dd>
+<dt><strong>second_run</strong><span class="classifier">bool</span></dt><dd><p>Whether this is a refinement run (uses larger learning rate if True).</p>
+</dd>
+<dt><strong>high_end</strong><span class="classifier">bool</span></dt><dd><p>Whether this is for high parameter values (further increases learning rate).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>Computed maximum learning rate value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.bifurcation_analysis.BifurcationEnv.setup_adaptive_env">
+<span class="sig-name descname"><span class="pre">setup_adaptive_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.setup_adaptive_env" title="Link to this definition">#</a></dt>
+<dd><p>Set up the adaptive environment for bifurcation analysis.</p>
+<p>This method initializes the gradient function environment with the provided parameters,
+creating an <a class="reference internal" href="InflGame.adaptive.grad_func_env.html#InflGame.adaptive.grad_func_env.AdaptiveEnv" title="InflGame.adaptive.grad_func_env.AdaptiveEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">InflGame.adaptive.grad_func_env.AdaptiveEnv</span></code></a> instance that will be
+used for equilibrium computations and bifurcation analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.adaptive.monte_search.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Monte Carlo Search</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../MARL/InflGame.MARL.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bifurcation-analysis-module">Bifurcation Analysis Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.equilibrium_bifurcation_complete"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.equilibrium_bifurcation_complete</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.final_pos_over_reach</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.final_pos_over_reach_envelope"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.final_pos_over_reach_envelope</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_convergence_intersections"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.find_convergence_intersections</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_second_order_bifs"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.find_second_order_bifs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.find_third_order_bifurcations_refined"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.find_third_order_bifurcations_refined</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.first_order_bifurcation_plot"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.first_order_bifurcation_plot</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.learning_rate_large_end"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.learning_rate_large_end</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.bifurcation_analysis.BifurcationEnv.setup_adaptive_env"><code class="docutils literal notranslate"><span class="pre">BifurcationEnv.setup_adaptive_env</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api/adaptive/InflGame.adaptive.bifurcation_analysis.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

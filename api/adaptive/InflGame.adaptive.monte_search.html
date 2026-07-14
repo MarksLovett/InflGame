@@ -1,0 +1,1082 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Monte Carlo Search &#8212; InflGame  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/math_fix.css?v=0386c563" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/adaptive/InflGame.adaptive.monte_search';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Bifurcation Analysis" href="InflGame.adaptive.bifurcation_analysis.html" />
+    <link rel="prev" title="Newton Search" href="InflGame.adaptive.newton_search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">InflGame  documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../InflGame.html">
+    InflGame package
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">User guide</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="InflGame.adaptive.html">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.grad_func_env.html">Adaptive Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.visualization.html">Plots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.jacobian.html">Jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.newton_search.html">Newton Search</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Monte Carlo Search</a></li>
+<li class="toctree-l2"><a class="reference internal" href="InflGame.adaptive.bifurcation_analysis.html">Bifurcation Analysis</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.html">Multi-Agent Learning (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.MARL</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.async_game.html">Asynchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.sync_game.html">Synchronous Influencer Game</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_async.html">Asynchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.IQL_sync.html">Synchronous IQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../MARL/InflGame.MARL.MARL_plots.html">MARL Plots</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../MARL/InflGame.MARL.utils.html">MARL Utilities (<code class="xref py py-mod docutils literal notranslate"><span class="pre">MARL.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.experiments.html">MARL experiments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.IQL_utils.html">IQL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.MARL_utils.html">General RL Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../MARL/utils/InflGame.MARL.utils.my_parse.html">RAYRL Parser</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../domains/domains.html">Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.domains</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../domains/rd/rd.html">Resource Distributions</a></li>
+
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/one_d/one_d.html">One Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.one_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/one_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/two_d/two_d.html">Two Dimensional Domains (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.two_d</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/two_d/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../domains/simplex/simplex.html">2D Simplex Domain (<code class="xref py py-mod docutils literal notranslate"><span class="pre">domains.simplex</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/plots.html">Plots</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../domains/simplex/utils.html">Utilities</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../kernels/InflGame.kernels.html">InflGame.kernels (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.kernels</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.gauss.html">Gaussian kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.jones.html">Jones’ Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.diric.html">Dirichlet Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../kernels/InflGame.kernels.MV_gauss.html">Multi-Variate Gaussian Kernel</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../utils/InflGame.utils.html">InflGame.utils (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.utils</span></code>)</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.general.html">General Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.data_management.html">Data Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.plot_utils.html">Plot Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.validation.html">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../utils/InflGame.utils.smoothing.html">Smoothing</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../InflGame.html" class="nav-link">InflGame package</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="InflGame.adaptive.html" class="nav-link">Adaptive (<code class="xref py py-mod docutils literal notranslate"><span class="pre">InflGame.adaptive</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Monte Carlo Search</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-InflGame.adaptive.monte_search">
+<span id="monte-carlo-search"></span><h1>Monte Carlo Search<a class="headerlink" href="#module-InflGame.adaptive.monte_search" title="Link to this heading">#</a></h1>
+<section id="monte-carlo-equilibrium-search-module">
+<span id="module-monte_search"></span><h2>Monte Carlo Equilibrium Search Module<a class="headerlink" href="#monte-carlo-equilibrium-search-module" title="Link to this heading">#</a></h2>
+<p>This module provides tools for searching and analyzing equilibria in adaptive game environments
+using grid search and Monte Carlo methods. It includes functionality for detecting convergence,
+identifying limit cycles, classifying equilibrium types, and visualizing the distribution of
+equilibria across the strategy space.</p>
+<p>The module is designed to work with the <em class="xref py py-obj">AdaptiveEnv</em> class and provides comprehensive analysis
+of equilibrium structures in multi-agent influencer games.</p>
+<section id="dependencies">
+<h3>Dependencies:<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>InflGame.adaptive.grad_func_env</p></li>
+<li><p>InflGame.utils</p></li>
+<li><p>NumPy</p></li>
+<li><p>PyTorch</p></li>
+<li><p>Matplotlib</p></li>
+<li><p>pandas</p></li>
+</ul>
+</section>
+<section id="usage">
+<h3>Usage:<a class="headerlink" href="#usage" title="Link to this heading">#</a></h3>
+<p>The <em class="xref py py-obj">search_env</em> class can be used to search for equilibria across the strategy space using either
+grid-based or Monte Carlo sampling. It supports parallel processing for computational efficiency
+and provides detailed classification of equilibrium types.</p>
+</section>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">InflGame.adaptive.monte_search</span> <span class="kn">import</span> <span class="n">search_env</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Initialize the search environment</span>
+<span class="n">searcher</span> <span class="o">=</span> <span class="n">search_env</span><span class="p">(</span>
+    <span class="n">num_agents</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">agents_pos</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]),</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]),</span>
+    <span class="n">resource_distribution</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">,</span> <span class="mf">30.0</span><span class="p">]),</span>
+    <span class="n">bin_points</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="n">infl_configs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;infl_type&#39;</span><span class="p">:</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">},</span>
+    <span class="n">learning_rate_type</span><span class="o">=</span><span class="s1">&#39;cosine_annealing&#39;</span><span class="p">,</span>
+    <span class="n">learning_rate</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mi">15</span><span class="p">],</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">domain_type</span><span class="o">=</span><span class="s1">&#39;1d&#39;</span><span class="p">,</span>
+    <span class="n">domain_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Set up the adaptive environment</span>
+<span class="n">searcher</span><span class="o">.</span><span class="n">setup_adaptive_env</span><span class="p">()</span>
+
+<span class="c1"># Perform grid search for equilibria</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span>
+    <span class="n">resolution</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">use_parallel</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Analyze results</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">analyze_grid_search_results</span><span class="p">()</span>
+
+<span class="c1"># Print summary</span>
+<span class="n">searcher</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+
+<span class="c1"># Visualize equilibrium distribution</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">plot_equilibrium_analysis</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.analyze_unique_equilibria">
+<span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.monte_search.</span></span><span class="sig-name descname"><span class="pre">analyze_unique_equilibria</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.analyze_unique_equilibria" title="Link to this definition">#</a></dt>
+<dd><p>Analyze Monte Carlo results to find unique equilibria and their frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>result_tensor</strong><span class="classifier">torch.Tensor</span></dt><dd><p>Tensor of final positions from Monte Carlo runs</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Tolerance for considering positions as “near-unique”</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>Dictionary with unique equilibria, frequencies, and statistics</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.print_equilibrium_analysis">
+<span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.monte_search.</span></span><span class="sig-name descname"><span class="pre">print_equilibrium_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis_results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.print_equilibrium_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Print a detailed analysis of the equilibrium results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>analysis_results</strong><span class="classifier">dict</span></dt><dd><p>Results from analyze_unique_equilibria</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.monte_search.</span></span><span class="sig-name descname"><span class="pre">search_env</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_agents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agents_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_distribution</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bin_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'infl_type':</span> <span class="pre">'gaussian'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cosine_annealing'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.0001,</span> <span class="pre">0.01,</span> <span class="pre">15]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">infl_fshift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1d'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resource_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'na'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">domain_refinement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_zero_infl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env" title="Link to this definition">#</a></dt>
+<dd><p>The search_env class provides a framework for searching and analyzing equilibria in adaptive
+game environments. It supports grid-based and Monte Carlo sampling methods to explore the
+strategy space, detect convergence patterns, identify limit cycles, and classify equilibrium
+types based on agent positions and clustering.</p>
+<p>This class is particularly useful for understanding the multiplicity and stability of equilibria
+in multi-agent influencer games across various domains (1D, 2D, and simplex).</p>
+<p><strong>Key Features</strong>:</p>
+<ul class="simple">
+<li><p>Grid search and Monte Carlo sampling for equilibrium discovery</p></li>
+<li><p>Parallel processing support for computational efficiency</p></li>
+<li><p>Automatic detection of convergence and limit cycles</p></li>
+<li><p>Classification of equilibrium types based on agent clustering</p></li>
+<li><p>Comprehensive visualization of equilibrium distributions</p></li>
+</ul>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.analyze_grid_search_results" title="InflGame.adaptive.monte_search.search_env.analyze_grid_search_results"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analyze_grid_search_results</span></code></a>([results_dict, ...])</p></td>
+<td><p>Analyze equilibrium search results to classify equilibrium types and compute statistics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.classify_equilibrium_type" title="InflGame.adaptive.monte_search.search_env.classify_equilibrium_type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">classify_equilibrium_type</span></code></a>(positions[, tolerance])</p></td>
+<td><p>Classify equilibrium type based on agent clustering and spatial arrangement.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.detect_approximate_cycles" title="InflGame.adaptive.monte_search.search_env.detect_approximate_cycles"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detect_approximate_cycles</span></code></a>(sequence[, ...])</p></td>
+<td><p>Detect approximate periodic cycles in gradient ascent trajectories.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.gradient_ascent_monte_carlo" title="InflGame.adaptive.monte_search.search_env.gradient_ascent_monte_carlo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gradient_ascent_monte_carlo</span></code></a>(number_samples, seed)</p></td>
+<td><p>Run gradient ascent using Monte Carlo generated starting positions with parallelization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.monte_carlo_unit_hypercube" title="InflGame.adaptive.monte_search.search_env.monte_carlo_unit_hypercube"><code class="xref py py-obj docutils literal notranslate"><span class="pre">monte_carlo_unit_hypercube</span></code></a>(number_samples, seed)</p></td>
+<td><p>Generate random samples in the unit hypercube for Monte Carlo equilibrium search.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.plot_equilibrium_analysis" title="InflGame.adaptive.monte_search.search_env.plot_equilibrium_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_equilibrium_analysis</span></code></a>([results_dict, ...])</p></td>
+<td><p>Create comprehensive visualizations of equilibrium analysis results.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.print_results_summary" title="InflGame.adaptive.monte_search.search_env.print_results_summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_results_summary</span></code></a>()</p></td>
+<td><p>Print a formatted summary of equilibrium search analysis results.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.search_Eq" title="InflGame.adaptive.monte_search.search_env.search_Eq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search_Eq</span></code></a>([resolution, number_samples, ...])</p></td>
+<td><p>Search for equilibrium positions from multiple starting points across the strategy space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.setup_adaptive_env" title="InflGame.adaptive.monte_search.search_env.setup_adaptive_env"><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_adaptive_env</span></code></a>()</p></td>
+<td><p>Set up the adaptive environment for equilibrium search.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#InflGame.adaptive.monte_search.search_env.unit_cube_3d" title="InflGame.adaptive.monte_search.search_env.unit_cube_3d"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unit_cube_3d</span></code></a>([resolution])</p></td>
+<td><p>Generate a 3D grid of points in the unit cube for systematic equilibrium search.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.analyze_grid_search_results">
+<span class="sig-name descname"><span class="pre">analyze_grid_search_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position_tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.analyze_grid_search_results" title="Link to this definition">#</a></dt>
+<dd><p>Analyze equilibrium search results to classify equilibrium types and compute statistics.</p>
+<p>This method processes the results from <em class="xref py py-obj">search_Eq()</em> to categorize convergence behavior,
+classify equilibrium types based on agent clustering, and compute comprehensive statistics
+about the equilibrium landscape.</p>
+<p><strong>Classification Categories</strong>:</p>
+<ul class="simple">
+<li><p><strong>Converged</strong>: Gradient ascent reached a stable equilibrium</p></li>
+<li><p><strong>Cycling</strong>: Limit cycle detected in the dynamics</p></li>
+<li><p><strong>No Result</strong>: Failed to converge within time limit</p></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">stats</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">analyze_grid_search_results</span><span class="p">(</span>
+    <span class="n">results_dict</span><span class="o">=</span><span class="n">results</span><span class="p">,</span>
+    <span class="n">position_tolerance</span><span class="o">=</span><span class="mf">1e-3</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Convergence rate: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;converged_percentage&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Equilibrium types: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;equilibrium_types&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>results_dict</strong><span class="classifier">Optional[Dict]</span></dt><dd><p>Results dictionary from search_Eq(). Uses self.results_dict if None.</p>
+</dd>
+<dt><strong>position_tolerance</strong><span class="classifier">float</span></dt><dd><p>Tolerance for grouping agents at similar positions.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict</dt><dd><p>Dictionary containing: - <code class="docutils literal notranslate"><span class="pre">total_points</span></code> (int): Total starting points analyzed - <code class="docutils literal notranslate"><span class="pre">converged</span></code> (int): Number of converged points - <code class="docutils literal notranslate"><span class="pre">cycles</span></code> (int): Number of cycling trajectories - <code class="docutils literal notranslate"><span class="pre">converged_percentage</span></code> (float): Percentage that converged - <code class="docutils literal notranslate"><span class="pre">equilibrium_types</span></code> (Dict): Counts of each equilibrium type - <code class="docutils literal notranslate"><span class="pre">equilibrium_type_percentages</span></code> (Dict): Percentages of each type</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.classify_equilibrium_type">
+<span class="sig-name descname"><span class="pre">classify_equilibrium_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.classify_equilibrium_type" title="Link to this definition">#</a></dt>
+<dd><p>Classify equilibrium type based on agent clustering and spatial arrangement.</p>
+<p>This method analyzes the final positions of agents to determine the equilibrium
+structure, grouping agents that are within tolerance of each other and providing
+a descriptive classification that captures both the clustering pattern and spatial
+ordering.</p>
+<p><strong>Classification Notation</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(n)</span></code>: All n agents clustered together</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(n-1,1)</span></code>: n-1 agents at lower position, 1 isolated higher</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,n-1)</span></code>: 1 agent at lower position, n-1 grouped higher</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c(1,n-2,1)</span></code>: Symmetric arrangement with middle group centered at 0.5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l(1,n-2,1)</span></code>: Asymmetric with middle group below 0.5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">u(1,n-2,1)</span></code>: Asymmetric with middle group above 0.5</p></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span>
+<span class="n">eq_type</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">classify_equilibrium_type</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+<span class="c1"># Returns: &#39;(1,2,1)&#39; for symmetric 4-player equilibrium</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>positions</strong><span class="classifier">np.ndarray</span></dt><dd><p>Array of agent positions at equilibrium.</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Maximum distance to consider positions as equal.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>String describing the equilibrium type and spatial arrangement.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.detect_approximate_cycles">
+<span class="sig-name descname"><span class="pre">detect_approximate_cycles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.detect_approximate_cycles" title="Link to this definition">#</a></dt>
+<dd><p>Detect approximate periodic cycles in gradient ascent trajectories.</p>
+<p>This method identifies limit cycles in the dynamics by searching for repeating
+patterns in the position sequence, allowing for some numerical tolerance to
+handle cases where cycles aren’t perfectly identical.</p>
+<p><strong>Algorithm</strong>:</p>
+<p>Uses autocorrelation to detect periodicity, computing correlation between
+the sequence and shifted versions of itself to find the best matching period.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sequence</strong><span class="classifier">np.ndarray</span></dt><dd><p>Time series of positions or values to analyze.</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Tolerance for considering patterns as similar.</p>
+</dd>
+<dt><strong>min_period</strong><span class="classifier">int</span></dt><dd><p>Minimum period length to consider.</p>
+</dd>
+<dt><strong>max_period</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum period length to consider. Defaults to half sequence length.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict</dt><dd><p>Dictionary containing cycle detection results with keys: - <code class="docutils literal notranslate"><span class="pre">has_approximate_cycle</span></code> (bool): Whether a cycle was detected - <code class="docutils literal notranslate"><span class="pre">period</span></code> (int): Detected period length (None if no cycle) - <code class="docutils literal notranslate"><span class="pre">correlation_score</span></code> (float): Quality of the detected cycle - <code class="docutils literal notranslate"><span class="pre">confidence</span></code> (float): Confidence in cycle detection (0-1)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.gradient_ascent_monte_carlo">
+<span class="sig-name descname"><span class="pre">gradient_ascent_monte_carlo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerated_agents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.gradient_ascent_monte_carlo" title="Link to this definition">#</a></dt>
+<dd><p>Run gradient ascent using Monte Carlo generated starting positions with parallelization.</p>
+<p>This function generates random starting positions using the monte_carlo_unit_hypercube method
+and then runs gradient ascent for each position in parallel, similar to final_pos_over_reach
+but using random initial positions instead of varying parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>number_samples</strong><span class="classifier">int</span></dt><dd><p>Number of Monte Carlo samples to generate</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int</span></dt><dd><p>Random seed for reproducibility</p>
+</dd>
+<dt><strong>tolerance</strong><span class="classifier">float</span></dt><dd><p>Tolerance for convergence</p>
+</dd>
+<dt><strong>tolerated_agents</strong><span class="classifier">Optional[int]</span></dt><dd><p>Number of agents allowed to tolerate deviations</p>
+</dd>
+<dt><strong>parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing</p>
+</dd>
+<dt><strong>max_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum number of parallel workers (defaults to CPU count)</p>
+</dd>
+<dt><strong>batch_size</strong><span class="classifier">Optional[int]</span></dt><dd><p>Batch size for processing (auto-calculated if None)</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">Optional[int]</span></dt><dd><p>Maximum time steps for gradient ascent</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>torch.Tensor</dt><dd><p>The final positions of agents for each Monte Carlo sample</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If input parameters are invalid</p>
+</dd>
+<dt>RuntimeError</dt><dd><p>If computation fails</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.monte_carlo_unit_hypercube">
+<span class="sig-name descname"><span class="pre">monte_carlo_unit_hypercube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.monte_carlo_unit_hypercube" title="Link to this definition">#</a></dt>
+<dd><p>Generate random samples in the unit hypercube for Monte Carlo equilibrium search.</p>
+<p>This method generates uniformly distributed random starting positions in the
+n-dimensional unit hypercube [0,1]^n, where n is the number of agents.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>number_samples</strong><span class="classifier">int</span></dt><dd><p>Number of random samples to generate.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int</span></dt><dd><p>Random seed for reproducibility.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>torch.Tensor</dt><dd><p>Tensor of random positions with shape (number_samples, num_agents).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.plot_equilibrium_analysis">
+<span class="sig-name descname"><span class="pre">plot_equilibrium_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['convergence',</span> <span class="pre">'distribution',</span> <span class="pre">'percentage']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_ads</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">['.png',</span> <span class="pre">'.svg']</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paper_figure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'figure_id':</span> <span class="pre">'equilibrium_analysis',</span> <span class="pre">'paper':</span> <span class="pre">False,</span> <span class="pre">'section':</span> <span class="pre">'equilibrium_analysis'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">font</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'default_size':</span> <span class="pre">12,</span> <span class="pre">'font_family':</span> <span class="pre">'sans-serif',</span> <span class="pre">'label_size':</span> <span class="pre">11,</span> <span class="pre">'tick_size':</span> <span class="pre">10,</span> <span class="pre">'title_size':</span> <span class="pre">14}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'bar_distribution':</span> <span class="pre">'#3498DB',</span> <span class="pre">'bar_percentage':</span> <span class="pre">'#E74C3C',</span> <span class="pre">'converged':</span> <span class="pre">'#2E8B57',</span> <span class="pre">'cycling':</span> <span class="pre">'#FF6B6B',</span> <span class="pre">'no_result':</span> <span class="pre">'#95A5A6'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'convergence_title':</span> <span class="pre">'Convergence</span> <span class="pre">Behavior</span> <span class="pre">Distribution',</span> <span class="pre">'distribution_title':</span> <span class="pre">'Equilibrium</span> <span class="pre">Types</span> <span class="pre">Distribution',</span> <span class="pre">'percentage_title':</span> <span class="pre">'Equilibrium</span> <span class="pre">Types</span> <span class="pre">(%</span> <span class="pre">of</span> <span class="pre">Converged)',</span> <span class="pre">'xlabel_distribution':</span> <span class="pre">'Equilibrium</span> <span class="pre">Type',</span> <span class="pre">'xlabel_percentage':</span> <span class="pre">'Equilibrium</span> <span class="pre">Type',</span> <span class="pre">'ylabel_distribution':</span> <span class="pre">'Count',</span> <span class="pre">'ylabel_percentage':</span> <span class="pre">'Percentage</span> <span class="pre">(%)'}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.plot_equilibrium_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Create comprehensive visualizations of equilibrium analysis results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>stats</strong><span class="classifier">Dict</span></dt><dd><p>Statistics dictionary containing convergence results and equilibrium types.</p>
+</dd>
+<dt><strong>plot_types</strong><span class="classifier">List[str], optional</span></dt><dd><p>List of plot types to include: ‘convergence’, ‘distribution’, ‘percentage’.
+Default is all three.</p>
+</dd>
+<dt><strong>save</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to save the figure. Default is False.</p>
+</dd>
+<dt><strong>name_ads</strong><span class="classifier">List[str], optional</span></dt><dd><p>List of additional name components for file naming. Default is [].</p>
+</dd>
+<dt><strong>save_types</strong><span class="classifier">List[str], optional</span></dt><dd><p>File extensions for saving. Default is [‘.png’, ‘.svg’].</p>
+</dd>
+<dt><strong>paper_figure</strong><span class="classifier">Dict, optional</span></dt><dd><p>Dictionary with keys ‘paper’ (bool), ‘section’ (str), ‘figure_id’ (str).
+Controls paper-style naming and organization. Default is 
+{‘paper’: False, ‘section’: ‘equilibrium_analysis’, ‘figure_id’: ‘equilibrium_analysis’}.</p>
+</dd>
+<dt><strong>font</strong><span class="classifier">Dict, optional</span></dt><dd><p>Font configuration dictionary with keys: ‘default_size’, ‘title_size’,
+‘label_size’, ‘tick_size’, ‘font_family’.</p>
+</dd>
+<dt><strong>colors</strong><span class="classifier">Dict, optional</span></dt><dd><p>Color configuration for different plot elements.</p>
+</dd>
+<dt><strong>text_configs</strong><span class="classifier">Dict, optional</span></dt><dd><p>Text configuration for titles and labels.</p>
+</dd>
+<dt><strong>figsize</strong><span class="classifier">Optional[tuple], optional</span></dt><dd><p>Figure size. If None, automatically determined based on number of plots.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>matplotlib.figure.Figure</dt><dd><p>The generated matplotlib figure.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Show only convergence pie chart</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_equilibrium_analysis</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">plot_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;convergence&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Show distribution and percentage, save with custom naming</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">fig</span> <span class="o">=</span> <span class="n">plot_equilibrium_analysis</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">stats</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">plot_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;distribution&#39;</span><span class="p">,</span> <span class="s1">&#39;percentage&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">save</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">name_ads</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;n3&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="n">paper_figure</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;paper&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;section&#39;</span><span class="p">:</span> <span class="s1">&#39;results&#39;</span><span class="p">,</span> <span class="s1">&#39;figure_id&#39;</span><span class="p">:</span> <span class="s1">&#39;eq_analysis&#39;</span><span class="p">}</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.print_results_summary">
+<span class="sig-name descname"><span class="pre">print_results_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.print_results_summary" title="Link to this definition">#</a></dt>
+<dd><p>Print a formatted summary of equilibrium search analysis results.</p>
+<p>This method displays a comprehensive, human-readable summary of the equilibrium
+search results, including convergence statistics, equilibrium type distributions,
+and detailed breakdowns of each equilibrium category.</p>
+<p>Must be called after <em class="xref py py-obj">analyze_grid_search_results()</em>.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">searcher</span><span class="o">.</span><span class="n">analyze_grid_search_results</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="n">searcher</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>AttributeError</dt><dd><p>If analyze_grid_search_results() hasn’t been called yet.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.search_Eq">
+<span class="sig-name descname"><span class="pre">search_Eq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_monte_carlo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.search_Eq" title="Link to this definition">#</a></dt>
+<dd><p>Search for equilibrium positions from multiple starting points across the strategy space.</p>
+<p>This method performs a comprehensive search for equilibria using either grid-based
+sampling or Monte Carlo random sampling. It analyzes convergence behavior from each
+starting point, detecting both stable equilibria and limit cycles.</p>
+<p><strong>Search Methods</strong>:</p>
+<ul class="simple">
+<li><p><strong>Grid Search</strong> (<code class="docutils literal notranslate"><span class="pre">use_monte_carlo=False</span></code>): Systematic sampling on a uniform grid</p></li>
+<li><p><strong>Monte Carlo</strong> (<code class="docutils literal notranslate"><span class="pre">use_monte_carlo=True</span></code>): Random sampling from uniform distribution</p></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Grid search with 10 points per dimension</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span>
+    <span class="n">resolution</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">use_parallel</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># Monte Carlo search with 1000 random samples</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span>
+    <span class="n">number_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">time_steps</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+    <span class="n">use_monte_carlo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">seed</span><span class="o">=</span><span class="mi">42</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>resolution</strong><span class="classifier">Optional[int]</span></dt><dd><p>Grid resolution (points per dimension). Required for grid search.</p>
+</dd>
+<dt><strong>number_samples</strong><span class="classifier">Optional[int]</span></dt><dd><p>Number of random samples. Required for Monte Carlo search.</p>
+</dd>
+<dt><strong>time_steps</strong><span class="classifier">int</span></dt><dd><p>Maximum gradient ascent iterations per starting point.</p>
+</dd>
+<dt><strong>use_parallel</strong><span class="classifier">bool</span></dt><dd><p>Whether to use parallel processing for efficiency.</p>
+</dd>
+<dt><strong>num_workers</strong><span class="classifier">Optional[int]</span></dt><dd><p>Number of parallel workers. Defaults to CPU count.</p>
+</dd>
+<dt><strong>use_monte_carlo</strong><span class="classifier">bool</span></dt><dd><p>Use Monte Carlo sampling instead of grid.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int</span></dt><dd><p>Random seed for reproducibility (Monte Carlo only).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Dict</dt><dd><p>Dictionary mapping starting points to convergence results.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.setup_adaptive_env">
+<span class="sig-name descname"><span class="pre">setup_adaptive_env</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.setup_adaptive_env" title="Link to this definition">#</a></dt>
+<dd><p>Set up the adaptive environment for equilibrium search.</p>
+<p>This method initializes the gradient function environment with the provided
+parameters, enabling gradient ascent dynamics for equilibrium discovery.
+Must be called before performing any equilibrium search operations.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">searcher</span> <span class="o">=</span> <span class="n">search_env</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">searcher</span><span class="o">.</span><span class="n">setup_adaptive_env</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">search_Eq</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.search_env.unit_cube_3d">
+<span class="sig-name descname"><span class="pre">unit_cube_3d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.search_env.unit_cube_3d" title="Link to this definition">#</a></dt>
+<dd><p>Generate a 3D grid of points in the unit cube for systematic equilibrium search.</p>
+<p>This method creates a uniform grid of points in [0,1]^3 space, excluding boundary
+points to focus on interior equilibria.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>resolution</strong><span class="classifier">int</span></dt><dd><p>Number of points per dimension (excluding boundaries).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>torch.Tensor</dt><dd><p>Tensor of grid points with shape (n_points, 3).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="InflGame.adaptive.monte_search.visualize_equilibrium_clustering">
+<span class="sig-prename descclassname"><span class="pre">InflGame.adaptive.monte_search.</span></span><span class="sig-name descname"><span class="pre">visualize_equilibrium_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_results</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#InflGame.adaptive.monte_search.visualize_equilibrium_clustering" title="Link to this definition">#</a></dt>
+<dd><p>Create visualizations for the equilibrium clustering analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>analysis_results</strong></dt><dd><p>Results from analyze_unique_equilibria</p>
+</dd>
+<dt><strong>original_results</strong></dt><dd><p>Original Monte Carlo results tensor</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="InflGame.adaptive.newton_search.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Newton Search</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="InflGame.adaptive.bifurcation_analysis.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Bifurcation Analysis</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#monte-carlo-equilibrium-search-module">Monte Carlo Equilibrium Search Module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage:</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.analyze_unique_equilibria"><code class="docutils literal notranslate"><span class="pre">analyze_unique_equilibria</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.print_equilibrium_analysis"><code class="docutils literal notranslate"><span class="pre">print_equilibrium_analysis</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env"><code class="docutils literal notranslate"><span class="pre">search_env</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.analyze_grid_search_results"><code class="docutils literal notranslate"><span class="pre">search_env.analyze_grid_search_results</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.classify_equilibrium_type"><code class="docutils literal notranslate"><span class="pre">search_env.classify_equilibrium_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.detect_approximate_cycles"><code class="docutils literal notranslate"><span class="pre">search_env.detect_approximate_cycles</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.gradient_ascent_monte_carlo"><code class="docutils literal notranslate"><span class="pre">search_env.gradient_ascent_monte_carlo</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.monte_carlo_unit_hypercube"><code class="docutils literal notranslate"><span class="pre">search_env.monte_carlo_unit_hypercube</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.plot_equilibrium_analysis"><code class="docutils literal notranslate"><span class="pre">search_env.plot_equilibrium_analysis</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.print_results_summary"><code class="docutils literal notranslate"><span class="pre">search_env.print_results_summary</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.search_Eq"><code class="docutils literal notranslate"><span class="pre">search_env.search_Eq</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.setup_adaptive_env"><code class="docutils literal notranslate"><span class="pre">search_env.setup_adaptive_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.search_env.unit_cube_3d"><code class="docutils literal notranslate"><span class="pre">search_env.unit_cube_3d</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#InflGame.adaptive.monte_search.visualize_equilibrium_clustering"><code class="docutils literal notranslate"><span class="pre">visualize_equilibrium_clustering</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/api/adaptive/InflGame.adaptive.monte_search.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Mark Lovett.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

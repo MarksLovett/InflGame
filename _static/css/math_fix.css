@@ -1,0 +1,59 @@
+/*
+ * Custom Sphinx / pydata-sphinx-theme overrides.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* MathJax: equations look fine then collapse under theme flex wrappers.      */
+/* https://github.com/mathjax/MathJax/issues/1558                             */
+/* https://github.com/pydata/pydata-sphinx-theme/issues/2312                  */
+/* -------------------------------------------------------------------------- */
+
+span.math {
+  display: inline !important;
+  align-items: unset !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+div.math {
+  display: flex !important;
+  flex-direction: row-reverse;
+  align-items: center;
+  max-width: 100%;
+  overflow: visible !important;
+}
+
+div.math > mjx-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden !important;
+  padding-bottom: 0.5rem;
+}
+
+mjx-container[jax="CHTML"][display="true"],
+mjx-container[jax="CHTML"] {
+  box-sizing: content-box;
+}
+
+mjx-container mjx-assistive-mml {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(1px, 1px, 1px, 1px) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Figures: Sphinx :scale: writes fixed width+height. When max-width:100%     */
+/* shrinks wide images (dist_pos, timelapse), height stays locked and the     */
+/* image looks horizontally smushed. Keep aspect ratio.                       */
+/* -------------------------------------------------------------------------- */
+
+.bd-content img,
+.bd-article img,
+figure img,
+a.reference.image-reference img {
+  max-width: 100%;
+  height: auto !important;
+}
